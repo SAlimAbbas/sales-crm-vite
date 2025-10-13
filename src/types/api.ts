@@ -1,0 +1,22 @@
+export interface ApiResponse<T = any> {
+  failed: number;
+  success: number;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginationParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
+export interface BulkActionResponse {
+  message: string;
+  success: number;
+  failed: number;
+  duplicates?: number;
+}
