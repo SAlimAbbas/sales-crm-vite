@@ -11,6 +11,7 @@ import {
   Divider,
   Chip,
 } from "@mui/material";
+import { motion } from "framer-motion";
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -103,18 +104,29 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       }}
     >
       <DrawerHeader>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box>
-            <Typography variant="h6" noWrap>
-              Sales CRM
-            </Typography>
-            <Chip
-              label={user?.role}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
-          </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+          }}
+        >
+          <motion.img
+            src="/images/logo.png"
+            alt="Logo"
+            style={{ width: 80, height: 80 }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+            }}
+          />
+          <Typography variant="h6" noWrap component="div">
+            EW Sales Leads
+          </Typography>
         </Box>
       </DrawerHeader>
 

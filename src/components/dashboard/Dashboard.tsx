@@ -140,7 +140,6 @@ const Dashboard: React.FC = () => {
 
   const stats = dashboardData?.summary;
   const charts = dashboardData?.charts;
-  console.log("charts data", charts);
   const performance = dashboardData?.performance;
 
   const conversionData = charts?.conversion_breakdown

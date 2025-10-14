@@ -81,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </IconButton>
 
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Sales CRM
+          {user?.name ? `Welcome, ${user.name}` : "Welcome"}
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -140,10 +140,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             sx: { width: 200, mt: 1 },
           }}
         >
-          <MenuItem onClick={handleMenuClose}>
-            <AccountCircle sx={{ mr: 2 }} />
-            Profile
-          </MenuItem>
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
         </Menu>
 
@@ -157,7 +153,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         >
           <MenuItem onClick={handleMenuClose}>
             <Box sx={{ p: 2, textAlign: "center" }}>
-              <Typography variant="body2">No new notifications</Typography>
+              <Typography variant="body2">Notification system not available right now</Typography>
             </Box>
           </MenuItem>
         </Menu>

@@ -48,23 +48,25 @@ const ConversionChart: React.FC<ConversionChartProps> = ({ data }) => {
   const chartData = [
     {
       name: "Converted",
-      value: data.converted,
+      value: Number(data.converted) || 0,
       color: COLORS.converted,
       percentage: 0,
     },
     {
       name: "Active",
-      value: data.active,
+      value: Number(data.active) || 0,
       color: COLORS.active,
       percentage: 0,
     },
     {
       name: "Invalid",
-      value: data.invalid,
+      value: Number(data.invalid) || 0,
       color: COLORS.invalid,
       percentage: 0,
     },
   ].filter((item) => item.value > 0);
+
+  console.log(chartData);
 
   // Calculate percentages
   const total = data.converted + data.active + data.invalid;
@@ -162,39 +164,6 @@ const ConversionChart: React.FC<ConversionChartProps> = ({ data }) => {
           />
         </PieChart>
       </ResponsiveContainer>
-
-      {/* Summary Stats */}
-      <Box
-        mt={2}
-        display="flex"
-        justifyContent="space-around"
-        textAlign="center"
-      >
-        <Box>
-          <Typography variant="h6" sx={{ color: COLORS.converted }}>
-            {data.converted}
-          </Typography>
-          <Typography variant="caption" color="textSecondary">
-            Converted
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="h6" sx={{ color: COLORS.active }}>
-            {data.active}
-          </Typography>
-          <Typography variant="caption" color="textSecondary">
-            Active
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="h6" sx={{ color: COLORS.invalid }}>
-            {data.invalid}
-          </Typography>
-          <Typography variant="caption" color="textSecondary">
-            Invalid
-          </Typography>
-        </Box>
-      </Box>
     </Box>
   );
 };

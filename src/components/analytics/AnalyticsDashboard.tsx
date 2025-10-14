@@ -84,7 +84,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 const AnalyticsDashboard: React.FC = () => {
   const { user } = useAuth();
   const { showNotification } = useNotification();
-  const [dateRange, setDateRange] = useState("month");
+  const [dateRange, setDateRange] = useState("this_month");
   const [showReports, setShowReports] = useState(false);
   const [reportType, setReportType] = useState<"leads" | "performance">(
     "leads"
@@ -115,7 +115,12 @@ const AnalyticsDashboard: React.FC = () => {
   };
 
   if (isLoading) {
-    return <LoadingSkeleton variant="dashboard" message="Loading analytics data..."/>;
+    return (
+      <LoadingSkeleton
+        variant="dashboard"
+        message="Loading analytics data..."
+      />
+    );
   }
 
   if (error) {
@@ -131,9 +136,9 @@ const AnalyticsDashboard: React.FC = () => {
     );
   }
 
-  const summary = dashboardData?.data?.summary;
-  const charts = dashboardData?.data?.charts;
-  const performance = dashboardData?.data?.performance;
+  const summary = dashboardData?.summary;
+  const charts = dashboardData?.charts;
+  const performance = dashboardData?.performance;
 
   return (
     <Box>
@@ -149,14 +154,20 @@ const AnalyticsDashboard: React.FC = () => {
             <InputLabel>Date Range</InputLabel>
             <Select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
               label="Date Range"
+              onChange={(e) => setDateRange(e.target.value)}
             >
               <MenuItem value="today">Today</MenuItem>
-              <MenuItem value="week">This Week</MenuItem>
-              <MenuItem value="month">This Month</MenuItem>
-              <MenuItem value="quarter">This Quarter</MenuItem>
-              <MenuItem value="year">This Year</MenuItem>
+              <MenuItem value="yesterday">Yesterday</MenuItem>
+              <MenuItem value="last_7_days">Last 7 days</MenuItem>
+              <MenuItem value="this_week">This week</MenuItem>
+              <MenuItem value="last_week">Last week</MenuItem>
+              <MenuItem value="last_30_days">Last 30 days</MenuItem>
+              <MenuItem value="this_month">This month</MenuItem>
+              <MenuItem value="last_month">Last month</MenuItem>
+              <MenuItem value="year_to_date">Year to date</MenuItem>
+              <MenuItem value="lifetime">Lifetime</MenuItem>
+              {/* <MenuItem value="custom">Custom</MenuItem> */}
             </Select>
           </FormControl>
           {user?.role !== "salesperson" && (

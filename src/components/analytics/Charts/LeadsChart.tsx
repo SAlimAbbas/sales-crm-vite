@@ -56,8 +56,8 @@ const LeadsChart: React.FC<LeadsChartProps> = ({ data }) => {
           <YAxis stroke="#666" fontSize={12} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
+              backgroundColor: "var(--mui-palette-background-paper)",
+              border: "1px solid var(--mui-palette-divider)",
               borderRadius: "4px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}

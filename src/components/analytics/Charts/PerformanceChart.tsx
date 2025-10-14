@@ -163,7 +163,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <Card sx={{ p: 2 }}>
+        <Card sx={{ p: 2, bgcolor: (theme) => theme.palette.background.paper }}>
           <Typography variant="subtitle2" gutterBottom>
             {label}
           </Typography>
@@ -301,7 +301,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
             Detailed Performance Metrics
           </Typography>
 
-          <TableContainer component={Paper} variant="outlined">
+          <TableContainer component={Paper} variant="outlined" sx={{ bgcolor: (theme) => theme.palette.background.paper }}>
             <Table size="small">
               <TableHead>
                 <TableRow>

@@ -12,6 +12,8 @@ export const StyledDrawer = styled(Drawer)(({ theme }) => ({
     borderRight: "1px solid",
     borderColor: theme.palette.divider,
     backgroundColor: theme.palette.background.paper,
+    top: 64, // Add this to push drawer below header
+    height: "calc(100% - 64px)", // Adjust height
   },
 }));
 
