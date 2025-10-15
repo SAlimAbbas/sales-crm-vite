@@ -17,6 +17,7 @@ export interface PaginationParams {
   start_date?: string;
   end_date?: string;
   status?: string;
+  is_completed?: boolean;
 }
 
 export interface BulkActionResponse {

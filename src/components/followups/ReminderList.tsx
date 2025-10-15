@@ -67,7 +67,7 @@ const ReminderList: React.FC = () => {
 
   const getUpcomingFollowups = () => {
     return (upcomingFollowups?.data || [])
-      .filter((followup) => !followup.is_completed && !followup.is_overdue)
+      .filter((followup:any) => !followup.is_completed && !followup.is_overdue)
       .slice(0, 5); // Show only 5 upcoming
   };
 
