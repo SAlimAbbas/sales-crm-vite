@@ -26,11 +26,13 @@ const FormDatePicker: React.FC<FormDatePickerProps> = ({
   minDate,
   maxDate,
 }) => {
+  const dateValue = typeof value === "string" ? new Date(value) : value;
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <DatePicker
         label={label + (required ? " *" : "")}
-        value={value}
+        value={dateValue}
         onChange={onChange}
         disabled={disabled}
         minDate={minDate}
