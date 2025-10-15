@@ -4,6 +4,9 @@ export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  summary?: any;
+  charts?: any;
+  performance?: any;
 }
 
 export interface PaginationParams {
