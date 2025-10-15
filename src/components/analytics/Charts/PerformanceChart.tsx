@@ -29,8 +29,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
 } from "recharts";
 import {
   TrendingUp as TrendingUpIcon,
@@ -119,16 +117,16 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
     }
   };
 
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case "up":
-        return "success";
-      case "down":
-        return "error";
-      default:
-        return "default";
-    }
-  };
+  // const getTrendColor = (trend: string) => {
+  //   switch (trend) {
+  //     case "up":
+  //       return "success";
+  //     case "down":
+  //       return "error";
+  //     default:
+  //       return "default";
+  //   }
+  // };
 
   const chartConfigs = {
     overview: {

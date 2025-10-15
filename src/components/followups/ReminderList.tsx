@@ -32,7 +32,7 @@ const ReminderList: React.FC = () => {
     data: overdueFollowups,
     isLoading: loadingOverdue,
     refetch: refetchOverdue,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["overdue-reminders"],
     queryFn: () => followupService.getOverdue(),
   });
@@ -41,7 +41,7 @@ const ReminderList: React.FC = () => {
     data: upcomingFollowups,
     isLoading: loadingUpcoming,
     refetch: refetchUpcoming,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["upcoming-reminders"],
     queryFn: () =>
       followupService.getFollowups({

@@ -19,11 +19,8 @@ import {
   Chip,
 } from "@mui/material";
 import {
-  People as PeopleIcon,
   Business as BusinessIcon,
-  Assignment as AssignmentIcon,
   Schedule as ScheduleIcon,
-  TrendingUp as TrendingUpIcon,
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
   FileDownload as FileDownloadIcon,
@@ -36,8 +33,6 @@ import QuickActions from "./QuickActions";
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -312,13 +307,9 @@ const Dashboard: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({
-                        name,
-                        percent,
-                      }: {
-                        name: string;
-                        percent: number;
-                      }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={(props: any) =>
+                        `${props.name}: ${(props.percent * 100).toFixed(0)}%`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"

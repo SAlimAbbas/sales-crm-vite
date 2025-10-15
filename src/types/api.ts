@@ -12,6 +12,11 @@ export interface PaginationParams {
   search?: string;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
+  role?: 'admin' | 'manager' | 'salesperson';
+  is_active?: boolean;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
 }
 
 export interface BulkActionResponse {

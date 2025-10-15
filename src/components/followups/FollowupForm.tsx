@@ -51,7 +51,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
   const [loading, setLoading] = useState(false);
 
   // Fetch available leads
-  const { data: leadsData, isLoading: loadingLeads } = useQuery({
+  const { data: leadsData, isLoading: loadingLeads } = useQuery<any>({
     queryKey: ["available-leads"],
     queryFn: () => leadService.getLeads({ per_page: 100 }),
     enabled: open,
@@ -59,8 +59,8 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
 
   const availableLeads =
     leadsData?.data?.filter(
-      (lead) =>
-        !lead.followups?.some((f) => !f.is_completed) &&
+      (lead:any) =>
+        !lead.followups?.some((f:any) => !f.is_completed) &&
         lead.assigned_to === currentUser?.id
     ) || [];
 

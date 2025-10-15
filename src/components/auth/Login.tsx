@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Container,
-  Paper,
   TextField,
   Button,
   Typography,
@@ -17,7 +16,7 @@ import {
   Email as EmailIcon,
   Lock as LockIcon,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
 
 // Styled Components
@@ -135,7 +134,7 @@ const Login: React.FC = () => {
   };
 
   // Animation variants
-  const containerVariants = {
+  const containerVariants:Variants  = {
     hidden: { opacity: 0, y: 50 },
     visible: {
       opacity: 1,

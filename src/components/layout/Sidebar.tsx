@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Drawer,
   List,
   ListItem,
   ListItemButton,
@@ -9,7 +8,6 @@ import {
   Box,
   Typography,
   Divider,
-  Chip,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import {
@@ -115,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <motion.img
             src="/images/logo.png"
             alt="Logo"
-            style={{ width: 80, height: 80 }}
+            style={{ width: 60, height: 60 }}
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{

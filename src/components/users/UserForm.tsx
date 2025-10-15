@@ -109,7 +109,7 @@ const UserForm: React.FC<UserFormProps> = ({
     },
   });
 
-  const { data: managersData } = useQuery({
+  const { data: managersData } = useQuery<any>({
     queryKey: ["managers"],
     queryFn: () => userService.getUsers({ role: "manager" }),
     enabled: open && formik.values.role === "salesperson",

@@ -14,7 +14,6 @@ import {
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
-  AccountCircle,
   Brightness4,
   Brightness7,
 } from "@mui/icons-material";

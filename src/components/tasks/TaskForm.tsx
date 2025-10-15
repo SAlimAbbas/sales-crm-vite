@@ -47,14 +47,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [loading, setLoading] = useState(false);
 
   // Fetch users based on role permissions
-  const { data: usersData, isLoading: loadingUsers } = useQuery({
+  const { data: usersData, isLoading: loadingUsers } = useQuery<any>({
     queryKey: ["users-for-assignment"],
     queryFn: () => userService.getUsers(),
     enabled: open,
   });
 
   // Fetch leads
-  const { data: leadsData, isLoading: loadingLeads } = useQuery({
+  const { data: leadsData, isLoading: loadingLeads } = useQuery<any>({
     queryKey: ["leads-for-tasks"],
     queryFn: () => leadService.getLeads({ per_page: 100 }),
     enabled: open,
@@ -65,7 +65,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       title: "",
       description: "",
       due_date: new Date().toISOString().split("T")[0], // Default to today
-      priority: "medium" as const,
+      priority: "medium" as "low" | "medium" | "high",
       assigned_to: "",
       lead_id: "",
     },
@@ -145,12 +145,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
     } else if (currentUser?.role === "manager") {
       // Manager can assign to their team members
       return usersData.data.filter(
-        (user) =>
+        (user:any) =>
           user.manager_id === currentUser.id || user.id === currentUser.id
       );
     } else {
       // Salesperson can only assign to themselves
-      return usersData.data.filter((user) => user.id === currentUser?.id);
+      return usersData.data.filter((user:any) => user.id === currentUser?.id);
     }
   };
 
@@ -163,12 +163,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
   ];
 
   const leadOptions =
-    leadsData?.data?.map((lead) => ({
+    leadsData?.data?.map((lead:any) => ({
       value: lead.id.toString(),
       label: `${lead.company_name} (${lead.contact_number})`,
     })) || [];
 
-  const userOptions = availableUsers.map((user) => ({
+  const userOptions = availableUsers.map((user:any) => ({
     value: user.id.toString(),
     label: `${user.name} (${user.role})`,
   }));

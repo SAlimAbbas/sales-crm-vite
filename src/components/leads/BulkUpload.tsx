@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Box, Typography, Button, Alert, LinearProgress } from "@mui/material";
 import {
-  CloudUpload as UploadIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
 import CustomModal from "../ui/CustomModal";

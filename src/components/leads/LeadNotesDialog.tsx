@@ -45,7 +45,7 @@ const LeadNotesDialog: React.FC<LeadNotesDialogProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: notesData, isLoading } = useQuery({
+  const { data: notesData, isLoading } = useQuery<any>({
     queryKey: ["notes", leadId],
     queryFn: () => noteService.getNotes(leadId),
     enabled: open,
@@ -169,7 +169,7 @@ const LeadNotesDialog: React.FC<LeadNotesDialogProps> = ({
           </Alert>
         ) : (
           <List>
-            {notes?.map((note) => (
+            {notes?.map((note:any) => (
               <Paper key={note.id} sx={{ mb: 2, p: 2 }}>
                 <Box
                   display="flex"

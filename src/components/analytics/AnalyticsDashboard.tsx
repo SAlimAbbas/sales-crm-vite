@@ -22,10 +22,7 @@ import {
   GetApp as DownloadIcon,
 } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
-import {
-  analyticsService,
-  DashboardData,
-} from "../../services/analyticsService";
+import { analyticsService } from "../../services/analyticsService";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotification } from "../../contexts/NotificationContext";
 // import LoadingSpinner from "../common/LoadingSpinner";
@@ -94,7 +91,6 @@ const AnalyticsDashboard: React.FC = () => {
     data: dashboardData,
     isLoading,
     error,
-    refetch,
   } = useQuery({
     queryKey: ["analytics-dashboard", dateRange],
     queryFn: () => analyticsService.getDashboard({ range: dateRange }),

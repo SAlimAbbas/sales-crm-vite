@@ -85,7 +85,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   const [localCountry, setLocalCountry] = useState(filters.country);
   const [localProduct, setLocalProduct] = useState(filters.product);
 
-  const { data: usersData } = useQuery({
+  const { data: usersData } = useQuery<any>({
     queryKey: ["salespeople"],
     queryFn: () => userService.getUsers({ role: "salesperson" }),
     select: (data) => data?.data || data, // Handle both ApiResponse<UsersResponse> and UsersResponse

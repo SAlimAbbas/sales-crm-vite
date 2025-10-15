@@ -52,7 +52,7 @@ const LeadManagement: React.FC = () => {
   });
 
   const handleViewNotes = (leadId: number) => {
-    const lead = leadsData?.data?.find((l) => l.id === leadId);
+    const lead = leadsData?.data?.find((l: any) => l.id === leadId);
     setNotesDialog({
       open: true,
       leadId: leadId,
@@ -123,10 +123,10 @@ const LeadManagement: React.FC = () => {
     data: leadsData,
     isLoading,
     refetch,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["leads", cleanParams],
     queryFn: () => leadService.getLeads(cleanParams),
-    keepPreviousData: true,
+    placeholderData: (previousData: any) => previousData,
     staleTime: 0,
     refetchOnWindowFocus: false,
     // ✅ Add these to prevent unnecessary re-renders
@@ -157,7 +157,7 @@ const LeadManagement: React.FC = () => {
   }, [user?.role]);
 
   // Handlers
-  const handleStatusTabChange = (_, value: string) => {
+  const handleStatusTabChange = (_: any, value: string) => {
     setStatusFilter(value);
     setPage(0);
     setSelectedLeadIds([]);

@@ -81,7 +81,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
   const { showNotification } = useNotification();
 
-  const { data: usersData } = useQuery({
+  const { data: usersData } = useQuery<any>({
     queryKey: ["salespeople"],
     queryFn: () => userService.getUsers({ role: "salesperson" }),
     enabled: assignDialog.open,

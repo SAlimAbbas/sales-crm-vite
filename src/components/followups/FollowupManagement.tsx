@@ -65,7 +65,7 @@ const FollowupManagement: React.FC = () => {
     data: followupsData,
     isLoading,
     refetch,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["followups", page, rowsPerPage, filter],
     queryFn: () =>
       followupService.getFollowups({
@@ -75,7 +75,7 @@ const FollowupManagement: React.FC = () => {
       }),
   });
 
-  const { data: overdueFollowups } = useQuery({
+  const { data: overdueFollowups } = useQuery<any>({
     queryKey: ["overdue-followups"],
     queryFn: () => followupService.getOverdue(),
     enabled: tabValue === 2,
@@ -312,7 +312,7 @@ const FollowupManagement: React.FC = () => {
             columns={columns}
             data={overdueFollowups || []}
             loading={isLoading}
-            pagination={false}
+            pagination={undefined}
             emptyMessage="No overdue follow-ups found"
           />
         </TabPanel>
@@ -329,7 +329,7 @@ const FollowupManagement: React.FC = () => {
         open={openCompleteDialog}
         title="Complete Follow-up"
         message={`Are you sure you want to mark this follow-up as completed?`}
-        onConfirm={(notes: string) => handleCompleteConfirm(notes)}
+        onConfirm={handleCompleteConfirm}
         onCancel={() => setOpenCompleteDialog(false)}
         severity="success"
         confirmText="Complete"

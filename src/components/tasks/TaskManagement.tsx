@@ -51,7 +51,7 @@ const TaskManagement: React.FC = () => {
     data: tasksData,
     isLoading,
     refetch,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["tasks", page, rowsPerPage, statusFilter],
     queryFn: () =>
       taskService.getTasks({
@@ -152,7 +152,7 @@ const TaskManagement: React.FC = () => {
             onClick={(e) => {
               e.stopPropagation();
               if (!isOverdue && canUpdateStatus(row)) {
-                handleStatusChangeClick(row, value);
+                handleStatusChangeClick(row);
               }
             }}
             sx={{

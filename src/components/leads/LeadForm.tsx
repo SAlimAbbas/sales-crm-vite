@@ -41,7 +41,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const { data: usersData } = useQuery({
+  const { data: usersData } = useQuery<any>({
     queryKey: ["salespeople"],
     queryFn: () => userService.getUsers({ role: "salesperson" }),
     enabled: open,
@@ -274,7 +274,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
                     ]
                   : [
                       { value: "", label: "Unassigned" },
-                      ...(usersData?.data?.map((user) => ({
+                      ...(usersData?.data?.map((user:any) => ({
                         value: user.id.toString(),
                         label: user.name,
                       })) || []),

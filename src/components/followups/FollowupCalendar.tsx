@@ -19,7 +19,7 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useQuery } from "@tanstack/react-query";
 import { followupService } from "../../services/followupService";
-import { useNotification } from "../../contexts/NotificationContext";
+// import { useNotification } from "../../contexts/NotificationContext";
 import { Followup } from "../../types";
 import { Close as CloseIcon } from "@mui/icons-material";
 
@@ -30,18 +30,18 @@ interface CalendarEvent extends Event {
 }
 
 const FollowupCalendar: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null| undefined>(null);
   const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
-  const { showNotification } = useNotification();
+  // const { showNotification } = useNotification();
 
-  const { data: followups, isLoading } = useQuery({
+  const { data: followups } = useQuery<any>({
     queryKey: ["calendar-followups"],
     queryFn: () => followupService.getFollowups({ per_page: 100 }),
   });
 
-  const events: CalendarEvent[] = (followups?.data || [])
-    .filter((followup) => !followup.is_completed)
-    .map((followup) => ({
+  const events: CalendarEvent[]  = (followups?.data || [])
+    .filter((followup:any) => !followup.is_completed)
+    .map((followup:any) => ({
       title: followup.lead?.company_name || "Unknown Company",
       start: new Date(followup.scheduled_at),
       end: new Date(new Date(followup.scheduled_at).getTime() + 30 * 60000), // 30 minutes duration
@@ -70,7 +70,7 @@ const FollowupCalendar: React.FC = () => {
 
   const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvents([event]);
-    setSelectedDate(event.start);
+    setSelectedDate(event?.start);
   };
 
   const handleSelectSlot = (slotInfo: { start: Date; end: Date }) => {
@@ -144,7 +144,7 @@ const FollowupCalendar: React.FC = () => {
             </Typography>
           ) : (
             <List>
-              {selectedEvents.map((event, index) => (
+              {selectedEvents.map((event: any, index) => (
                 <ListItem key={index} divider>
                   <ListItemText
                     primary={

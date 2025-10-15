@@ -36,7 +36,7 @@ const UserManagement: React.FC = () => {
     data: usersData,
     isLoading,
     refetch,
-  } = useQuery({
+  } = useQuery<any>({
     queryKey: ["users", page, rowsPerPage, searchTerm],
     queryFn: () =>
       userService.getUsers({
