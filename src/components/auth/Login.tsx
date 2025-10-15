@@ -90,23 +90,23 @@ const StyledTextField = styled(TextField)({
   },
 });
 
-const FloatingOrb = styled(motion.div)<{
-  top: string;
-  left: string;
-  size: string;
-  color: string;
-}>(({ top, left, size, color }) => ({
-  position: "absolute",
-  top,
-  left,
-  width: size,
-  height: size,
-  borderRadius: "50%",
-  background: color,
-  filter: "blur(80px)",
-  opacity: 0.6,
-  zIndex: -1,
-}));
+// const FloatingOrb = styled(motion.div)<{
+//   top: string;
+//   left: string;
+//   size: string;
+//   color: string;
+// }>(({ top, left, size, color }) => ({
+//   position: "absolute",
+//   top,
+//   left,
+//   width: size,
+//   height: size,
+//   borderRadius: "50%",
+//   background: color,
+//   filter: "blur(80px)",
+//   opacity: 0.6,
+//   zIndex: -1,
+// }));
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -157,45 +157,25 @@ const Login: React.FC = () => {
     },
   };
 
-  const orbVariants = {
-    animate: {
-      y: [0, -30, 0],
-      x: [0, 20, 0],
-      transition: {
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
+  // const orbVariants = {
+  //   animate: {
+  //     y: [0, -30, 0],
+  //     x: [0, 20, 0],
+  //     transition: {
+  //       duration: 8,
+  //       repeat: Infinity,
+  //       ease: "easeInOut",
+  //     },
+  //   },
+  // };
 
   return (
     <>
       {/* Background Video */}
       <VideoBackground autoPlay loop muted playsInline>
-        <source src="/videos/background.mp4" type="video/mp4" />
+        <source src="/videos/blur-background.mp4" type="video/mp4" />
         {/* Add your video file to public/videos/background.mp4 */}
       </VideoBackground>
-
-      {/* Floating Orbs */}
-      <FloatingOrb
-        top="10%"
-        left="10%"
-        size="300px"
-        color="rgba(99, 102, 241, 0.6)"
-        variants={orbVariants}
-        animate="animate"
-      />
-      <FloatingOrb
-        top="60%"
-        left="70%"
-        size="400px"
-        color="rgba(64, 0, 76, 0.6)"
-        variants={orbVariants}
-        animate="animate"
-        style={{ animationDelay: "2s" }}
-      />
-
       <Container
         component="main"
         maxWidth="sm"
