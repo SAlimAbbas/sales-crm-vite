@@ -7,8 +7,8 @@ else
     echo "❌ deploy-config.sh not found!"
     echo "Create it with your SSH details:"
     echo ""
-    echo "SSH_USER=\"u123456789\""
-    echo "SSH_HOST=\"srv123.hostinger.com\""
+    echo "SSH_USER=\"u597814446\""
+    echo "SSH_HOST=\"193.203.186.174\""
     echo "SSH_PORT=\"65002\""
     echo "REMOTE_PATH=\"domains/exportersworldscrm.site/public_html\""
     exit 1
