@@ -16,6 +16,7 @@ export interface Lead {
   assigned_to?: number;
   created_by: number | { id: number; name: string; [key: string]: any };
   tags: string | null; // Add this
+  notes_count?: number;
   created_at: string;
   updated_at: string;
   assigned_user?: User;

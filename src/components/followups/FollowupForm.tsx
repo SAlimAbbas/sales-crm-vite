@@ -26,6 +26,7 @@ interface FollowupFormProps {
   onClose: () => void;
   onSuccess: () => void;
   followup?: Followup | null;
+  preSelectedLeadId?: number | null;
 }
 
 const validationSchema = yup.object({
@@ -45,6 +46,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
   onClose,
   onSuccess,
   followup,
+  preSelectedLeadId,
 }) => {
   const { user: currentUser } = useAuth();
   const { showNotification } = useNotification();
@@ -59,8 +61,8 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
 
   const availableLeads =
     leadsData?.data?.filter(
-      (lead:any) =>
-        !lead.followups?.some((f:any) => !f.is_completed) &&
+      (lead: any) =>
+        !lead.followups?.some((f: any) => !f.is_completed) &&
         lead.assigned_to === currentUser?.id
     ) || [];
 
@@ -104,6 +106,9 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
       });
     } else if (open) {
       formik.resetForm();
+      if (preSelectedLeadId) {
+        formik.setFieldValue("lead_id", preSelectedLeadId.toString());
+      }
     }
   }, [open, followup]);
 
@@ -146,9 +151,10 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
                 label="Select Lead *"
                 disabled={loadingLeads}
               >
-                {availableLeads.map((lead:any) => (
+                {availableLeads.map((lead: any) => (
                   <MenuItem key={lead.id} value={lead.id}>
-                    {lead.company_name} - {lead.contact_number} ({lead.name? lead.name : "No Name"})
+                    {lead.company_name} - {lead.contact_number} (
+                    {lead.name ? lead.name : "No Name"})
                   </MenuItem>
                 ))}
                 {availableLeads.length === 0 && (

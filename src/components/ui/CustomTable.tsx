@@ -39,6 +39,7 @@ interface CustomTableProps {
     total: number;
     onPageChange: (page: number) => void;
     onRowsPerPageChange: (rowsPerPage: number) => void;
+    rowsPerPageOptions?: number[];
   };
   sorting?: {
     sortBy: string;
@@ -155,7 +156,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
 
         {pagination && (
           <TablePagination
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={pagination.rowsPerPageOptions || [10, 25, 50, 100]}
             component="div"
             count={pagination.total}
             rowsPerPage={pagination.rowsPerPage}

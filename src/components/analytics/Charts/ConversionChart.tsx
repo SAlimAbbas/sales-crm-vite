@@ -66,8 +66,6 @@ const ConversionChart: React.FC<ConversionChartProps> = ({ data }) => {
     },
   ].filter((item) => item.value > 0);
 
-  console.log(chartData);
-
   // Calculate percentages
   const total = data.converted + data.active + data.invalid;
   chartData.forEach((item) => {

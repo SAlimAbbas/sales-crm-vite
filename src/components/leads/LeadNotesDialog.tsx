@@ -56,6 +56,7 @@ const LeadNotesDialog: React.FC<LeadNotesDialogProps> = ({
     mutationFn: (data: NoteFormData) => noteService.createNote(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes", leadId] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] }); // ✅ Add this
       setNoteContent("");
       showNotification("Note added successfully", "success");
     },
@@ -83,6 +84,7 @@ const LeadNotesDialog: React.FC<LeadNotesDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes", leadId] });
       showNotification("Note deleted successfully", "success");
+      queryClient.invalidateQueries({ queryKey: ["leads"] }); // ✅ Add this
     },
     onError: () => {
       showNotification("Failed to delete note", "error");

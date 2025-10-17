@@ -20,12 +20,13 @@ import ConfirmDialog from "../common/ConfirmDialog";
 import { useAuth } from "../../contexts/AuthContext"; // or wherever your auth context is
 import TaskForm from "../tasks/TaskForm";
 import LeadNotesDialog from "./LeadNotesDialog";
+import FollowupForm from "../followups/FollowupForm";
 
 const LeadManagement: React.FC = () => {
   const { user } = useAuth();
   // State management
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
@@ -41,6 +42,12 @@ const LeadManagement: React.FC = () => {
   const [selectedLeadForTask, setSelectedLeadForTask] = useState<Lead | null>(
     null
   );
+
+  const [openFollowupForm, setOpenFollowupForm] = useState(false);
+  const [selectedLeadIdForFollowup, setSelectedLeadIdForFollowup] = useState<
+    number | null
+  >(null);
+
   const [notesDialog, setNotesDialog] = useState<{
     open: boolean;
     leadId: number | null;
@@ -64,6 +71,11 @@ const LeadManagement: React.FC = () => {
   const handleCreateTask = (lead: Lead) => {
     setSelectedLeadForTask(lead);
     setOpenTaskForm(true);
+  };
+
+  const handleScheduleFollowup = (leadId: number) => {
+    setSelectedLeadIdForFollowup(leadId);
+    setOpenFollowupForm(true);
   };
 
   const handleTaskFormClose = () => {
@@ -363,7 +375,9 @@ const LeadManagement: React.FC = () => {
           enableMultiSelect={true}
           onRefresh={refetch}
           onCreateTask={handleCreateTask}
+          onScheduleFollowup={handleScheduleFollowup}
           onViewNotes={handleViewNotes}
+          rowsPerPageOptions={[50, 75, 100, 500]}
         />
       </Paper>
 
@@ -398,6 +412,21 @@ const LeadManagement: React.FC = () => {
         onSuccess={handleTaskFormSuccess}
         task={null}
         preSelectedLeadId={selectedLeadForTask?.id} // ✅ Pass the lead ID
+      />
+
+      {/* Follow-up Form Modal */}
+      <FollowupForm
+        open={openFollowupForm}
+        onClose={() => {
+          setOpenFollowupForm(false);
+          setSelectedLeadIdForFollowup(null);
+        }}
+        onSuccess={() => {
+          setOpenFollowupForm(false);
+          setSelectedLeadIdForFollowup(null);
+          showNotification("Follow-up scheduled successfully", "success");
+        }}
+        preSelectedLeadId={selectedLeadIdForFollowup}
       />
 
       <LeadNotesDialog

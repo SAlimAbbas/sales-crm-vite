@@ -26,6 +26,7 @@ import {
   InputLabel,
   Select,
   Alert,
+  Badge,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -33,6 +34,7 @@ import {
   MoreVert as MoreVertIcon,
   Assignment as AssignIcon,
   LocalOffer as LocalOfferIcon,
+  AccessTime as AccessTimeIcon,
   Add as AddIcon,
   Note as NoteIcon,
 } from "@mui/icons-material";
@@ -61,8 +63,10 @@ interface LeadTableProps {
   enableMultiSelect?: boolean;
   onRefresh?: () => void;
   onCreateTask?: (lead: Lead) => void;
+  onScheduleFollowup?: (leadId: number) => void;
   onViewNotes?: (leadId: number) => void;
   currentUser?: any;
+  rowsPerPageOptions?: number[];
 }
 
 // type Order = "asc" | "desc";
@@ -77,7 +81,7 @@ interface HeadCell {
 
 const headCells: HeadCell[] = [
   { id: "company_name", label: "Company", sortable: true, minWidth: 200 },
-  { id: "owner_name", label: "Contact", sortable: true, minWidth: 150 },
+  { id: "owner_name", label: "Name", sortable: true, minWidth: 150 },
   { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
   { id: "source", label: "Source", sortable: true, minWidth: 120 },
   { id: "country", label: "Country", sortable: true, minWidth: 100 },
@@ -113,7 +117,9 @@ const LeadTable: React.FC<LeadTableProps> = ({
   onRefresh,
   onCreateTask,
   onViewNotes,
+  onScheduleFollowup,
   currentUser,
+  rowsPerPageOptions = [50, 75, 100, 500],
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -347,7 +353,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   };
 
   if (loading) {
-    return <LoadingSkeleton variant="leads" message="Loading leads..."  />;
+    return <LoadingSkeleton variant="leads" message="Loading leads..." />;
   }
 
   return (
@@ -526,7 +532,13 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
                   <TableCell align="right">
                     <Box display="flex" gap={0.5} justifyContent="flex-end">
-                      <Tooltip title="View/Add Notes">
+                      <Tooltip
+                        title={
+                          lead.notes_count && lead.notes_count > 0
+                            ? `View ${lead.notes_count} Note(s)`
+                            : "Add Note"
+                        }
+                      >
                         <IconButton
                           size="small"
                           onClick={(e) => {
@@ -535,8 +547,29 @@ const LeadTable: React.FC<LeadTableProps> = ({
                               onViewNotes(lead.id);
                             }
                           }}
+                          sx={{
+                            color:
+                              lead.notes_count && lead.notes_count > 0
+                                ? "#1976d2"
+                                : "inherit",
+                          }}
                         >
-                          <NoteIcon fontSize="small" />
+                          <Badge
+                            badgeContent={lead.notes_count || 0}
+                            color="primary"
+                            invisible={
+                              !lead.notes_count || lead.notes_count === 0
+                            }
+                            sx={{
+                              "& .MuiBadge-badge": {
+                                fontSize: "0.6rem",
+                                height: "16px",
+                                minWidth: "16px",
+                              },
+                            }}
+                          >
+                            <NoteIcon fontSize="small" />
+                          </Badge>
                         </IconButton>
                       </Tooltip>
 
@@ -583,7 +616,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50, 100]}
+        rowsPerPageOptions={rowsPerPageOptions}
         component="div"
         count={total}
         rowsPerPage={rowsPerPage}
@@ -620,6 +653,17 @@ const LeadTable: React.FC<LeadTableProps> = ({
         >
           <AddIcon fontSize="small" sx={{ mr: 1 }} />
           Create Task
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (selectedLead && onScheduleFollowup) {
+              onScheduleFollowup(selectedLead.id);
+            }
+            handleMenuClose();
+          }}
+        >
+          <AccessTimeIcon fontSize="small" sx={{ mr: 1 }} />
+          Schedule Follow-up
         </MenuItem>
 
         <MenuItem

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,9 +6,9 @@ import {
   DialogActions,
   IconButton,
   Box,
-  Typography
-} from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+  Typography,
+} from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
 
 interface CustomModalProps {
   open: boolean;
@@ -16,7 +16,7 @@ interface CustomModalProps {
   title: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
   fullWidth?: boolean;
 }
 
@@ -26,17 +26,21 @@ const CustomModal: React.FC<CustomModalProps> = ({
   title,
   children,
   actions,
-  maxWidth = 'md',
-  fullWidth = true
+  maxWidth = "md",
+  fullWidth = true,
 }) => {
   return (
     <Dialog
       open={open}
-      onClose={onClose}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
       PaperProps={{
-        sx: { borderRadius: 2 }
+        sx: { borderRadius: 2 },
+      }}
+      onClose={(event, reason) => {
+        if (reason !== "backdropClick") {
+          onClose();
+        }
       }}
     >
       <DialogTitle>
@@ -44,25 +48,15 @@ const CustomModal: React.FC<CustomModalProps> = ({
           <Typography variant="h6" component="div">
             {title}
           </Typography>
-          <IconButton
-            onClick={onClose}
-            size="small"
-            sx={{ ml: 2 }}
-          >
+          <IconButton onClick={onClose} size="small" sx={{ ml: 2 }}>
             <CloseIcon />
           </IconButton>
         </Box>
       </DialogTitle>
-      
-      <DialogContent dividers>
-        {children}
-      </DialogContent>
-      
-      {actions && (
-        <DialogActions sx={{ p: 2 }}>
-          {actions}
-        </DialogActions>
-      )}
+
+      <DialogContent dividers>{children}</DialogContent>
+
+      {actions && <DialogActions sx={{ p: 2 }}>{actions}</DialogActions>}
     </Dialog>
   );
 };

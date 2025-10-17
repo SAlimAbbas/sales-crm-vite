@@ -59,6 +59,21 @@ const TaskManagement: React.FC = () => {
         per_page: rowsPerPage,
         status: statusFilter !== "all" ? statusFilter : undefined,
       }),
+    enabled: viewMode === "table",
+  });
+
+  // ✅ Add new query for board view (fetches ALL tasks)
+  const {
+    data: boardTasksData,
+    isLoading: isBoardLoading,
+    refetch: refetchBoard,
+  } = useQuery<any>({
+    queryKey: ["tasks-board"],
+    queryFn: () =>
+      taskService.getTasks({
+        per_page: 1000, // Get all tasks for board
+      }),
+    enabled: viewMode === "board", // ✅ Only run for board view
   });
 
   // Tab configuration
@@ -309,7 +324,16 @@ const TaskManagement: React.FC = () => {
 
           {/* Refresh Button */}
           <Tooltip title="Refresh">
-            <IconButton onClick={() => refetch()} color="primary">
+            <IconButton
+              onClick={() => {
+                if (viewMode === "table") {
+                  refetch();
+                } else {
+                  refetchBoard();
+                }
+              }}
+              color="primary"
+            >
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -364,11 +388,11 @@ const TaskManagement: React.FC = () => {
         )
       ) : (
         <TaskBoard
-          tasks={tasksData?.data || []}
+          tasks={boardTasksData?.data || []}
           onEdit={handleEdit}
           onDelete={user?.role === "admin" ? handleDeleteClick : undefined}
           onStatusChange={handleStatusChangeClick}
-          loading={isLoading}
+          loading={isBoardLoading}
         />
       )}
 

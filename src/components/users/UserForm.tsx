@@ -67,8 +67,6 @@ const UserForm: React.FC<UserFormProps> = ({
     validationSchema: getValidationSchema(!!user), // Pass whether we're editing
     enableReinitialize: true, // Add this to reinitialize when user prop changes
     onSubmit: async (values, { setSubmitting }) => {
-      console.log("🔄 onSubmit triggered!");
-      console.log("📋 Form values:", values);
 
       setLoading(true);
       setSubmitting(true);
@@ -92,9 +90,6 @@ const UserForm: React.FC<UserFormProps> = ({
 
         onSuccess();
       } catch (error: any) {
-        console.error("❌ Form submission error:", error);
-        console.error("❌ Error response:", error.response);
-
         if (error.response?.data?.errors) {
           formik.setErrors(error.response.data.errors);
         } else {

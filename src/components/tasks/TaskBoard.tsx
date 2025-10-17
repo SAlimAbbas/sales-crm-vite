@@ -8,6 +8,8 @@ import {
 } from "@mui/icons-material";
 import { Task } from "../../types";
 import TaskCard from "./TaskCard";
+import LoadingSkeleton from "../common/LoadingSkeleton";
+import { theme } from "../../styles/theme";
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -96,16 +98,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   };
 
   if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight={400}
-      >
-        <Typography>Loading tasks...</Typography>
-      </Box>
-    );
+    return <LoadingSkeleton variant="task-board" message="Loading tasks..." />;
   }
 
   return (
@@ -122,7 +115,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 sx={{
                   minHeight: 600,
                   backgroundColor: column.bgColor,
-                  border: `1px solid ${column.color}20`,
                 }}
               >
                 {/* Column Header */}
@@ -158,7 +150,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                       sx={{
                         "& .MuiBadge-badge": {
                           backgroundColor: column.color,
-                          color: "white",
                         },
                       }}
                     >
@@ -208,7 +199,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                     >
                       <Typography
                         variant="body2"
-                        color="textSecondary"
+                        color={theme.palette.text.primary}
                         textAlign="center"
                       >
                         No {column.title.toLowerCase()} tasks
@@ -236,7 +227,10 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
       </Grid>
 
       {/* Board Summary */}
-      <Paper elevation={1} sx={{ mt: 3, p: 2, bgcolor: (theme) => theme.palette.background.paper  }}>
+      <Paper
+        elevation={1}
+        sx={{ mt: 3, p: 2, bgcolor: (theme) => theme.palette.background.paper }}
+      >
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h6" color="textSecondary">
             Board Summary

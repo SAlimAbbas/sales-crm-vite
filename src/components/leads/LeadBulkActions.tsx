@@ -172,7 +172,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     }
   };
 
-   const statusOptions = [
+  const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
     ...(currentUser.role === "admin" || currentUser.role === "manager"
       ? [{ value: LEAD_STATUS.UNASSIGNED, label: "Unassigned" }]
@@ -241,14 +241,18 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       >
         {currentUser.role === "admin" || currentUser.role === "manager" ? (
           <MenuItem
-          onClick={() => {
-            setAssignDialog({ open: true, salespersonId: "", loading: false });
-            handleMenuClose();
-          }}
-        >
-          <AssignIcon fontSize="small" sx={{ mr: 1 }} />
-          Assign to Salesperson
-        </MenuItem>
+            onClick={() => {
+              setAssignDialog({
+                open: true,
+                salespersonId: "",
+                loading: false,
+              });
+              handleMenuClose();
+            }}
+          >
+            <AssignIcon fontSize="small" sx={{ mr: 1 }} />
+            Assign to Salesperson
+          </MenuItem>
         ) : null}
 
         <MenuItem
@@ -261,18 +265,22 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
           Update Status
         </MenuItem>
 
-        <Divider />
+        {currentUser.role === "admin" || currentUser.role === "manager" ? (
+          <>
+            <Divider />
 
-        <MenuItem
-          onClick={() => {
-            setDeleteDialog({ open: true, loading: false });
-            handleMenuClose();
-          }}
-          sx={{ color: "error.main" }}
-        >
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete Leads
-        </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setDeleteDialog({ open: true, loading: false });
+                handleMenuClose();
+              }}
+              sx={{ color: "error.main" }}
+            >
+              <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+              Delete Leads
+            </MenuItem>
+          </>
+        ) : null}
       </Menu>
 
       {/* Bulk Assign Dialog */}

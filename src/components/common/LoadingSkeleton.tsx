@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Skeleton, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  Paper,
+  Skeleton,
+  Typography,
+} from "@mui/material";
 
 interface LoadingSkeletonProps {
   message?: string;
@@ -10,6 +18,7 @@ interface LoadingSkeletonProps {
     | "card"
     | "list"
     | "kpi"
+    | "task-board"
     | "chart"
     | "dashboard"
     | "leads"
@@ -96,12 +105,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 
             {/* Quick Actions */}
             <Box mb={3}>
-              <Skeleton
-                variant="text"
-                width={150}
-                height={32}
-                sx={{ mb: 2 }}
-              />
+              <Skeleton variant="text" width={150} height={32} sx={{ mb: 2 }} />
               <Box display="grid" gridTemplateColumns="repeat(4, 1fr)" gap={2}>
                 {Array.from({ length: 4 }).map((_, index) => (
                   <Skeleton
@@ -143,11 +147,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
                   alignItems="center"
                   height={350}
                 >
-                  <Skeleton
-                    variant="circular"
-                    width={280}
-                    height={280}
-                  />
+                  <Skeleton variant="circular" width={280} height={280} />
                 </Box>
               </Box>
             </Box>
@@ -156,16 +156,16 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 
       case "leads":
         return (
-          <Box sx={{p: 3, minHeight: "100vh",width: "100%" }}>
+          <Box sx={{ p: 3, minHeight: "100vh", width: "100%" }}>
             {/* Table */}
-            <Box sx={{borderRadius: 2, overflow: "hidden" }}>
+            <Box sx={{ borderRadius: 2, overflow: "hidden" }}>
               {/* Table Header */}
               <Box
                 display="grid"
                 gridTemplateColumns="2fr 1.5fr 1fr 1fr 1fr 1fr"
                 gap={2}
                 p={2}
-                sx={{borderBottom: "1px solid #e0e0e0" }}
+                sx={{ borderBottom: "1px solid #e0e0e0" }}
               >
                 {["Name", "Email", "Phone", "Status", "Source", "Actions"].map(
                   (_, index) => (
@@ -238,17 +238,16 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 
       case "task":
         return (
-          <Box sx={{p: 3, minHeight: "100vh", width: "100%" }}>
-
+          <Box sx={{ p: 3, minHeight: "100vh", width: "100%" }}>
             {/* Table */}
-            <Box sx={{borderRadius: 2, overflow: "hidden" }}>
+            <Box sx={{ borderRadius: 2, overflow: "hidden" }}>
               {/* Table Header */}
               <Box
                 display="grid"
                 gridTemplateColumns="2fr 1fr 1fr 1fr 1.5fr 1fr"
                 gap={2}
                 p={2}
-                sx={{borderBottom: "1px solid #e0e0e0" }}
+                sx={{ borderBottom: "1px solid #e0e0e0" }}
               >
                 {[
                   "Task",
@@ -338,9 +337,198 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
           </Box>
         );
 
+      case "task-board":
+        return (
+          <Box sx={{ p: 3, minHeight: "100vh", width: "100%" }}>
+            {/* Board Grid - 4 Columns */}
+            <Grid container spacing={2} sx={{ minWidth: 800 }}>
+              {/* Create 4 columns for Pending, In Progress, Completed, Overdue */}
+              {Array.from({ length: 4 }).map((_, colIndex) => (
+                <Grid size={{ xs: 12, md: 3 }} key={colIndex}>
+                  <Paper
+                    elevation={1}
+                    sx={{
+                      minHeight: 600,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    {/* Column Header */}
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderBottom: "2px solid #757575",
+                      }}
+                    >
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        mb={1}
+                      >
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Skeleton variant="circular" width={24} height={24} />
+                          <Skeleton variant="text" width={100} height={28} />
+                        </Box>
+                        <Skeleton variant="circular" width={24} height={24} />
+                      </Box>
+
+                      {/* Priority Stats */}
+                      <Box display="flex" gap={1} flexWrap="wrap">
+                        <Skeleton
+                          variant="rectangular"
+                          width={60}
+                          height={20}
+                          sx={{ borderRadius: 3 }}
+                        />
+                        <Skeleton
+                          variant="rectangular"
+                          width={55}
+                          height={20}
+                          sx={{ borderRadius: 3 }}
+                        />
+                        <Skeleton
+                          variant="rectangular"
+                          width={50}
+                          height={20}
+                          sx={{ borderRadius: 3 }}
+                        />
+                      </Box>
+                    </Box>
+
+                    {/* Column Content - Task Cards */}
+                    <Box sx={{ p: 1, maxHeight: 520, overflowY: "auto" }}>
+                      {Array.from({ length: 3 }).map((_, cardIndex) => (
+                        <Card
+                          key={cardIndex}
+                          sx={{
+                            mb: 1,
+                            borderLeft: "4px solid #757575",
+                          }}
+                        >
+                          <CardContent sx={{ pb: 1 }}>
+                            {/* Card Header */}
+                            <Box
+                              display="flex"
+                              justifyContent="space-between"
+                              alignItems="flex-start"
+                              mb={1}
+                            >
+                              <Skeleton
+                                variant="text"
+                                width="70%"
+                                height={24}
+                              />
+                              <Skeleton
+                                variant="circular"
+                                width={24}
+                                height={24}
+                              />
+                            </Box>
+
+                            {/* Status and Priority Chips */}
+                            <Box display="flex" gap={1} mb={2}>
+                              <Skeleton
+                                variant="rectangular"
+                                width={70}
+                                height={20}
+                                sx={{ borderRadius: 3 }}
+                              />
+                              <Skeleton
+                                variant="rectangular"
+                                width={50}
+                                height={20}
+                                sx={{ borderRadius: 3 }}
+                              />
+                            </Box>
+
+                            {/* Task Details */}
+                            <Box display="flex" flexDirection="column" gap={1}>
+                              {/* Due Date */}
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Skeleton
+                                  variant="circular"
+                                  width={16}
+                                  height={16}
+                                />
+                                <Skeleton
+                                  variant="text"
+                                  width="60%"
+                                  height={16}
+                                />
+                              </Box>
+
+                              {/* Assigned User */}
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Skeleton
+                                  variant="circular"
+                                  width={16}
+                                  height={16}
+                                />
+                                <Skeleton
+                                  variant="text"
+                                  width="50%"
+                                  height={16}
+                                />
+                              </Box>
+
+                              {/* Related Lead */}
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Skeleton
+                                  variant="circular"
+                                  width={16}
+                                  height={16}
+                                />
+                                <Skeleton
+                                  variant="text"
+                                  width="55%"
+                                  height={16}
+                                />
+                              </Box>
+                            </Box>
+
+                            {/* Avatar */}
+                            <Box
+                              display="flex"
+                              justifyContent="flex-end"
+                              mt={1}
+                            >
+                              <Skeleton
+                                variant="circular"
+                                width={24}
+                                height={24}
+                              />
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </Box>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Board Summary */}
+            <Paper elevation={1} sx={{ mt: 3, p: 2 }}>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Skeleton variant="text" width={150} height={28} />
+                <Box display="flex" gap={2}>
+                  <Skeleton variant="text" width={100} height={20} />
+                  <Skeleton variant="text" width={80} height={20} />
+                  <Skeleton variant="text" width={100} height={20} />
+                  <Skeleton variant="text" width={120} height={20} />
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
+        );
+
       case "followups":
         return (
-          <Box sx={{p: 3, minHeight: "100vh" }}>
+          <Box sx={{ p: 3, minHeight: "100vh" }}>
             {/* Header */}
             <Box
               display="flex"
@@ -463,9 +651,9 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 
       case "user":
         return (
-          <Box sx={{minHeight: "100vh", width: "100%" }}>
+          <Box sx={{ minHeight: "100vh", width: "100%" }}>
             {/* Table */}
-            <Box sx={{borderRadius: 2, overflow: "hidden" }}>
+            <Box sx={{ borderRadius: 2, overflow: "hidden" }}>
               {/* Table Header */}
               <Box
                 display="grid"
@@ -591,7 +779,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
             <Skeleton
               variant="rectangular"
               width={width}
-              height={200}
+              height={"100vh"}
               sx={{ mb: 2 }}
             />
             <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1 }} />
