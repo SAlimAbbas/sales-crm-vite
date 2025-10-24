@@ -67,7 +67,7 @@ const ReminderList: React.FC = () => {
 
   const getUpcomingFollowups = () => {
     return (upcomingFollowups?.data || [])
-      .filter((followup:any) => !followup.is_completed && !followup.is_overdue)
+      .filter((followup: any) => !followup.is_completed && !followup.is_overdue)
       .slice(0, 5); // Show only 5 upcoming
   };
 
@@ -166,7 +166,7 @@ const ReminderList: React.FC = () => {
         <Paper sx={{ p: 2 }}>
           <Box display="flex" alignItems="center" gap={1} mb={2}>
             <TimeIcon color="primary" />
-            <Typography variant="h6">Upcoming Follow-ups</Typography>
+            <Typography variant="h6">Upcoming Reminders</Typography>
           </Box>
 
           <List>
@@ -182,15 +182,30 @@ const ReminderList: React.FC = () => {
                     </Typography>
                   }
                   secondary={
-                    <Box>
-                      <Typography variant="body2">
+                    <Box component="span">
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        component="span"
+                        display="block"
+                      >
                         Scheduled: {formatTime(followup.scheduled_at)}
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        component="span"
+                        display="block"
+                      >
                         Contact: {followup.lead?.contact_number} •{" "}
                         {followup.lead?.email}
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        component="span"
+                        display="block"
+                      >
                         Assigned to: {followup.salesperson?.name}
                       </Typography>
                     </Box>

@@ -116,7 +116,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
     <CustomModal
       open={open}
       onClose={onClose}
-      title={followup ? "Edit Follow-up" : "Schedule Follow-up"}
+      title={followup ? "Edit Reminder" : "Schedule Reminder"}
       maxWidth="md"
       actions={
         <Box>
@@ -159,7 +159,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
                 ))}
                 {availableLeads.length === 0 && (
                   <MenuItem disabled>
-                    No available leads without existing follow-ups
+                    No available leads without existing reminders
                   </MenuItem>
                 )}
               </Select>

@@ -18,6 +18,12 @@ import ConfirmDialog from "../common/ConfirmDialog";
 import { useNotification } from "../../contexts/NotificationContext";
 import { Followup } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
+import FollowupCalendar from "./FollowupCalendar";
+import ReminderList from "./ReminderList";
+import {
+  CalendarMonth as CalendarIcon,
+  List as ListIcon,
+} from "@mui/icons-material";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -51,6 +57,7 @@ const FollowupManagement: React.FC = () => {
   const [selectedFollowup, setSelectedFollowup] = useState<Followup | null>(
     null
   );
+  const [view, setView] = useState<"table" | "calendar" | "list">("table");
   const { showNotification } = useNotification();
   const { user: currentUser } = useAuth();
 
@@ -253,8 +260,40 @@ const FollowupManagement: React.FC = () => {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h4">Follow-up Management</Typography>
-        <Box display="flex" gap={2}>
+        <Typography variant="h4">Reminders Management</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          {/* View Toggle Buttons */}
+          <Box
+            display="flex"
+            gap={1}
+            sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 0.5 }}
+          >
+            <Button
+              size="small"
+              variant={view === "table" ? "contained" : "outlined"}
+              onClick={() => setView("table")}
+              startIcon={<ListIcon />}
+            >
+              Table
+            </Button>
+            <Button
+              size="small"
+              variant={view === "calendar" ? "contained" : "outlined"}
+              onClick={() => setView("calendar")}
+              startIcon={<CalendarIcon />}
+            >
+              Calendar
+            </Button>
+            <Button
+              size="small"
+              variant={view === "list" ? "contained" : "outlined"}
+              onClick={() => setView("list")}
+              startIcon={<ListIcon />}
+            >
+              Quick View
+            </Button>
+          </Box>
+
           <IconButton onClick={() => refetch()} color="primary">
             <RefreshIcon />
           </IconButton>
@@ -263,60 +302,66 @@ const FollowupManagement: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={() => setOpenForm(true)}
           >
-            Schedule Follow-up
+            Schedule Reminder
           </Button>
         </Box>
       </Box>
 
-      <Paper sx={{ p: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 2 }}>
-          <Tab label="Scheduled" />
-          <Tab label="Completed" />
-          <Tab label="Overdue" />
-        </Tabs>
+      {view === "table" && (
+        <Paper sx={{ p: 3 }}>
+          <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 2 }}>
+            <Tab label="Scheduled" />
+            <Tab label="Completed" />
+            <Tab label="Overdue" />
+          </Tabs>
 
-        <TabPanel value={tabValue} index={0}>
-          <CustomTable
-            columns={columns}
-            data={followupsData?.data || []}
-            loading={isLoading}
-            pagination={{
-              page,
-              rowsPerPage,
-              total: followupsData?.total || 0,
-              onPageChange: setPage,
-              onRowsPerPageChange: setRowsPerPage,
-            }}
-            emptyMessage="No scheduled follow-ups found"
-          />
-        </TabPanel>
+          <TabPanel value={tabValue} index={0}>
+            <CustomTable
+              columns={columns}
+              data={followupsData?.data || []}
+              loading={isLoading}
+              pagination={{
+                page,
+                rowsPerPage,
+                total: followupsData?.total || 0,
+                onPageChange: setPage,
+                onRowsPerPageChange: setRowsPerPage,
+              }}
+              emptyMessage="No scheduled follow-ups found"
+            />
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={1}>
-          <CustomTable
-            columns={columns}
-            data={followupsData?.data || []}
-            loading={isLoading}
-            pagination={{
-              page,
-              rowsPerPage,
-              total: followupsData?.total || 0,
-              onPageChange: setPage,
-              onRowsPerPageChange: setRowsPerPage,
-            }}
-            emptyMessage="No completed follow-ups found"
-          />
-        </TabPanel>
+          <TabPanel value={tabValue} index={1}>
+            <CustomTable
+              columns={columns}
+              data={followupsData?.data || []}
+              loading={isLoading}
+              pagination={{
+                page,
+                rowsPerPage,
+                total: followupsData?.total || 0,
+                onPageChange: setPage,
+                onRowsPerPageChange: setRowsPerPage,
+              }}
+              emptyMessage="No completed follow-ups found"
+            />
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={2}>
-          <CustomTable
-            columns={columns}
-            data={overdueFollowups || []}
-            loading={isLoading}
-            pagination={undefined}
-            emptyMessage="No overdue follow-ups found"
-          />
-        </TabPanel>
-      </Paper>
+          <TabPanel value={tabValue} index={2}>
+            <CustomTable
+              columns={columns}
+              data={overdueFollowups || []}
+              loading={isLoading}
+              pagination={undefined}
+              emptyMessage="No overdue follow-ups found"
+            />
+          </TabPanel>
+        </Paper>
+      )}
+
+      {view === "calendar" && <FollowupCalendar onRefresh={refetch} />}
+
+      {view === "list" && <ReminderList />}
 
       <FollowupForm
         open={openForm}

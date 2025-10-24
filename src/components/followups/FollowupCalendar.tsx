@@ -28,9 +28,14 @@ const localizer = momentLocalizer(moment);
 interface CalendarEvent extends Event {
   followup: Followup;
 }
+interface FollowupCalendarProps {
+  onRefresh?: () => void;
+}
 
-const FollowupCalendar: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null| undefined>(null);
+const FollowupCalendar: React.FC<FollowupCalendarProps> = ({ onRefresh }) => {
+  const [selectedDate, setSelectedDate] = useState<Date | null | undefined>(
+    null
+  );
   const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
   // const { showNotification } = useNotification();
 
@@ -39,9 +44,9 @@ const FollowupCalendar: React.FC = () => {
     queryFn: () => followupService.getFollowups({ per_page: 100 }),
   });
 
-  const events: CalendarEvent[]  = (followups?.data || [])
-    .filter((followup:any) => !followup.is_completed)
-    .map((followup:any) => ({
+  const events: CalendarEvent[] = (followups?.data || [])
+    .filter((followup: any) => !followup.is_completed)
+    .map((followup: any) => ({
       title: followup.lead?.company_name || "Unknown Company",
       start: new Date(followup.scheduled_at),
       end: new Date(new Date(followup.scheduled_at).getTime() + 30 * 60000), // 30 minutes duration
@@ -94,7 +99,7 @@ const FollowupCalendar: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Follow-up Calendar
+        Calendar
       </Typography>
 
       <Paper sx={{ p: 3, height: "70vh" }}>
@@ -140,7 +145,7 @@ const FollowupCalendar: React.FC = () => {
         <DialogContent>
           {selectedEvents.length === 0 ? (
             <Typography color="textSecondary">
-              No follow-ups scheduled for this date
+              No reminders scheduled for this date
             </Typography>
           ) : (
             <List>
@@ -164,16 +169,31 @@ const FollowupCalendar: React.FC = () => {
                       </Box>
                     }
                     secondary={
-                      <Box>
-                        <Typography variant="body2" color="textSecondary">
+                      <Box component="span">
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          component="span"
+                          display="block"
+                        >
                           Time: {formatTime(event.start)} -{" "}
                           {formatTime(event.end)}
                         </Typography>
-                        <Typography variant="body2" color="textSecondary">
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          component="span"
+                          display="block"
+                        >
                           Contact: {event.followup.lead?.contact_number} •{" "}
                           {event.followup.lead?.email}
                         </Typography>
-                        <Typography variant="body2" color="textSecondary">
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          component="span"
+                          display="block"
+                        >
                           Assigned to: {event.followup.salesperson?.name}
                         </Typography>
                       </Box>

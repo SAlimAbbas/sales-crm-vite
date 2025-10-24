@@ -663,7 +663,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
           }}
         >
           <AccessTimeIcon fontSize="small" sx={{ mr: 1 }} />
-          Schedule Follow-up
+          Set Reminder
         </MenuItem>
 
         <MenuItem
