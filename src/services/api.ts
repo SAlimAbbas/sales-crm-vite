@@ -53,7 +53,12 @@ export const apiService = {
 
   // For users endpoint, don't wrap in ApiResponse since Laravel returns paginated data directly
   get: <T>(url: string, params?: any) => {
-    if (url === "/users" || url === "/analytics/dashboard") {
+    if (
+      url === "/users" ||
+      url === "/analytics/dashboard" ||
+      url.startsWith("/notifications")
+    ) {
+      // ✅ Handle all notification endpoints
       return api.get<T>(url, { params }).then((response) => response.data);
     }
     return api

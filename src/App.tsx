@@ -29,6 +29,8 @@ import { CustomThemeProvider } from "./contexts/ThemeContext";
 // Styles
 import { theme } from "./styles/theme";
 import "./App.css";
+import { NotificationSystemProvider } from "./contexts/NotificationSystemContext";
+import NotificationsPage from "./components/notifications/NotificationsPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -75,6 +77,7 @@ const AppRoutes: React.FC = () => {
             <Layout>
               <Routes>
                 <Route index element={<Dashboard />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="leads" element={<LeadManagement />} />
                 <Route path="tasks" element={<TaskManagement />} />
@@ -97,9 +100,11 @@ function App() {
         <CssBaseline />
         <AuthProvider>
           <NotificationProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
+            <NotificationSystemProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </NotificationSystemProvider>
           </NotificationProvider>
         </AuthProvider>
       </CustomThemeProvider>
