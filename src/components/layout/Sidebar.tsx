@@ -62,13 +62,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       roles: ["admin", "manager", "salesperson"],
     },
     {
-      text: "Follow-ups",
+      text: "Reminders",
       icon: <ScheduleIcon />,
       path: "/followups",
       roles: ["admin", "manager", "salesperson"],
     },
     {
-      text: "Analytics",
+      text: "Analytics (Under Development)",
       icon: <AnalyticsIcon />,
       path: "/analytics",
       roles: ["admin", "manager"],
