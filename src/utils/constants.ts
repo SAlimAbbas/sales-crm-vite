@@ -5,18 +5,18 @@ export const ROLES = {
 } as const;
 
 export const LEAD_STATUS = {
-  UNASSIGNED: 'unassigned',
-  ASSIGNED: 'assigned',
-  RINGING: 'ringing',
-  CALL_BACK: 'call_back',
-  FOLLOW_UP: 'follow_up',
-  PROSPECTS: 'prospects',
-  CONVERTED: 'converted',
-  INVALID_NUMBER: 'invalid_number',
-  WHATSAPPED: 'whatsapped',
-  INVALID_CONTACT: 'invalid_contact',
-  NOT_ON_WHATSAPP: 'not_on_whatsapp',
-} as const;
+  UNASSIGNED: "unassigned",
+  ASSIGNED: "assigned",
+  PROSPECTS: "prospects",
+  CONVERTED: "converted",
+  RINGING: "ringing",
+  CALL_BACK: "call_back",
+  FOLLOW_UP: "follow_up",
+  NOT_INTERESTED: "not_interested", // ✅ Changed from INVALID_NUMBER
+  WHATSAPPED: "whatsapped",
+  INVALID_CONTACT: "invalid_contact",
+  NOT_ON_WHATSAPP: "not_on_whatsapp",
+};
 
 export const TASK_PRIORITY = {
   LOW: 'low',

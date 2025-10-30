@@ -21,7 +21,7 @@ const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({
       [LEAD_STATUS.FOLLOW_UP]: "Follow Up",
       [LEAD_STATUS.PROSPECTS]: "Prospects",
       [LEAD_STATUS.CONVERTED]: "Converted",
-      [LEAD_STATUS.INVALID_NUMBER]: "Invalid Number",
+      [LEAD_STATUS.NOT_INTERESTED]: "Not Interested",
       [LEAD_STATUS.WHATSAPPED]: "WhatsApped",
       [LEAD_STATUS.INVALID_CONTACT]: "Invalid Contact",
       [LEAD_STATUS.NOT_ON_WHATSAPP]: "Not on WhatsApp",

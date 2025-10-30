@@ -199,7 +199,7 @@ const AnalyticsDashboard: React.FC = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Active Follow-ups"
+            title="Active Reminders"
             value={summary?.active_followups || 0}
             icon={<ScheduleIcon />}
             color="info"

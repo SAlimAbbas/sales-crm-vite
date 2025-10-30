@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { showNotification } = useNotification();
   const { toggleTheme, isDark } = useThemeContext();
-  const { unreadCount, fetchNotifications } = useNotificationSystem();
+  const { unreadCount, fetchNotifications,markAllAsRead } = useNotificationSystem();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [notificationDrawerOpen, setNotificationDrawerOpen] =
@@ -44,6 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const handleNotificationsOpen = () => {
     setNotificationDrawerOpen(true);
+    markAllAsRead();
     fetchNotifications(); // Refresh notifications when opening
   };
 

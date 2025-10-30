@@ -36,7 +36,7 @@ export const getStatusColor = (status: string): string => {
     [LEAD_STATUS.RINGING]: "warning",
     [LEAD_STATUS.CALL_BACK]: "warning",
     [LEAD_STATUS.FOLLOW_UP]: "info",
-    [LEAD_STATUS.INVALID_NUMBER]: "error",
+    [LEAD_STATUS.NOT_INTERESTED]: "error",
     [LEAD_STATUS.INVALID_CONTACT]: "error",
     [LEAD_STATUS.WHATSAPPED]: "success",
     [LEAD_STATUS.NOT_ON_WHATSAPP]: "default",

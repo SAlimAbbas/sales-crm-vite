@@ -14,7 +14,9 @@ import * as yup from "yup";
 import { useAuth } from "../../contexts/AuthContext";
 import CustomModal from "../ui/CustomModal";
 // import FormInput from "../ui/FormElements/FormInput";
-import FormDatePicker from "../ui/FormElements/FormDatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { followupService } from "../../services/followupService";
 import { leadService } from "../../services/leadService";
 import { useNotification } from "../../contexts/NotificationContext";
@@ -36,8 +38,8 @@ const validationSchema = yup.object({
     .required("Scheduled time is required")
     .test(
       "is-future",
-      "Scheduled time must be at least 1 minute in the future",
-      (value) => value && value > new Date(Date.now() + 6000) // At least 1 minute ahead
+      "Scheduled time must be at least 10 minutes in the future", // ✅ Changed message
+      (value) => value && value > new Date(Date.now() + 10 * 60 * 1000) // ✅ 10 minutes ahead
     ),
 });
 
@@ -69,7 +71,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
   const formik = useFormik({
     initialValues: {
       lead_id: "",
-      scheduled_at: new Date(Date.now() + 3600000).toISOString(), // Add 1 hour from now
+      scheduled_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // ✅ 15 minutes from now
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -167,24 +169,32 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <FormDatePicker
-              label="Scheduled Date & Time *"
-              value={
-                formik.values.scheduled_at
-                  ? new Date(formik.values.scheduled_at)
-                  : null
-              }
-              onChange={(value) =>
-                formik.setFieldValue("scheduled_at", value?.toISOString())
-              }
-              error={
-                formik.touched.scheduled_at &&
-                Boolean(formik.errors.scheduled_at)
-                  ? String(formik.errors.scheduled_at)
-                  : undefined
-              }
-              minDate={new Date()}
-            />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateTimePicker
+                label="Scheduled Date & Time *"
+                value={
+                  formik.values.scheduled_at
+                    ? new Date(formik.values.scheduled_at)
+                    : null
+                }
+                onChange={(value) =>
+                  formik.setFieldValue("scheduled_at", value?.toISOString())
+                }
+                minDateTime={new Date(Date.now() + 10 * 60 * 1000)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error:
+                      formik.touched.scheduled_at &&
+                      Boolean(formik.errors.scheduled_at),
+                    helperText:
+                      formik.touched.scheduled_at && formik.errors.scheduled_at
+                        ? formik.errors.scheduled_at
+                        : "You'll receive a reminder 5 minutes before", // ✅ Add helper text
+                  },
+                }}
+              />
+            </LocalizationProvider>
           </Grid>
         </Grid>
       </form>

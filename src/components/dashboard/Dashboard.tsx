@@ -114,7 +114,7 @@ const Dashboard: React.FC = () => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatsCard
-              title="Active Follow-ups"
+              title="Active Reminders"
               value="--"
               icon={<ScheduleIcon />}
               color="warning"
@@ -220,9 +220,9 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Active Follow-ups"
+            title="Active Reminders"
             value={stats?.active_followups || 0}
-            subtitle="Scheduled follow-ups"
+            subtitle="Scheduled Reminders"
             icon={<ScheduleIcon />}
             color="warning"
           />

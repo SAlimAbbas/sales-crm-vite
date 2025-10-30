@@ -25,6 +25,8 @@ import FollowupManagement from "./components/followups/FollowupManagement";
 import AnalyticsDashboard from "./components/analytics/AnalyticsDashboard";
 import LoadingSkeleton from "./components/common/LoadingSkeleton";
 import { CustomThemeProvider } from "./contexts/ThemeContext";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 // Styles
 import { theme } from "./styles/theme";
@@ -98,15 +100,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <CustomThemeProvider>
         <CssBaseline />
-        <AuthProvider>
-          <NotificationProvider>
-            <NotificationSystemProvider>
-              <Router>
-                <AppRoutes />
-              </Router>
-            </NotificationSystemProvider>
-          </NotificationProvider>
-        </AuthProvider>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <AuthProvider>
+            <NotificationProvider>
+              <NotificationSystemProvider>
+                <Router>
+                  <AppRoutes />
+                </Router>
+              </NotificationSystemProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </LocalizationProvider>
       </CustomThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

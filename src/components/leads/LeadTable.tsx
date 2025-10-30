@@ -37,6 +37,7 @@ import {
   AccessTime as AccessTimeIcon,
   Add as AddIcon,
   Note as NoteIcon,
+  ContentCopy as ContentCopyIcon,
 } from "@mui/icons-material";
 import { Lead } from "../../types";
 import { getStatusColor } from "../../utils/helpers";
@@ -81,7 +82,8 @@ interface HeadCell {
 
 const headCells: HeadCell[] = [
   { id: "company_name", label: "Company", sortable: true, minWidth: 200 },
-  { id: "owner_name", label: "Name", sortable: true, minWidth: 150 },
+  { id: "owner_name", label: "Name", sortable: true, minWidth: 100 },
+  { id: "product", label: "Product", sortable: true, minWidth: 100 },
   { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
   { id: "source", label: "Source", sortable: true, minWidth: 120 },
   { id: "country", label: "Country", sortable: true, minWidth: 100 },
@@ -154,7 +156,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     { value: LEAD_STATUS.RINGING, label: "Ringing" },
     { value: LEAD_STATUS.CALL_BACK, label: "Call Back" },
     { value: LEAD_STATUS.FOLLOW_UP, label: "Follow Up" },
-    { value: LEAD_STATUS.INVALID_NUMBER, label: "Invalid Number" },
+    { value: LEAD_STATUS.NOT_INTERESTED, label: "Not Interested" }, // ✅ Changed
     { value: LEAD_STATUS.WHATSAPPED, label: "WhatsApped" },
     { value: LEAD_STATUS.INVALID_CONTACT, label: "Invalid Contact" },
     { value: LEAD_STATUS.NOT_ON_WHATSAPP, label: "Not on WhatsApp" },
@@ -478,8 +480,32 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
                   <TableCell>
                     <Typography variant="body2" noWrap>
-                      {lead.contact_number}
+                      {lead.product || "-"}
                     </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <Typography variant="body2" noWrap>
+                        {lead.contact_number}
+                      </Typography>
+                      <Tooltip title="Copy to clipboard">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(lead.contact_number);
+                            showNotification?.(
+                              "Phone number copied!",
+                              "success"
+                            );
+                          }}
+                          sx={{ padding: "2px" }}
+                        >
+                          <ContentCopyIcon sx={{ fontSize: "14px" }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
 
                   <TableCell>
@@ -512,7 +538,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                           label={lead.status.replace(/_/g, " ").toUpperCase()}
                           size="small"
                           color={getStatusColor(lead.status) as any}
-                          variant="outlined"
+                          variant="filled"
                         />
                       </Box>
                     </Tooltip>
@@ -727,7 +753,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         label={option.label}
                         size="small"
                         color={getStatusColor(option.value) as any}
-                        variant="outlined"
+                        variant="filled"
                       />
                     </Box>
                   </MenuItem>
