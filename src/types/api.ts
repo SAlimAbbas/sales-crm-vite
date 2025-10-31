@@ -14,8 +14,8 @@ export interface PaginationParams {
   per_page?: number;
   search?: string;
   sort_by?: string;
-  sort_order?: 'asc' | 'desc';
-  role?: 'admin' | 'manager' | 'salesperson';
+  sort_order?: "asc" | "desc";
+  role?: "admin" | "manager" | "salesperson";
   is_active?: boolean;
   start_date?: string;
   end_date?: string;
@@ -28,4 +28,5 @@ export interface BulkActionResponse {
   success: number;
   failed: number;
   duplicates?: number;
+  errors?: Array<{ row: number; error: string }>;
 }

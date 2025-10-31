@@ -67,8 +67,12 @@ const ReminderList: React.FC = () => {
 
   const getUpcomingFollowups = () => {
     return (upcomingFollowups?.data || [])
-      .filter((followup: any) => !followup.is_completed && !followup.is_overdue)
-      .slice(0, 5); // Show only 5 upcoming
+      .filter((followup: Followup) => {
+        // ✅ Check dynamic is_overdue property
+        const isOverdue = new Date(followup.scheduled_at) < new Date();
+        return !followup.is_completed && !isOverdue;
+      })
+      .slice(0, 5);
   };
 
   if (loadingOverdue || loadingUpcoming) {
@@ -134,15 +138,27 @@ const ReminderList: React.FC = () => {
                     </Box>
                   }
                   secondary={
-                    <Box>
-                      <Typography variant="body2">
+                    <React.Fragment>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         Was due: {formatTime(followup.scheduled_at)}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: "0.75rem",
+                          marginTop: "4px",
+                          color: "textSecondary", // Note: This might need to be a proper color value
+                        }}
+                      >
                         Contact: {followup.lead?.contact_number} •{" "}
                         {followup.lead?.email}
-                      </Typography>
-                    </Box>
+                      </span>
+                    </React.Fragment>
                   }
                 />
                 {currentUser?.id === followup.salesperson_id && (

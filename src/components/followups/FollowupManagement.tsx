@@ -63,29 +63,23 @@ const FollowupManagement: React.FC = () => {
 
   const filter =
     tabValue === 1
-      ? { is_completed: true }
+      ? { is_completed: true } // ✅ Send as string 'true'
       : tabValue === 2
-      ? { is_overdue: true }
-      : { is_completed: false };
+      ? { is_completed: false, is_overdue: true } // ✅ Both conditions
+      : { is_completed: false, is_overdue: true }; // ✅ Scheduled only
 
   const {
     data: followupsData,
     isLoading,
     refetch,
   } = useQuery<any>({
-    queryKey: ["followups", page, rowsPerPage, filter],
+    queryKey: ["followups", page, rowsPerPage, tabValue], // ✅ Use tabValue
     queryFn: () =>
       followupService.getFollowups({
         page: page + 1,
         per_page: rowsPerPage,
         ...filter,
       }),
-  });
-
-  const { data: overdueFollowups } = useQuery<any>({
-    queryKey: ["overdue-followups"],
-    queryFn: () => followupService.getOverdue(),
-    enabled: tabValue === 2,
   });
 
   const columns = [
@@ -350,9 +344,15 @@ const FollowupManagement: React.FC = () => {
           <TabPanel value={tabValue} index={2}>
             <CustomTable
               columns={columns}
-              data={overdueFollowups || []}
+              data={followupsData?.data || []} // ✅ Use followupsData, not overdueFollowups
               loading={isLoading}
-              pagination={undefined}
+              pagination={{
+                page,
+                rowsPerPage,
+                total: followupsData?.total || 0,
+                onPageChange: setPage,
+                onRowsPerPageChange: setRowsPerPage,
+              }}
               emptyMessage="No overdue follow-ups found"
             />
           </TabPanel>

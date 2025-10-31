@@ -186,6 +186,11 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     { value: LEAD_STATUS.WHATSAPPED, label: "WhatsApped" },
     { value: LEAD_STATUS.INVALID_CONTACT, label: "Invalid Contact" },
     { value: LEAD_STATUS.NOT_ON_WHATSAPP, label: "Not on WhatsApp" },
+    { value: LEAD_STATUS.BUSY, label: "Busy" }, // ✅ Add
+    { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" }, // ✅ Add
+    { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" }, // ✅ Add
+    { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" }, // ✅ Add
+    { value: LEAD_STATUS.NOT_REACHABLE, label: "Not Reachable" }, // ✅ Add
   ];
 
   if (selectedIds.length === 0) {

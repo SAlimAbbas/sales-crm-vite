@@ -38,13 +38,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  let notificationCounter = 0;
 
   const showNotification = (
     message: string,
     type: Notification["type"] = "info",
     duration = 6000
   ) => {
-    const id = Date.now().toString();
+    notificationCounter++;
+    const id = `${Date.now()}-${notificationCounter}`;
     setNotifications((prev) => [...prev, { id, message, type, duration }]);
   };
 

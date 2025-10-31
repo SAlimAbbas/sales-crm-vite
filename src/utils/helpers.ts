@@ -40,6 +40,11 @@ export const getStatusColor = (status: string): string => {
     [LEAD_STATUS.INVALID_CONTACT]: "error",
     [LEAD_STATUS.WHATSAPPED]: "success",
     [LEAD_STATUS.NOT_ON_WHATSAPP]: "default",
+    [LEAD_STATUS.BUSY]: "warning", // ✅ Add
+    [LEAD_STATUS.CALL_DISCONNECTED]: "secondary", // ✅ Add
+    [LEAD_STATUS.NO_RESPONSE]: "info", // ✅ Add
+    [LEAD_STATUS.SWITCHED_OFF]: "default", // ✅ Add
+    [LEAD_STATUS.NOT_REACHABLE]: "secondary", // ✅ Add
 
     // Task statuses
     [TASK_STATUS.COMPLETED]: "success",

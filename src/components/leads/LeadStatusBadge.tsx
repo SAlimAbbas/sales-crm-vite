@@ -25,6 +25,11 @@ const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({
       [LEAD_STATUS.WHATSAPPED]: "WhatsApped",
       [LEAD_STATUS.INVALID_CONTACT]: "Invalid Contact",
       [LEAD_STATUS.NOT_ON_WHATSAPP]: "Not on WhatsApp",
+      [LEAD_STATUS.BUSY]: "Busy", // ✅ Add
+      [LEAD_STATUS.CALL_DISCONNECTED]: "Call Disconnected", // ✅ Add
+      [LEAD_STATUS.NO_RESPONSE]: "No Response", // ✅ Add
+      [LEAD_STATUS.SWITCHED_OFF]: "Switched Off", // ✅ Add
+      [LEAD_STATUS.NOT_REACHABLE]: "Not Reachable", // ✅ Add
     };
 
     return statusMap[status] || status;

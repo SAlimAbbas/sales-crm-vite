@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Box, Typography, Button, Alert, LinearProgress } from "@mui/material";
-import {
-  Download as DownloadIcon,
-} from "@mui/icons-material";
+import { Download as DownloadIcon } from "@mui/icons-material";
 import CustomModal from "../ui/CustomModal";
 import FormUpload from "../ui/FormElements/FormUpload";
 import { leadService } from "../../services/leadService";
@@ -21,7 +19,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<{
+    success: number;
+    failed: number;
+    duplicates?: number;
+    errors?: Array<{ row: number; error: string }>;
+  } | null>(null);
   const { showNotification } = useNotification();
 
   const handleUpload = async () => {
@@ -37,16 +40,27 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
       const result = await leadService.bulkUpload(formData);
       setUploadResult(result);
 
-      if (result.success > 0) {
+      // Show only ONE notification based on the result
+      if (result.failed === 0 && result.success > 0) {
         showNotification(
           `Successfully uploaded ${result.success} leads`,
           "success"
         );
-        onSuccess();
+      } else if (result.success > 0 && result.failed > 0) {
+        showNotification(
+          `Uploaded ${result.success} leads, ${result.failed} failed`,
+          "warning"
+        );
+      } else if (result.failed > 0 && result.success === 0) {
+        showNotification(
+          `Upload failed: ${result.failed} leads could not be processed`,
+          "error"
+        );
       }
 
-      if (result.failed > 0) {
-        showNotification(`${result.failed} leads failed to upload`, "warning");
+      // Only call onSuccess if there were successful uploads
+      if (result.success > 0) {
+        onSuccess();
       }
     } catch (error: any) {
       showNotification(
@@ -123,26 +137,65 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
         {loading && (
           <Box sx={{ mt: 2 }}>
             <LinearProgress />
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Uploading file...
-            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mt: 2,
+              }}
+            >
+              <Typography variant="body2" color="primary">
+                Processing {files[0]?.name}... This may take a moment.
+              </Typography>
+            </Box>
           </Box>
         )}
 
         {uploadResult && (
           <Box sx={{ mt: 2 }}>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Upload completed: {uploadResult.success} successful,{" "}
-              {uploadResult.failed} failed
-              {uploadResult.duplicates &&
-                `, ${uploadResult.duplicates} duplicates`}
+            <Alert
+              severity={uploadResult.failed > 0 ? "warning" : "success"}
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="subtitle2" fontWeight="bold">
+                Upload Summary
+              </Typography>
+              <Typography variant="body2">
+                ✓ {uploadResult.success} leads uploaded successfully
+                {uploadResult.failed > 0 &&
+                  ` • ✗ ${uploadResult.failed} failed`}
+                {(uploadResult.duplicates ?? 0) > 0 &&
+                  ` • ⚠ ${uploadResult.duplicates} duplicates skipped`}
+              </Typography>
             </Alert>
 
-            {uploadResult.failed > 0 && (
-              <Typography variant="body2" color="textSecondary">
-                Please check your file format and try again. Ensure all required
-                fields are filled.
-              </Typography>
+            {uploadResult.errors && uploadResult.errors.length > 0 && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                  Failed Rows:
+                </Typography>
+                <Box sx={{ maxHeight: 200, overflow: "auto" }}>
+                  {uploadResult.errors.slice(0, 10).map((err, idx) => (
+                    <Typography
+                      key={idx}
+                      variant="body2"
+                      sx={{ fontSize: "0.85rem" }}
+                    >
+                      • Row {err.row}: {err.error}
+                    </Typography>
+                  ))}
+                  {uploadResult.errors.length > 10 && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      ...and {uploadResult.errors.length - 10} more errors
+                    </Typography>
+                  )}
+                </Box>
+              </Alert>
             )}
           </Box>
         )}
