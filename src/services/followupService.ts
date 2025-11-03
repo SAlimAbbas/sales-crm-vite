@@ -1,25 +1,36 @@
-import { apiService } from './api';
-import { Followup, FollowupFormData, FollowupsResponse, PaginationParams } from '../types';
+import { apiService } from "./api";
+import {
+  Followup,
+  FollowupFormData,
+  FollowupsResponse,
+  PaginationParams,
+} from "../types";
 
 export const followupService = {
-  getFollowups: (params?: PaginationParams) => 
-    apiService.get<FollowupsResponse>('/followups', params),
+  getFollowups: (params?: PaginationParams) =>
+    apiService.get<FollowupsResponse>("/followups", params),
 
-  getFollowup: (id: number) => 
-    apiService.get<Followup>(`/followups/${id}`),
+  getFollowup: (id: number) => apiService.get<Followup>(`/followups/${id}`),
 
-  createFollowup: (data: FollowupFormData) => 
-    apiService.post<Followup>('/followups', data),
+  // ✅ REPLACE THIS METHOD
+  createFollowup: async (data: FollowupFormData) => {
+    try {
+      return await apiService.post<Followup>("/followups", data);
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        throw new Error("An active follow-up already exists for this lead");
+      }
+      throw error;
+    }
+  },
 
-  updateFollowup: (id: number, data: Partial<FollowupFormData>) => 
+  updateFollowup: (id: number, data: Partial<FollowupFormData>) =>
     apiService.put<Followup>(`/followups/${id}`, data),
 
-  deleteFollowup: (id: number) => 
-    apiService.delete(`/followups/${id}`),
+  deleteFollowup: (id: number) => apiService.delete(`/followups/${id}`),
 
-  completeFollowup: (id: number, notes?: string) => 
+  completeFollowup: (id: number, notes?: string) =>
     apiService.post<Followup>(`/followups/${id}/complete`, { notes }),
 
-  getOverdue: () => 
-    apiService.get<Followup[]>('/followups/overdue'),
+  getOverdue: () => apiService.get<Followup[]>("/followups/overdue"),
 };

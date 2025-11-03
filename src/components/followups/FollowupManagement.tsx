@@ -63,10 +63,24 @@ const FollowupManagement: React.FC = () => {
 
   const filter =
     tabValue === 1
-      ? { is_completed: true } // ✅ Send as string 'true'
+      ? { is_completed: true }
       : tabValue === 2
-      ? { is_completed: false, is_overdue: true } // ✅ Both conditions
-      : { is_completed: false, is_overdue: true }; // ✅ Scheduled only
+      ? { is_overdue: true } // ✅ Only overdue filter, remove is_completed
+      : {}; // ✅ Show all non-completed for scheduled tab
+
+  // Add this query for count
+  const { data: overdueCount } = useQuery<number>({
+    queryKey: ["overdue-count"],
+    queryFn: async () => {
+      const response = await followupService.getOverdue();
+      // ✅ Handle both array and ApiResponse formats
+      return Array.isArray(response)
+        ? response.length
+        : response.data?.length || 0;
+    },
+    refetchInterval: 60000,
+    initialData: 0, // ✅ Set default value to prevent undefined
+  });
 
   const {
     data: followupsData,
@@ -306,7 +320,25 @@ const FollowupManagement: React.FC = () => {
           <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 2 }}>
             <Tab label="Scheduled" />
             <Tab label="Completed" />
-            <Tab label="Overdue" />
+            <Tab
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  Overdue
+                 {(overdueCount ?? 0) > 0 && (
+                    <Chip
+                      label={overdueCount}
+                      size="small"
+                      color="error"
+                      sx={{
+                        height: 20,
+                        minWidth: 20,
+                        "& .MuiChip-label": { px: 0.5 },
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+            />
           </Tabs>
 
           <TabPanel value={tabValue} index={0}>

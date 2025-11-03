@@ -33,7 +33,7 @@ const QuickActions: React.FC = () => {
       color: "success",
     },
     {
-      label: "Schedule Follow-up",
+      label: "Schedule Reminders",
       icon: <ScheduleIcon />,
       onClick: () => navigate("/followups?action=create"),
       color: "warning",
