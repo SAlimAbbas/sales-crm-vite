@@ -255,7 +255,7 @@ const LeadManagement: React.FC = () => {
   };
 
   const handleUploadSuccess = () => {
-    setOpenUpload(false);
+    // setOpenUpload(false);
     refetch();
     showNotification("Leads uploaded successfully", "success");
   };

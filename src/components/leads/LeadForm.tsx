@@ -49,7 +49,9 @@ const LeadForm: React.FC<LeadFormProps> = ({
 
   const formik = useFormik({
     initialValues: {
-      date: lead?.date || new Date().toISOString().split("T")[0],
+      date: lead?.date
+        ? lead.date.split("T")[0]
+        : new Date().toISOString().split("T")[0],
       company_name: lead?.company_name || "",
       contact_number: lead?.contact_number || "",
       source: lead?.source || "",
@@ -99,7 +101,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
   useEffect(() => {
     if (open && lead) {
       formik.setValues({
-        date: lead.date,
+        date: lead.date.split('T')[0],
         company_name: lead.company_name,
         contact_number: lead.contact_number,
         source: lead.source,
@@ -261,7 +263,9 @@ const LeadForm: React.FC<LeadFormProps> = ({
             <FormSelect
               label="Assign To"
               value={
-                user?.role === "salesperson" ? user?.id.toString() : formik.values.assigned_to
+                user?.role === "salesperson"
+                  ? user?.id.toString()
+                  : formik.values.assigned_to
               }
               onChange={(value) => formik.setFieldValue("assigned_to", value)}
               options={
@@ -274,7 +278,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
                     ]
                   : [
                       { value: "", label: "Unassigned" },
-                      ...(usersData?.data?.map((user:any) => ({
+                      ...(usersData?.data?.map((user: any) => ({
                         value: user.id.toString(),
                         label: user.name,
                       })) || []),
