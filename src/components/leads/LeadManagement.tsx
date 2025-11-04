@@ -21,6 +21,7 @@ import { useAuth } from "../../contexts/AuthContext"; // or wherever your auth c
 import TaskForm from "../tasks/TaskForm";
 import LeadNotesDialog from "./LeadNotesDialog";
 import FollowupForm from "../followups/FollowupForm";
+import { format } from "date-fns";
 
 const LeadManagement: React.FC = () => {
   const { user } = useAuth();
@@ -116,8 +117,12 @@ const LeadManagement: React.FC = () => {
       source: filters.source,
       country: filters.country,
       assigned_to: filters.assignedTo,
-      date_from: filters.dateFrom?.toISOString().split("T")[0],
-      date_to: filters.dateTo?.toISOString().split("T")[0],
+      date_from: filters.dateFrom
+        ? format(filters.dateFrom, "yyyy-MM-dd")
+        : undefined,
+      date_to: filters.dateTo
+        ? format(filters.dateTo, "yyyy-MM-dd")
+        : undefined,
       product: filters.product,
       tags: filters.tags,
       sort: sortField,
