@@ -22,10 +22,23 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
   const [uploadResult, setUploadResult] = useState<{
     success: number;
     failed: number;
-    duplicates?: number;
+    duplicates?: number | any;
     errors?: Array<{ row: number; error: string }>;
+    download_key?: string;
   } | null>(null);
+
   const { showNotification } = useNotification();
+
+  const handleDownloadFailed = async () => {
+    if (!uploadResult?.download_key) return;
+
+    try {
+      await leadService.downloadFailedLeads(uploadResult.download_key);
+      showNotification("Failed leads downloaded successfully", "success");
+    } catch (error) {
+      showNotification("Failed to download error report", "error");
+    }
+  };
 
   const handleUpload = async () => {
     if (files.length === 0) return;
@@ -152,53 +165,76 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
           </Box>
         )}
 
-        {uploadResult && (
-          <Box sx={{ mt: 2 }}>
-            <Alert
-              severity={uploadResult.failed > 0 ? "warning" : "success"}
-              sx={{ mb: 2 }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold">
-                Upload Summary
-              </Typography>
-              <Typography variant="body2">
-                ✓ {uploadResult.success} leads uploaded successfully
-                {uploadResult.failed > 0 &&
-                  ` • ✗ ${uploadResult.failed} failed`}
-                {(uploadResult.duplicates ?? 0) > 0 &&
-                  ` • ⚠ ${uploadResult.duplicates} duplicates skipped`}
-              </Typography>
-            </Alert>
-
-            {uploadResult.errors && uploadResult.errors.length > 0 && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                  Failed Rows:
+        {uploadResult &&
+          (uploadResult.failed > 0 || uploadResult.duplicates > 0) && (
+            <Box sx={{ mt: 2 }}>
+              <Alert
+                severity={uploadResult.failed > 0 ? "warning" : "success"}
+                sx={{ mb: 2 }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Upload Summary
                 </Typography>
-                <Box sx={{ maxHeight: 200, overflow: "auto" }}>
-                  {uploadResult.errors.slice(0, 10).map((err, idx) => (
-                    <Typography
-                      key={idx}
-                      variant="body2"
-                      sx={{ fontSize: "0.85rem" }}
-                    >
-                      • Row {err.row}: {err.error}
-                    </Typography>
-                  ))}
-                  {uploadResult.errors.length > 10 && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 1 }}
-                    >
-                      ...and {uploadResult.errors.length - 10} more errors
-                    </Typography>
-                  )}
-                </Box>
+                <Typography variant="body2">
+                  ✓ {uploadResult.success} leads uploaded successfully out of
+                  total{" "}
+                  {uploadResult.success +
+                    uploadResult.failed +
+                    (uploadResult.duplicates ?? 0)}
+                  {uploadResult.failed > 0 &&
+                    ` • ✗ ${uploadResult.failed} failed`}
+                  {(uploadResult.duplicates ?? 0) > 0 &&
+                    ` • ⚠ ${uploadResult.duplicates} duplicates skipped`}
+                </Typography>
               </Alert>
-            )}
-          </Box>
-        )}
+
+              {uploadResult.download_key && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleDownloadFailed}
+                  fullWidth
+                  sx={{ mt: 2, mb: 2 }}
+                >
+                  Download Failed/Duplicate Leads (
+                  {uploadResult.failed + (uploadResult.duplicates || 0)})
+                </Button>
+              )}
+
+              {uploadResult.errors && uploadResult.errors.length > 0 && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    gutterBottom
+                  >
+                    Failed Rows:
+                  </Typography>
+                  <Box sx={{ maxHeight: 200, overflow: "auto" }}>
+                    {uploadResult.errors.slice(0, 10).map((err, idx) => (
+                      <Typography
+                        key={idx}
+                        variant="body2"
+                        sx={{ fontSize: "0.85rem" }}
+                      >
+                        • Row {err.row}: {err.error}
+                      </Typography>
+                    ))}
+                    {uploadResult.errors.length > 10 && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        ...and {uploadResult.errors.length - 10} more errors
+                      </Typography>
+                    )}
+                  </Box>
+                </Alert>
+              )}
+            </Box>
+          )}
 
         <Box sx={{ mt: 3, p: 2, borderRadius: 1 }}>
           <Typography variant="subtitle2" gutterBottom>

@@ -80,26 +80,6 @@ interface HeadCell {
   minWidth?: number;
 }
 
-const headCells: HeadCell[] = [
-  { id: "company_name", label: "Company", sortable: true, minWidth: 200 },
-  { id: "owner_name", label: "Name", sortable: true, minWidth: 100 },
-  { id: "product", label: "Product", sortable: true, minWidth: 100 },
-  { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
-  { id: "source", label: "Source", sortable: true, minWidth: 120 },
-  { id: "country", label: "Country", sortable: true, minWidth: 100 },
-  { id: "type", label: "Type", sortable: true, minWidth: 100 },
-  { id: "status", label: "Status", sortable: true, minWidth: 120 },
-  { id: "assigned_to", label: "Assigned To", sortable: false, minWidth: 150 },
-  { id: "created_at", label: "Created", sortable: true, minWidth: 120 },
-  {
-    id: "actions",
-    label: "Actions",
-    sortable: false,
-    align: "right",
-    minWidth: 120,
-  },
-];
-
 const LeadTable: React.FC<LeadTableProps> = ({
   leads,
   loading,
@@ -123,6 +103,58 @@ const LeadTable: React.FC<LeadTableProps> = ({
   currentUser,
   rowsPerPageOptions = [50, 75, 100, 500],
 }) => {
+  const headCells: HeadCell[] = [
+    { id: "company_name", label: "Company", sortable: true, minWidth: 200 },
+    { id: "owner_name", label: "Name", sortable: true, minWidth: 150 },
+    { id: "product", label: "Product", sortable: true, minWidth: 100 },
+    { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
+    { id: "source", label: "Source", sortable: true, minWidth: 120 },
+    { id: "country", label: "Country", sortable: true, minWidth: 100 },
+    { id: "type", label: "Type", sortable: true, minWidth: 100 },
+    { id: "status", label: "Status", sortable: true, minWidth: 120 },
+
+    // ✅ Show Assigned To only for admin/manager
+    ...(currentUser?.role !== "salesperson"
+      ? [
+          {
+            id: "assigned_to" as keyof Lead,
+            label: "Assigned To",
+            sortable: false,
+            minWidth: 100,
+          },
+
+          {
+            id: "date" as keyof Lead,
+            label: "Date",
+            sortable: true,
+            minWidth: 100,
+          },
+          {
+            id: "created_at" as keyof Lead,
+            label: "Created On",
+            sortable: true,
+            minWidth: 140,
+          },
+        ]
+      : []),
+
+    // ✅ Show Assigned On for everyone
+    {
+      id: "assigned_date" as keyof Lead,
+      label: "Assigned On",
+      sortable: true,
+      minWidth: 140,
+    },
+
+    {
+      id: "actions",
+      label: "Actions",
+      sortable: false,
+      align: "right" as const,
+      minWidth: 100,
+    },
+  ];
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number>(-1);
@@ -202,12 +234,12 @@ const LeadTable: React.FC<LeadTableProps> = ({
     // Only admin can delete OR creator can delete their own leads
     if (currentUser.role === "admin") return true;
 
-    const createdById =
-      typeof lead.created_by === "object"
-        ? lead.created_by?.id
-        : lead.created_by;
+    // const createdById =
+    //   typeof lead.created_by === "object"
+    //     ? lead.created_by?.id
+    //     : lead.created_by;
 
-    return createdById === currentUser.id;
+    // return createdById === currentUser.id;
   };
 
   const handleClick = (
@@ -549,15 +581,35 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </Tooltip>
                   </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body2" noWrap>
-                      {lead.assigned_user?.name || "Unassigned"}
-                    </Typography>
-                  </TableCell>
+                  {/* Assigned To column - only for admin/manager */}
+                  {currentUser?.role !== "salesperson" && (
+                    <>
+                      <TableCell>
+                        <Typography variant="body2" noWrap>
+                          {lead.assigned_user?.name || "Unassigned"}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell>
+                        <Typography variant="body2" noWrap>
+                          {lead.date ? formatDate(lead.date) : "N/A"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap>
+                          {lead.created_at
+                            ? formatDate(lead.created_at)
+                            : "N/A"}
+                        </Typography>
+                      </TableCell>
+                    </>
+                  )}
 
                   <TableCell>
                     <Typography variant="body2" noWrap>
-                      {formatDate(lead.created_at)}
+                      {lead.assigned_date
+                        ? formatDate(lead.assigned_date)
+                        : "N/A"}
                     </Typography>
                   </TableCell>
 

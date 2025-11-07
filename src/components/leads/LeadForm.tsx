@@ -89,9 +89,33 @@ const LeadForm: React.FC<LeadFormProps> = ({
 
         onSuccess();
       } catch (error: any) {
-        formik.setErrors({
-          contact_number: error.response?.data?.message || "An error occurred",
-        });
+        // ✅ Handle validation errors properly
+        const errors = error.response?.data?.errors;
+
+        if (errors) {
+          // Map backend validation errors to formik fields
+          const formikErrors: any = {};
+
+          if (errors.contact_number) {
+            formikErrors.contact_number = errors.contact_number[0];
+          }
+
+          if (errors.email) {
+            formikErrors.email = errors.email[0];
+          }
+
+          if (errors.company_name) {
+            formikErrors.company_name = errors.company_name[0];
+          }
+
+          // Set all errors at once
+          formik.setErrors(formikErrors);
+        } else {
+          // Generic error message
+          formik.setErrors({
+            company_name: error.response?.data?.message || "An error occurred",
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -101,7 +125,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
   useEffect(() => {
     if (open && lead) {
       formik.setValues({
-        date: lead.date.split('T')[0],
+        date: lead.date.split("T")[0],
         company_name: lead.company_name,
         contact_number: lead.contact_number,
         source: lead.source,

@@ -92,4 +92,17 @@ export const leadService = {
       by_source: Record<string, number>;
       by_country: Record<string, number>;
     }>("/leads/stats"),
+
+  downloadFailedLeads: (sessionKey: string) =>
+    apiService
+      .downloadBlob(`/leads/download-failed/${sessionKey}`)
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `failed_leads_${new Date().getTime()}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        return blob;
+      }),
 };

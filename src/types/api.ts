@@ -29,4 +29,5 @@ export interface BulkActionResponse {
   failed: number;
   duplicates?: number;
   errors?: Array<{ row: number; error: string }>;
+  download_key?: string;
 }

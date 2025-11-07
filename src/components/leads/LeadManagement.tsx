@@ -125,7 +125,7 @@ const LeadManagement: React.FC = () => {
         : undefined,
       product: filters.product,
       tags: filters.tags,
-      sort: sortField,
+      sort: user?.role === "salesperson" ? "assigned_date" : sortField, // ✅ Override sort for salesperson
       order: sortDirection,
     };
 
@@ -134,7 +134,15 @@ const LeadManagement: React.FC = () => {
         ([_, value]) => value !== "" && value !== undefined && value !== null
       )
     );
-  }, [page, rowsPerPage, filters, statusFilter, sortField, sortDirection]);
+  }, [
+    page,
+    rowsPerPage,
+    filters,
+    statusFilter,
+    sortField,
+    sortDirection,
+    user?.role,
+  ]);
 
   const {
     data: leadsData,

@@ -304,7 +304,7 @@ const UserManagement: React.FC = () => {
       <ConfirmDialog
         open={openDeleteDialog}
         title="Delete User"
-        message={`Are you sure you want to delete user "${selectedUser?.name}"? This will soft delete the user.`}
+        message={`Are you sure you want to delete user "${selectedUser?.name}"? This will delete the user.`}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setOpenDeleteDialog(false)}
         severity="error"

@@ -117,4 +117,11 @@ export const apiService = {
         return response.data;
       });
   },
+  downloadBlob: (url: string) => {
+    return api
+      .get(url, {
+        responseType: "blob",
+      })
+      .then((response) => response.data);
+  },
 };

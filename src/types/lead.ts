@@ -14,6 +14,7 @@ export interface Lead {
   type: "domestic" | "international";
   status: string;
   assigned_to?: number;
+  assigned_date?: string;
   created_by: number | { id: number; name: string; [key: string]: any };
   tags: string | null; // Add this
   notes_count?: number;
