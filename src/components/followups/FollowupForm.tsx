@@ -112,7 +112,7 @@ const FollowupForm: React.FC<FollowupFormProps> = ({
         formik.setFieldValue("lead_id", preSelectedLeadId.toString());
       }
     }
-  }, [open, followup]);
+  }, [open, followup,currentUser]);
 
   return (
     <CustomModal

@@ -41,11 +41,12 @@ import { debounce } from "lodash";
 
 export interface FilterState {
   search: string;
-  status: string;
+  status: string[];
   type: string;
   source: string;
   country: string;
   assignedTo: string;
+  dateField: string;
   dateFrom: Date | null;
   dateTo: Date | null;
   product: string;
@@ -62,11 +63,12 @@ interface LeadFiltersProps {
 
 const initialFilters: FilterState = {
   search: "",
-  status: "",
+  status: [],
   type: "",
   source: "",
   country: "",
   assignedTo: "",
+  dateField: "date",
   dateFrom: null,
   dateTo: null,
   product: "",
@@ -97,6 +99,16 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   useEffect(() => {
     filtersRef.current = filters;
   }, [filters]);
+
+  // Add this useEffect near the top of the component, after state declarations
+  useEffect(() => {
+    if (currentUser?.role === "salesperson") {
+      // Force set to assigned_date for salesperson
+      if (filters.dateField !== "assigned_date") {
+        onFiltersChange({ ...filters, dateField: "assigned_date" });
+      }
+    }
+  }, [currentUser?.role]);
 
   useEffect(() => {
     setLocalCountry(filters.country);
@@ -177,7 +189,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" }, // ✅ Add
     { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" }, // ✅ Add
     { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" }, // ✅ Add
-    
   ];
 
   const typeOptions = [
@@ -212,6 +223,8 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     return Object.entries(filters).filter(([key, value]) => {
       if (key === "search") return value.trim() !== "";
       if (key === "dateFrom" || key === "dateTo") return value !== null;
+      if (key === "status") return Array.isArray(value) && value.length > 0; // Add this
+      if (key === "dateField") return false; // Exclude dateField from count
       return value !== "";
     }).length;
   }, [filters]);
@@ -283,21 +296,42 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={filters.status}
-                  label="Status"
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
-                  disabled={loading}
-                >
-                  {statusOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                multiple
+                size="small"
+                options={statusOptions}
+                getOptionLabel={(option) => option.label}
+                value={statusOptions.filter((opt) =>
+                  filters.status.includes(opt.value)
+                )}
+                onChange={(_, newValue) => {
+                  handleFilterChange(
+                    "status",
+                    newValue.map((v) => v.value)
+                  );
+                }}
+                disabled={loading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Status"
+                    placeholder="Select statuses"
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // ✅ Destructure key separately
+                    return (
+                      <Chip
+                        key={key} // ✅ Pass key directly
+                        label={option.label}
+                        size="small"
+                        {...tagProps} // ✅ Spread remaining props without key
+                      />
+                    );
+                  })
+                }
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
@@ -418,8 +452,60 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Date Field</InputLabel>
+                <Select
+                  value={filters.dateField}
+                  label="Date Field"
+                  onChange={(e) =>
+                    handleFilterChange("dateField", e.target.value)
+                  }
+                  disabled={loading || currentUser?.role === "salesperson"}
+                >
+                  {/* Always render all options, but control visibility/interaction through disabled prop */}
+                  <MenuItem value="date">Lead Date</MenuItem>
+                  <MenuItem value="created_at">Created Date</MenuItem>
+                  <MenuItem value="assigned_date">Assigned Date</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Single Date Range Picker */}
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Box display="flex" gap={1} alignItems="center">
+                <DatePicker
+                  label="From"
+                  value={filters.dateFrom}
+                  onChange={(value) => handleFilterChange("dateFrom", value)}
+                  disabled={loading}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                />
+                <Typography variant="body2" color="textSecondary">
+                  to
+                </Typography>
+                <DatePicker
+                  label="To"
+                  value={filters.dateTo}
+                  minDate={filters.dateFrom || undefined}
+                  onChange={(value) => handleFilterChange("dateTo", value)}
+                  disabled={loading}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            {/* <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <DatePicker
                 label="Date From"
                 value={filters.dateFrom}
@@ -447,7 +533,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   },
                 }}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
 
           {/* Active Filters Display */}
@@ -465,14 +551,17 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     variant="outlined"
                   />
                 )}
-                {filters.status && (
+                {filters.status.length > 0 && (
                   <Chip
                     label={`Status: ${
-                      statusOptions.find((opt) => opt.value === filters.status)
-                        ?.label
+                      filters.status.length === 1
+                        ? statusOptions.find(
+                            (opt) => opt.value === filters.status[0]
+                          )?.label
+                        : `${filters.status.length} selected`
                     }`}
                     size="small"
-                    onDelete={() => handleFilterChange("status", "")}
+                    onDelete={() => handleFilterChange("status", [])}
                     variant="outlined"
                   />
                 )}
@@ -534,7 +623,13 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 )}
                 {filters.dateFrom && (
                   <Chip
-                    label={`From: ${filters.dateFrom.toLocaleDateString()}`}
+                    label={`${
+                      filters.dateField === "date"
+                        ? "Lead Date"
+                        : filters.dateField === "created_at"
+                        ? "Created"
+                        : "Assigned"
+                    } From: ${filters.dateFrom.toLocaleDateString()}`}
                     size="small"
                     onDelete={() => handleFilterChange("dateFrom", null)}
                     variant="outlined"

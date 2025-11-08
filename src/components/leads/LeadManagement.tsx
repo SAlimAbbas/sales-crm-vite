@@ -93,11 +93,12 @@ const LeadManagement: React.FC = () => {
   // Advanced filters state
   const [filters, setFilters] = useState<FilterState>({
     search: "",
-    status: "",
+    status: [],
     type: "",
     source: "",
     country: "",
     assignedTo: "",
+    dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role
     dateFrom: null,
     dateTo: null,
     product: "",
@@ -112,11 +113,17 @@ const LeadManagement: React.FC = () => {
       page: page + 1,
       per_page: rowsPerPage,
       search: filters.search,
-      status: statusFilter !== "all" ? statusFilter : filters.status,
+      status:
+        statusFilter !== "all"
+          ? statusFilter
+          : filters.status.length > 0
+          ? filters.status.join(",")
+          : undefined,
       type: filters.type,
       source: filters.source,
       country: filters.country,
       assigned_to: filters.assignedTo,
+      date_field: filters.dateField,
       date_from: filters.dateFrom
         ? format(filters.dateFrom, "yyyy-MM-dd")
         : undefined,
@@ -187,7 +194,7 @@ const LeadManagement: React.FC = () => {
     setPage(0);
     setSelectedLeadIds([]);
     // Clear status filter if using tabs
-    setFilters((prev) => ({ ...prev, status: "" }));
+    setFilters((prev) => ({ ...prev, status: [] })); // ✅ Change from "" to []
   };
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
@@ -203,11 +210,12 @@ const LeadManagement: React.FC = () => {
   const handleFiltersReset = useCallback(() => {
     setFilters({
       search: "",
-      status: "",
+      status: [],
       type: "",
       source: "",
       country: "",
       assignedTo: "",
+      dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role
       dateFrom: null,
       dateTo: null,
       product: "",
