@@ -85,37 +85,43 @@ export const apiService = {
       })
       .then((response) => response.data),
 
-  downloadFile: (url: string, data?: any, filename?: string) => {
-    return api
-      .post(url, data, {
-        responseType: "blob", // Important for file downloads
-      })
-      .then((response) => {
-        // Create blob link to download
-        const blob = new Blob([response.data]);
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrl;
+  downloadFile: (
+    url: string,
+    params?: any,
+    filename?: string,
+    method: "get" | "post" = "get"
+  ) => {
+    const request =
+      method === "post"
+        ? api.post(url, params, { responseType: "blob" })
+        : api.get(url, { params, responseType: "blob" });
 
-        // Get filename from response headers or use provided filename
-        const contentDisposition = response.headers["content-disposition"];
-        let extractedFilename = filename;
+    return request.then((response) => {
+      // Create blob link to download
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
 
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch) {
-            extractedFilename = filenameMatch[1];
-          }
+      // Get filename from response headers or use provided filename
+      const contentDisposition = response.headers["content-disposition"];
+      let extractedFilename = filename;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          extractedFilename = filenameMatch[1];
         }
+      }
 
-        link.download = extractedFilename || "download";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(downloadUrl);
+      link.download = extractedFilename || "download";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
 
-        return response.data;
-      });
+      return response.data;
+    });
   },
   downloadBlob: (url: string) => {
     return api

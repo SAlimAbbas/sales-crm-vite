@@ -22,6 +22,7 @@ import {
   Update as UpdateIcon,
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
+  Download as DownloadIcon,
 } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "../../services/userService";
@@ -172,6 +173,21 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     }
   };
 
+  const handleBulkExport = async () => {
+    try {
+      await leadService.bulkExportLeads(selectedIds);
+      showNotification(
+        `Successfully exported ${selectedIds.length} leads`,
+        "success"
+      );
+    } catch (error: any) {
+      showNotification(
+        error.response?.data?.message || "Failed to export leads",
+        "error"
+      );
+    }
+  };
+
   const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
     ...(currentUser.role === "admin" || currentUser.role === "manager"
@@ -273,7 +289,6 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
         {currentUser.role === "admin" || currentUser.role === "manager" ? (
           <>
             <Divider />
-
             <MenuItem
               onClick={() => {
                 setDeleteDialog({ open: true, loading: false });
@@ -283,6 +298,16 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
             >
               <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
               Delete Leads
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={() => {
+                handleBulkExport();
+                handleMenuClose();
+              }}
+            >
+              <DownloadIcon fontSize="small" sx={{ mr: 1 }} />
+              Export Selected
             </MenuItem>
           </>
         ) : null}

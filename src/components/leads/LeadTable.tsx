@@ -104,7 +104,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   rowsPerPageOptions = [50, 75, 100, 500],
 }) => {
   const headCells: HeadCell[] = [
-    { id: "company_name", label: "Company", sortable: true, minWidth: 200 },
+    { id: "company_name", label: "Company", sortable: true, minWidth: 100 },
     { id: "owner_name", label: "Name", sortable: true, minWidth: 150 },
     { id: "product", label: "Product", sortable: true, minWidth: 100 },
     { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
@@ -163,6 +163,28 @@ const LeadTable: React.FC<LeadTableProps> = ({
     null
   );
 
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    company_name: 100,
+    owner_name: 80,
+    product: 100,
+    contact_number: 120,
+    source: 80,
+    country: 80,
+    type: 80,
+    status: 120,
+    assigned_to: 80,
+    date: 80,
+    created_at: 80,
+    assigned_date: 80,
+    actions: 80,
+  });
+
+  const [resizing, setResizing] = useState<{
+    columnId: string;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
   // Status update dialog state
   const [statusDialog, setStatusDialog] = useState<{
     open: boolean;
@@ -198,6 +220,47 @@ const LeadTable: React.FC<LeadTableProps> = ({
     { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" }, // ✅ Add
     { value: LEAD_STATUS.NOT_REACHABLE, label: "Not Reachable" }, // ✅ Add
   ];
+
+  const handleMouseDown = (
+    e: React.MouseEvent,
+    columnId: string,
+    currentWidth: number
+  ) => {
+    e.preventDefault();
+    setResizing({
+      columnId,
+      startX: e.clientX,
+      startWidth: currentWidth,
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!resizing) return;
+
+    const diff = e.clientX - resizing.startX;
+    const newWidth = Math.max(50, resizing.startWidth + diff); // Min width 50px
+
+    setColumnWidths((prev) => ({
+      ...prev,
+      [resizing.columnId]: newWidth,
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setResizing(null);
+  };
+
+  // Add useEffect for mouse events
+  React.useEffect(() => {
+    if (resizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [resizing]);
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
@@ -396,7 +459,13 @@ const LeadTable: React.FC<LeadTableProps> = ({
   }
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+    <Paper
+      sx={{
+        width: "100%",
+        overflow: "hidden",
+        cursor: resizing ? "col-resize" : "default",
+      }}
+    >
       <TableContainer sx={{ maxHeight: 600 }}>
         <Table stickyHeader aria-labelledby="tableTitle" size="medium">
           <TableHead>
@@ -429,7 +498,13 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   sortDirection={
                     sortField === headCell.id ? sortDirection : false
                   }
-                  style={{ minWidth: headCell.minWidth }}
+                  style={{
+                    width: columnWidths[headCell.id],
+                    minWidth: columnWidths[headCell.id],
+                    position: "relative",
+                    userSelect: resizing ? "none" : "auto",
+                    overflow: "hidden",
+                  }}
                 >
                   {headCell.sortable ? (
                     <TableSortLabel
@@ -446,6 +521,32 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   ) : (
                     headCell.label
                   )}
+
+                  {/* Resize Handle */}
+                  <Box
+                    onMouseDown={(e) =>
+                      handleMouseDown(
+                        e,
+                        headCell.id as string,
+                        columnWidths[headCell.id]
+                      )
+                    }
+                    sx={{
+                      position: "absolute",
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: "4px",
+                      cursor: "col-resize",
+                      backgroundColor: "rgba(0, 0, 0, 0.12)", // Always visible
+                      borderRight: "1px solid rgba(0, 0, 0, 0.2)", // Optional: adds a border line
+                      "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.4)", // Blue on hover
+                        width: "6px", // Slightly wider on hover
+                      },
+                      zIndex: 1,
+                    }}
+                  />
                 </TableCell>
               ))}
             </TableRow>
@@ -478,7 +579,18 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </TableCell>
                   )}
 
-                  <TableCell component="th" id={labelId} scope="row">
+                  <TableCell
+                    component="th"
+                    id={labelId}
+                    scope="row"
+                    style={{
+                      width: columnWidths.company_name,
+                      maxWidth: columnWidths.company_name,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Box>
                       {lead.tags && (
                         <Chip
@@ -509,19 +621,43 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </Box>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.owner_name,
+                      maxWidth: columnWidths.owner_name,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Typography variant="body2" noWrap>
                       {lead.owner_name || "-"}
                     </Typography>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.product,
+                      maxWidth: columnWidths.product,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Typography variant="body2" noWrap>
                       {lead.product || "-"}
                     </Typography>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.contact_number,
+                      maxWidth: columnWidths.contact_number,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Box display="flex" alignItems="center" gap={0.5}>
                       <Typography variant="body2" noWrap>
                         {lead.contact_number}
@@ -545,19 +681,53 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </Box>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.source,
+                      maxWidth: columnWidths.source,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Chip label={lead.source} size="small" variant="outlined" />
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.country,
+                      maxWidth: columnWidths.country,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Typography variant="body2" noWrap>
                       {lead.country}
                     </Typography>
                   </TableCell>
 
-                  <TableCell>{getTypeChip(lead.type)}</TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.type,
+                      maxWidth: columnWidths.type,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {getTypeChip(lead.type)}
+                  </TableCell>
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.status,
+                      maxWidth: columnWidths.status,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Tooltip title="Click to change status">
                       <Box
                         onClick={(e) => handleStatusClick(e, lead)}
@@ -584,18 +754,42 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   {/* Assigned To column - only for admin/manager */}
                   {currentUser?.role !== "salesperson" && (
                     <>
-                      <TableCell>
+                      <TableCell
+                        style={{
+                          width: columnWidths.assigned_to,
+                          maxWidth: columnWidths.assigned_to,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         <Typography variant="body2" noWrap>
                           {lead.assigned_user?.name || "Unassigned"}
                         </Typography>
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell
+                        style={{
+                          width: columnWidths.date,
+                          maxWidth: columnWidths.date,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         <Typography variant="body2" noWrap>
                           {lead.date ? formatDate(lead.date) : "N/A"}
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        style={{
+                          width: columnWidths.created_at,
+                          maxWidth: columnWidths.created_at,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         <Typography variant="body2" noWrap>
                           {lead.created_at
                             ? formatDate(lead.created_at)
@@ -605,7 +799,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </>
                   )}
 
-                  <TableCell>
+                  <TableCell
+                    style={{
+                      width: columnWidths.assigned_date,
+                      maxWidth: columnWidths.assigned_date,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Typography variant="body2" noWrap>
                       {lead.assigned_date
                         ? formatDate(lead.assigned_date)
@@ -613,7 +815,16 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </Typography>
                   </TableCell>
 
-                  <TableCell align="right">
+                  <TableCell
+                    align="right"
+                    style={{
+                      width: columnWidths.actions,
+                      maxWidth: columnWidths.actions,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <Box display="flex" gap={0.5} justifyContent="flex-end">
                       <Tooltip
                         title={

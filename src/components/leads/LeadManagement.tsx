@@ -320,9 +320,10 @@ const LeadManagement: React.FC = () => {
                 variant="text"
                 startIcon={<DownloadIcon />}
                 onClick={handleExport}
-                disabled={isLoading}
+                disabled={isLoading || selectedLeadIds.length > 0}
               >
-                Export
+                Export{" "}
+                {selectedLeadIds.length > 0 && "(Disabled - Use bulk action)"}
               </Button>
               <Button
                 variant="outlined"

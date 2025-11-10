@@ -70,6 +70,14 @@ export const leadService = {
       lead_ids: leadIds,
     }),
 
+  bulkExportLeads: (leadIds: number[]) =>
+    apiService.downloadFile(
+      "/leads/bulk-export",
+      { lead_ids: leadIds },
+      "selected_leads_export.xlsx",
+      'post'
+    ),
+
   // Get salespeople for assignment (specific endpoint)
   getSalespeople: () => apiService.get<User[]>("/leads/salespeople"),
 
@@ -79,7 +87,7 @@ export const leadService = {
 
   // Export leads
   exportLeads: (filters?: LeadFilters) =>
-    apiService.downloadFile("/leads/export", filters, "leads_export.xlsx"),
+  apiService.downloadFile("/leads/export", filters, "leads_export.xlsx", 'get'),
 
   // Get lead statistics
   getLeadStats: () =>
