@@ -137,11 +137,13 @@ const Login: React.FC = () => {
       // After successful verification, reload to update auth state
       window.location.href = "/";
     } catch (err: any) {
+      // ✅ Don't throw error - just set it and stay on 2FA page
       setError(
         err.response?.data?.message ||
           "Verification failed. Please check your code and try again."
       );
-      throw err; // Re-throw to let TwoFactorVerification component handle it
+      // ❌ REMOVE THIS - Don't re-throw, user should stay on 2FA page
+      // throw err;
     } finally {
       setIsLoading(false);
     }

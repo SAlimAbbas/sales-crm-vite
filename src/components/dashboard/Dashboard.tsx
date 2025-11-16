@@ -46,6 +46,7 @@ import {
   AreaChart,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
+import AttendanceReportsSection from "../attendance/AttendanceReportsSection";
 
 const COLORS = {
   primary: "#1976d2",
@@ -415,6 +416,12 @@ const Dashboard: React.FC = () => {
                 </Table>
               </TableContainer>
             </Paper>
+          </Grid>
+        )}
+
+        {(user?.role === "admin" || user?.role === "manager") && (
+          <Grid size={12}>
+            <AttendanceReportsSection />
           </Grid>
         )}
       </Grid>

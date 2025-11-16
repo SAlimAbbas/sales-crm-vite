@@ -23,6 +23,7 @@ import { useNotification } from "../../contexts/NotificationContext";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useNotificationSystem } from "../../contexts/NotificationSystemContext";
 import NotificationPanel from "../notifications/NotificationPanel";
+import ClockInOutButton from "../attendance/ClockInOutButton";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -32,7 +33,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { showNotification } = useNotification();
   const { toggleTheme, isDark } = useThemeContext();
-  const { unreadCount, fetchNotifications,markAllAsRead } = useNotificationSystem();
+  const { unreadCount, fetchNotifications, markAllAsRead } =
+    useNotificationSystem();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [notificationDrawerOpen, setNotificationDrawerOpen] =
@@ -95,6 +97,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </Typography>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {user?.role === "salesperson" && <ClockInOutButton />}
             {/* Theme Toggle Button */}
             <IconButton
               onClick={toggleTheme}

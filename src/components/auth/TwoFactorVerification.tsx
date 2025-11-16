@@ -90,6 +90,15 @@ const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
     }
   }, [resendCooldown]);
 
+  useEffect(() => {
+    if (error) {
+      // Clear the code when there's an error so user can re-enter
+      setCode(["", "", "", "", "", ""]);
+      // Focus first input
+      inputRefs.current[0]?.focus();
+    }
+  }, [error]);
+
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
     if (value && !/^\d$/.test(value)) return;
@@ -104,9 +113,9 @@ const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
     }
 
     // Auto-submit when all fields are filled
-    if (newCode.every((digit) => digit !== "") && !isLoading) {
-      handleSubmit(newCode.join(""));
-    }
+    // if (newCode.every((digit) => digit !== "") && !isLoading) {
+    //   handleSubmit(newCode.join(""));
+    // }
   };
 
   const handleKeyDown = (
@@ -146,9 +155,9 @@ const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
     inputRefs.current[nextEmptyIndex !== -1 ? nextEmptyIndex : 5]?.focus();
 
     // Auto-submit if complete
-    if (pastedData.length === 6 && !isLoading) {
-      handleSubmit(pastedData);
-    }
+    // if (pastedData.length === 6 && !isLoading) {
+    //   handleSubmit(pastedData);
+    // }
   };
 
   const handleSubmit = async (codeValue: string) => {

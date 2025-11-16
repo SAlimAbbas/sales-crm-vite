@@ -203,6 +203,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     { value: "Referral", label: "Referral" },
     { value: "Social Media", label: "Social Media" },
     { value: "Cold Call", label: "Cold Call" },
+    { value: "Paid Campaign", label: "Paid Campaign" },
     { value: "Email Campaign", label: "Email Campaign" },
     { value: "Trade Show", label: "Trade Show" },
     { value: "Other", label: "Other" },

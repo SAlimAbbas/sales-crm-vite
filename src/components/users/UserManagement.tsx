@@ -82,6 +82,20 @@ const UserManagement: React.FC = () => {
       ),
     },
     {
+      id: "shift",
+      label: "Shift",
+      sortable: true,
+      render: (value: string | undefined, row: User) =>
+        row.role === "admin" ? "-" : value || "-",
+    },
+    {
+      id: "type",
+      label: "Type",
+      sortable: true,
+      render: (value: string | undefined, row: User) =>
+        row.role === "admin" ? "-" : value || "-",
+    },
+    {
       id: "phone",
       label: "Phone",
       sortable: false,

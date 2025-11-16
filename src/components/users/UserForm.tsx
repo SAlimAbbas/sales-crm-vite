@@ -33,6 +33,8 @@ const getValidationSchema = (isEditing: boolean) =>
     email: yup.string().email("Invalid email").required("Email is required"),
     phone: yup.string().nullable(),
     role: yup.string().required("Role is required"),
+    shift: yup.string().nullable(),
+    type: yup.string().nullable(),
     password: yup
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -53,6 +55,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isTypeDisabled, setIsTypeDisabled] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -60,6 +63,8 @@ const UserForm: React.FC<UserFormProps> = ({
       email: "",
       phone: "",
       role: "salesperson",
+      shift: "",
+      type: "",
       password: "",
       manager_id: "",
       is_active: true,
@@ -67,7 +72,6 @@ const UserForm: React.FC<UserFormProps> = ({
     validationSchema: getValidationSchema(!!user), // Pass whether we're editing
     enableReinitialize: true, // Add this to reinitialize when user prop changes
     onSubmit: async (values, { setSubmitting }) => {
-
       setLoading(true);
       setSubmitting(true);
 
@@ -77,6 +81,8 @@ const UserForm: React.FC<UserFormProps> = ({
           email: values.email,
           phone: values.phone || undefined,
           role: values.role as "admin" | "manager" | "salesperson",
+          shift: values.shift as "Day" | "Night" | undefined,
+          type: values.type as "Domestic" | "International" | undefined,
           password: values.password || undefined,
           manager_id: values.manager_id ? Number(values.manager_id) : undefined,
           is_active: values.is_active,
@@ -117,6 +123,8 @@ const UserForm: React.FC<UserFormProps> = ({
         email: user.email || "",
         phone: user.phone || "",
         role: user.role || "salesperson",
+        shift: user.shift || "",
+        type: user.type || "",
         password: "",
         manager_id: user.manager_id ? String(user.manager_id) : "",
         is_active: user.is_active ?? true,
@@ -128,12 +136,23 @@ const UserForm: React.FC<UserFormProps> = ({
         email: "",
         phone: "",
         role: "salesperson",
+        shift: "",
+        type: "",
         password: "",
         manager_id: "",
         is_active: true,
       });
     }
   }, [open, user]);
+
+  useEffect(() => {
+    if (formik.values.shift === "Night") {
+      formik.setFieldValue("type", "International");
+      setIsTypeDisabled(true);
+    } else {
+      setIsTypeDisabled(false);
+    }
+  }, [formik.values.shift]);
 
   const roleOptions = [
     { value: "salesperson", label: "Salesperson" },
@@ -247,6 +266,47 @@ const UserForm: React.FC<UserFormProps> = ({
                 ]}
               />
             </Grid>
+          )}
+          {formik.values.role !== "admin" && (
+            <>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormSelect
+                  label="Shift"
+                  name="shift"
+                  value={formik.values.shift}
+                  onChange={(value) => formik.setFieldValue("shift", value)}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.shift ? formik.errors.shift : undefined}
+                  helperText={
+                    formik.touched.shift ? formik.errors.shift || "" : ""
+                  }
+                  options={[
+                    { value: "", label: "Select Shift" },
+                    { value: "Day", label: "Day" },
+                    { value: "Night", label: "Night" },
+                  ]}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormSelect
+                  label="Type"
+                  name="type"
+                  value={formik.values.type}
+                  onChange={(value) => formik.setFieldValue("type", value)}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.type ? formik.errors.type : undefined}
+                  helperText={
+                    formik.touched.type ? formik.errors.type || "" : ""
+                  }
+                  disabled={isTypeDisabled}
+                  options={[
+                    { value: "", label: "Select Type" },
+                    { value: "Domestic", label: "Domestic" },
+                    { value: "International", label: "International" },
+                  ]}
+                />
+              </Grid>
+            </>
           )}
           {!user && (
             <Grid size={{ xs: 12, sm: 6 }}>

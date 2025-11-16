@@ -4,6 +4,8 @@ export interface User {
   email: string;
   phone?: string;
   role: "admin" | "manager" | "salesperson";
+  shift?: "Day" | "Night";
+  type?: "Domestic" | "International";
   is_active: boolean;
   is_deleted: boolean; // Make sure this exists
   manager_id?: number;
@@ -18,6 +20,8 @@ export interface UserFormData {
   email: string;
   phone?: string;
   role: "admin" | "manager" | "salesperson";
+  shift?: "Day" | "Night";
+  type?: "Domestic" | "International";
   password?: string;
   manager_id?: number;
   is_active: boolean;

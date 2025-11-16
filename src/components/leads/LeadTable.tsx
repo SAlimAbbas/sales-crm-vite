@@ -104,40 +104,47 @@ const LeadTable: React.FC<LeadTableProps> = ({
   rowsPerPageOptions = [50, 75, 100, 500],
 }) => {
   const headCells: HeadCell[] = [
-    { id: "company_name", label: "Company", sortable: true, minWidth: 100 },
-    { id: "owner_name", label: "Name", sortable: true, minWidth: 150 },
-    { id: "product", label: "Product", sortable: true, minWidth: 100 },
-    { id: "contact_number", label: "Phone", sortable: false, minWidth: 130 },
+    { id: "company_name", label: "Company", sortable: true, minWidth: 300 },
+    { id: "owner_name", label: "Name", sortable: true, minWidth: 120 },
+    { id: "product", label: "Product", sortable: true, minWidth: 120 },
+    { id: "contact_number", label: "Phone", sortable: false, minWidth: 140 },
     { id: "source", label: "Source", sortable: true, minWidth: 120 },
     { id: "country", label: "Country", sortable: true, minWidth: 100 },
     { id: "type", label: "Type", sortable: true, minWidth: 100 },
-    { id: "status", label: "Status", sortable: true, minWidth: 120 },
+    { id: "status", label: "Status", sortable: true, minWidth: 160 },
 
-    // ✅ Show Assigned To only for admin/manager
+    // ✅ Show Assigned To only for admin/manager, hide date fields for manager
     ...(currentUser?.role !== "salesperson"
-      ? [
-          {
-            id: "assigned_to" as keyof Lead,
-            label: "Assigned To",
-            sortable: false,
-            minWidth: 100,
-          },
-
-          {
-            id: "date" as keyof Lead,
-            label: "Date",
-            sortable: true,
-            minWidth: 100,
-          },
-          {
-            id: "created_at" as keyof Lead,
-            label: "Created On",
-            sortable: true,
-            minWidth: 140,
-          },
-        ]
+      ? currentUser?.role === "manager"
+        ? [
+            {
+              id: "assigned_to" as keyof Lead,
+              label: "Assigned To",
+              sortable: false,
+              minWidth: 100,
+            },
+          ]
+        : [
+            {
+              id: "assigned_to" as keyof Lead,
+              label: "Assigned To",
+              sortable: false,
+              minWidth: 100,
+            },
+            {
+              id: "date" as keyof Lead,
+              label: "Date",
+              sortable: true,
+              minWidth: 100,
+            },
+            {
+              id: "created_at" as keyof Lead,
+              label: "Created On",
+              sortable: true,
+              minWidth: 140,
+            },
+          ]
       : []),
-
     // ✅ Show Assigned On for everyone
     {
       id: "assigned_date" as keyof Lead,
@@ -164,14 +171,14 @@ const LeadTable: React.FC<LeadTableProps> = ({
   );
 
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
-    company_name: 100,
-    owner_name: 80,
-    product: 100,
-    contact_number: 120,
+    company_name: 300,
+    owner_name: 120,
+    product: 120,
+    contact_number: 140,
     source: 80,
     country: 80,
     type: 80,
-    status: 120,
+    status: 160,
     assigned_to: 80,
     date: 80,
     created_at: 80,
@@ -466,7 +473,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
         cursor: resizing ? "col-resize" : "default",
       }}
     >
-      <TableContainer sx={{ maxHeight: 600 }}>
+      <TableContainer sx={{ maxHeight: "auto" }}>
         <Table stickyHeader aria-labelledby="tableTitle" size="medium">
           <TableHead>
             <TableRow>
@@ -751,8 +758,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </Tooltip>
                   </TableCell>
 
-                  {/* Assigned To column - only for admin/manager */}
-                  {currentUser?.role !== "salesperson" && (
+                  {currentUser?.role === "admin" && (
                     <>
                       <TableCell
                         style={{
@@ -797,6 +803,22 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         </Typography>
                       </TableCell>
                     </>
+                  )}
+
+                  {currentUser?.role === "manager" && (
+                    <TableCell
+                      style={{
+                        width: columnWidths.assigned_to,
+                        maxWidth: columnWidths.assigned_to,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <Typography variant="body2" noWrap>
+                        {lead.assigned_user?.name || "Unassigned"}
+                      </Typography>
+                    </TableCell>
                   )}
 
                   <TableCell
