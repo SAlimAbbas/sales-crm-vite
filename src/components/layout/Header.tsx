@@ -97,7 +97,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </Typography>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {user?.role === "salesperson" && <ClockInOutButton />}
+            {(user?.role === "salesperson" || user?.role === "manager") && (
+              <ClockInOutButton />
+            )}
             {/* Theme Toggle Button */}
             <IconButton
               onClick={toggleTheme}

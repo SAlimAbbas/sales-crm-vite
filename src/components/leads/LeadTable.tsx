@@ -108,9 +108,9 @@ const LeadTable: React.FC<LeadTableProps> = ({
     { id: "owner_name", label: "Name", sortable: true, minWidth: 120 },
     { id: "product", label: "Product", sortable: true, minWidth: 120 },
     { id: "contact_number", label: "Phone", sortable: false, minWidth: 140 },
-    { id: "source", label: "Source", sortable: true, minWidth: 120 },
-    { id: "country", label: "Country", sortable: true, minWidth: 100 },
-    { id: "type", label: "Type", sortable: true, minWidth: 100 },
+    { id: "source", label: "Source", sortable: true, minWidth: 140 },
+    { id: "country", label: "Country", sortable: true, minWidth: 80 },
+    { id: "type", label: "Type", sortable: true, minWidth: 140 },
     { id: "status", label: "Status", sortable: true, minWidth: 160 },
 
     // ✅ Show Assigned To only for admin/manager, hide date fields for manager
@@ -121,7 +121,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               id: "assigned_to" as keyof Lead,
               label: "Assigned To",
               sortable: false,
-              minWidth: 100,
+              minWidth: 140,
             },
           ]
         : [
@@ -135,7 +135,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               id: "date" as keyof Lead,
               label: "Date",
               sortable: true,
-              minWidth: 100,
+              minWidth: 120,
             },
             {
               id: "created_at" as keyof Lead,
@@ -175,13 +175,13 @@ const LeadTable: React.FC<LeadTableProps> = ({
     owner_name: 120,
     product: 120,
     contact_number: 140,
-    source: 80,
+    source: 140,
     country: 80,
-    type: 80,
+    type: 140,
     status: 160,
-    assigned_to: 80,
-    date: 80,
-    created_at: 80,
+    assigned_to: 140,
+    date: 120,
+    created_at: 100,
     assigned_date: 80,
     actions: 80,
   });
@@ -473,7 +473,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
         cursor: resizing ? "col-resize" : "default",
       }}
     >
-      <TableContainer sx={{ maxHeight: "auto" }}>
+      <TableContainer sx={{ maxHeight: 600 }}>
         <Table stickyHeader aria-labelledby="tableTitle" size="medium">
           <TableHead>
             <TableRow>

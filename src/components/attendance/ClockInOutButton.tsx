@@ -20,6 +20,8 @@ import { AccessTime, ArrowDropDown } from "@mui/icons-material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { attendanceService } from "../../services/attendanceService";
 import { useNotification } from "../../contexts/NotificationContext";
+import { theme } from "../../styles/theme";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ClockInOutButton: React.FC = () => {
   const [openClockOut, setOpenClockOut] = useState(false);
@@ -33,6 +35,8 @@ const ClockInOutButton: React.FC = () => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const { showNotification } = useNotification();
   const queryClient = useQueryClient();
+
+  const { user } = useAuth();
 
   const { data: statusData, refetch } = useQuery<any>({
     queryKey: ["attendance-status"],
@@ -118,6 +122,68 @@ const ClockInOutButton: React.FC = () => {
     statusData?.current_break_seconds,
     lastUpdateTime,
   ]);
+
+  // Show recurring login reminder until user clocks in
+  useEffect(() => {
+    if (!statusData || user?.role === "admin") return;
+
+    const today = new Date().toDateString();
+    const hasLoggedInToday = localStorage.getItem("has_clocked_in_today");
+
+    // If already clocked in today, mark it and clear reminders
+    if (statusData.is_clocked_in) {
+      if (hasLoggedInToday !== today) {
+        localStorage.setItem("has_clocked_in_today", today);
+      }
+      return;
+    }
+
+    // If user hasn't clocked in today, show recurring reminders
+    if (hasLoggedInToday !== today) {
+      // Initial reminder after 3 seconds
+      const initialTimer = setTimeout(() => {
+        showNotification(
+          "⏰ Please clock in to start tracking your work time!",
+          "warning"
+        );
+      }, 3000);
+
+      // Recurring reminder every 2 minutes
+      const recurringTimer = setInterval(() => {
+        showNotification(
+          "⏰ Reminder: You haven't clocked in yet. Please clock in to continue.",
+          "warning"
+        );
+      }, 3 * 60 * 1000); // 2 minutes
+
+      return () => {
+        clearTimeout(initialTimer);
+        clearInterval(recurringTimer);
+      };
+    }
+  }, [statusData?.is_clocked_in, statusData, , user?.role]);
+
+  // Clear the clocked-in flag at midnight
+  useEffect(() => {
+    const checkMidnight = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+
+      const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+
+      const midnightTimer = setTimeout(() => {
+        localStorage.removeItem("has_clocked_in_today");
+        // Reload or check status again
+        window.location.reload();
+      }, timeUntilMidnight);
+
+      return () => clearTimeout(midnightTimer);
+    };
+
+    checkMidnight();
+  }, []);
 
   const clockInMutation = useMutation({
     mutationFn: attendanceService.clockIn,
@@ -258,19 +324,24 @@ const ClockInOutButton: React.FC = () => {
             px: 2,
             py: 0.5,
             borderRadius: 2,
-            backgroundColor: isClockedIn ? "success.main" : "background.paper",
-            color: isClockedIn ? "white" : "text.primary",
+            backgroundColor: isClockedIn
+              ? "success.main"
+              : theme.palette.secondary.dark,
+            color: isClockedIn ? "white" : theme.palette.secondary.contrastText,
             border: isClockedIn ? "none" : "1px solid",
             borderColor: "divider",
             transition: "all 0.3s",
             "&:hover": {
               backgroundColor: isClockedIn ? "success.dark" : "action.hover",
+              color: isClockedIn ? "white" : "text.primary",
             },
           }}
         >
           <AccessTime
             sx={{
-              color: isClockedIn ? "#4caf50" : "#f44336", // Green : Red
+              color: isClockedIn
+                ? theme.palette.success.main
+                : theme.palette.warning.light,
               animation: !isClockedIn ? "blink 1.5s infinite" : "none",
               "@keyframes blink": {
                 "0%, 100%": { opacity: 1 },

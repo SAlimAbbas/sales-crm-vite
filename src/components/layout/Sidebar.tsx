@@ -73,6 +73,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       path: "/analytics",
       roles: ["admin", "manager"],
     },
+    {
+      text: "Converted Clients",
+      icon: <BusinessIcon />,
+      path: "/converted-clients",
+      roles: ["admin", "manager"],
+      // element: <ConvertedClientManagement />,
+    },
   ];
 
   const handleNavigation = (path: string) => {

@@ -33,6 +33,7 @@ import { theme } from "./styles/theme";
 import "./App.css";
 import { NotificationSystemProvider } from "./contexts/NotificationSystemContext";
 import NotificationsPage from "./components/notifications/NotificationsPage";
+import ConvertedClientManagement from "./components/convertedClients/ConvertedClientManagement";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -85,6 +86,10 @@ const AppRoutes: React.FC = () => {
                 <Route path="tasks" element={<TaskManagement />} />
                 <Route path="followups" element={<FollowupManagement />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
+                <Route
+                  path="converted-clients"
+                  element={<ConvertedClientManagement />}
+                />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Layout>

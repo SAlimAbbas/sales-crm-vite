@@ -28,8 +28,9 @@ import { format } from "date-fns";
 
 const AttendanceReportsSection: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [selectedReport, setSelectedReport] = useState<{
     employeeName: string;
     date: string;
@@ -37,15 +38,22 @@ const AttendanceReportsSection: React.FC = () => {
   } | null>(null);
 
   const { data: usersData } = useQuery<any>({
-    queryKey: ["salespeople-list"],
-    queryFn: () => userService.getUsers({ role: "salesperson" }),
+    queryKey: ["employees-list"],
+    queryFn: () => userService.getUsers(), // This gets all users
   });
 
   const { data: attendanceData, isLoading } = useQuery<any>({
-    queryKey: ["attendance-history", selectedUser, startDate, endDate],
+    queryKey: [
+      "attendance-history",
+      selectedUser,
+      selectedRole,
+      startDate,
+      endDate,
+    ],
     queryFn: () =>
       attendanceService.getAttendanceHistory({
         user_id: selectedUser || undefined,
+        role: selectedRole || undefined, // Add this
         start_date: startDate || undefined,
         end_date: endDate || undefined,
       }),
@@ -65,22 +73,35 @@ const AttendanceReportsSection: React.FC = () => {
         Attendance Reports
       </Typography>
 
-      <Box display="flex" gap={2} mb={3}>
+      <Box display="flex" gap={2} mb={3} flexWrap="wrap">
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Salesperson</InputLabel>
+          <InputLabel>Employee</InputLabel>
           <Select
             value={selectedUser}
-            label="Salesperson"
+            label="Employee"
             onChange={(e) => setSelectedUser(e.target.value)}
           >
-            <MenuItem value="">All Salespeople</MenuItem>
-            {(usersData?.data?.data || usersData?.data || []).map(
-              (user: any) => (
+            <MenuItem value="">All Employees</MenuItem>
+            {(usersData?.data?.data || usersData?.data || [])
+              .filter((user: any) => user.role !== "admin") // Add this filter
+              .map((user: any) => (
                 <MenuItem key={user.id} value={user.id}>
-                  {user.name}
+                  {user.name} ({user.role})
                 </MenuItem>
-              )
-            )}
+              ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Filter by Role</InputLabel>
+          <Select
+            value={selectedRole}
+            label="Filter by Role"
+            onChange={(e) => setSelectedRole(e.target.value)}
+          >
+            <MenuItem value="">All Roles</MenuItem>
+            <MenuItem value="manager">Managers</MenuItem>
+            <MenuItem value="salesperson">Salespeople</MenuItem>
           </Select>
         </FormControl>
 
@@ -91,6 +112,7 @@ const AttendanceReportsSection: React.FC = () => {
           InputLabelProps={{ shrink: true }}
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
+          sx={{ minWidth: 150 }}
         />
 
         <TextField
@@ -100,6 +122,7 @@ const AttendanceReportsSection: React.FC = () => {
           InputLabelProps={{ shrink: true }}
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
+          sx={{ minWidth: 150 }}
         />
       </Box>
 

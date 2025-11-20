@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
         {/* Stats Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Total Leads (All Time)"
+            title={`Total Leads ${dateRange.replace(/_/g, " ")}`}
             value={stats?.total_leads || 0}
             icon={<BusinessIcon />}
             color="primary"
