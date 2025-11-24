@@ -45,6 +45,7 @@ import { LEAD_STATUS } from "../../utils/constants";
 import { leadService } from "../../services/leadService";
 import { useNotification } from "../../contexts/NotificationContext";
 import LoadingSkeleton from "../common/LoadingSkeleton";
+import { theme } from "../../styles/theme";
 
 interface LeadTableProps {
   leads: Lead[];
@@ -545,7 +546,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       bottom: 0,
                       width: "4px",
                       cursor: "col-resize",
-                      backgroundColor: "rgba(0, 0, 0, 0.12)", // Always visible
+                      backgroundColor: theme.palette.grey[500],
                       borderRight: "1px solid rgba(0, 0, 0, 0.2)", // Optional: adds a border line
                       "&:hover": {
                         backgroundColor: "rgba(25, 118, 210, 0.4)", // Blue on hover

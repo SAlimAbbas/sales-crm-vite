@@ -29,6 +29,7 @@ import {
   Clear as ClearIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -45,7 +46,7 @@ export interface FilterState {
   type: string;
   source: string;
   country: string;
-  assignedTo: string;
+  assignedTo: string[];
   dateField: string;
   dateFrom: Date | null;
   dateTo: Date | null;
@@ -59,6 +60,7 @@ interface LeadFiltersProps {
   onReset: () => void;
   loading?: boolean;
   currentUser?: any;
+  isWorkingOnLeads?: boolean;
 }
 
 const initialFilters: FilterState = {
@@ -67,7 +69,7 @@ const initialFilters: FilterState = {
   type: "",
   source: "",
   country: "",
-  assignedTo: "",
+  assignedTo: [],
   dateField: "date",
   dateFrom: null,
   dateTo: null,
@@ -81,40 +83,56 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   onReset,
   currentUser,
   loading = false,
+  isWorkingOnLeads = false,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search);
   const [localCountry, setLocalCountry] = useState(filters.country);
   const [localProduct, setLocalProduct] = useState(filters.product);
+  const [pendingFilters, setPendingFilters] = useState<FilterState>(filters);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+
+  const isCountryDisabled = useMemo(() => {
+    return pendingFilters.type === "domestic";
+  }, [pendingFilters.type]);
 
   const { data: usersData } = useQuery<any>({
     queryKey: ["salespeople"],
     queryFn: () => userService.getUsers({ role: "salesperson" }),
-    select: (data) => data?.data || data, // Handle both ApiResponse<UsersResponse> and UsersResponse
+    select: (data) => data?.data || data,
   });
 
-  // Debounced search handler - only triggers after 500ms of no typing
   const filtersRef = useRef(filters);
 
+  // Update filtersRef when filters change
   useEffect(() => {
     filtersRef.current = filters;
   }, [filters]);
 
-  // Add this useEffect near the top of the component, after state declarations
+  // Update the sync effect to only sync when no pending changes
+  useEffect(() => {
+    if (!hasPendingChanges) {
+      setPendingFilters(filters);
+    }
+  }, [filters, hasPendingChanges]);
+
+  // Force assigned_date for salesperson
   useEffect(() => {
     if (currentUser?.role === "salesperson") {
-      // Force set to assigned_date for salesperson
       if (filters.dateField !== "assigned_date") {
         onFiltersChange({ ...filters, dateField: "assigned_date" });
       }
     }
   }, [currentUser?.role]);
 
+  // Sync local state with filters
   useEffect(() => {
+    setLocalSearch(filters.search);
     setLocalCountry(filters.country);
     setLocalProduct(filters.product);
-  }, [filters.country, filters.product]);
+  }, [filters.search, filters.country, filters.product]);
 
+  // Cleanup debounced functions
   useEffect(() => {
     return () => {
       debouncedSearchRef.current.cancel();
@@ -167,13 +185,40 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     debouncedSearchRef.current(value, onFiltersChange);
   };
 
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
-    onFiltersChange({ ...filters, [key]: value });
+  const handlePendingFilterChange = (key: keyof FilterState, value: any) => {
+    setPendingFilters((prev) => ({ ...prev, [key]: value }));
+    setHasPendingChanges(true); // ✅ Mark that user made changes
+  };
+
+  const handleApplyFilters = () => {
+    setHasPendingChanges(false);
+
+    // ✅ Check if filters are actually the same (it's a refresh, not a filter change)
+    const filtersUnchanged =
+      JSON.stringify(filters) === JSON.stringify(pendingFilters);
+
+    // Pass a flag to indicate if this is a refresh
+    if (isWorkingOnLeads && filtersUnchanged) {
+      // @ts-ignore - We know onFiltersChange can accept a second parameter
+      onFiltersChange(pendingFilters, true); // ✅ Pass true for shouldForceRefresh
+    } else {
+      onFiltersChange(pendingFilters);
+    }
+  };
+
+  const handleReset = () => {
+    setLocalSearch("");
+    setLocalCountry("");
+    setLocalProduct("");
+    setPendingFilters(initialFilters);
+    setHasPendingChanges(false); // ✅ Clear the flag on reset
+    onFiltersChange(initialFilters);
+    onReset();
   };
 
   const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
-    ...(currentUser.role === "admin" || currentUser.role === "manager"
+    ...(currentUser?.role === "admin" || currentUser?.role === "manager"
       ? [{ value: LEAD_STATUS.UNASSIGNED, label: "Unassigned" }]
       : []),
     { value: LEAD_STATUS.PROSPECTS, label: "Prospects" },
@@ -181,14 +226,14 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     { value: LEAD_STATUS.RINGING, label: "Ringing" },
     { value: LEAD_STATUS.CALL_BACK, label: "Call Back" },
     { value: LEAD_STATUS.FOLLOW_UP, label: "Follow Up" },
-    { value: LEAD_STATUS.NOT_INTERESTED, label: "Not Interested" }, // ✅ Changed
+    { value: LEAD_STATUS.NOT_INTERESTED, label: "Not Interested" },
     { value: LEAD_STATUS.WHATSAPPED, label: "WhatsApped" },
     { value: LEAD_STATUS.INVALID_CONTACT, label: "Invalid Contact" },
     { value: LEAD_STATUS.NOT_ON_WHATSAPP, label: "Not on WhatsApp" },
-    { value: LEAD_STATUS.BUSY, label: "Busy" }, // ✅ Add
-    { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" }, // ✅ Add
-    { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" }, // ✅ Add
-    { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" }, // ✅ Add
+    { value: LEAD_STATUS.BUSY, label: "Busy" },
+    { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" },
+    { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" },
+    { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" },
   ];
 
   const typeOptions = [
@@ -210,9 +255,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   ];
 
   const assignmentOptions = [
-    { value: "", label: "All Assignment" },
-    { value: "assigned", label: "Assigned" },
-    { value: "unassigned", label: "Unassigned" },
     ...(usersData?.data || usersData || []).map((user: User) => ({
       value: user.id.toString(),
       label: user.name,
@@ -224,19 +266,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     return Object.entries(filters).filter(([key, value]) => {
       if (key === "search") return value.trim() !== "";
       if (key === "dateFrom" || key === "dateTo") return value !== null;
-      if (key === "status") return Array.isArray(value) && value.length > 0; // Add this
-      if (key === "dateField") return false; // Exclude dateField from count
+      if (key === "status" || key === "assignedTo")
+        return Array.isArray(value) && value.length > 0;
+      if (key === "dateField") return false;
       return value !== "";
     }).length;
   }, [filters]);
-
-  const handleReset = () => {
-    setLocalSearch("");
-    setLocalCountry("");
-    setLocalProduct("");
-    onFiltersChange(initialFilters);
-    onReset();
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -259,7 +294,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 <InputAdornment position="end">
                   <IconButton
                     size="small"
-                    onClick={() => handleFilterChange("search", "")}
+                    onClick={() => {
+                      setLocalSearch("");
+                      onFiltersChange({ ...filters, search: "" });
+                    }}
                   >
                     <ClearIcon />
                   </IconButton>
@@ -296,6 +334,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
           <Divider sx={{ my: 2 }} />
 
           <Grid container spacing={2}>
+            {/* Status Multi-Select */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <Autocomplete
                 multiple
@@ -303,10 +342,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 options={statusOptions}
                 getOptionLabel={(option) => option.label}
                 value={statusOptions.filter((opt) =>
-                  filters.status.includes(opt.value)
+                  pendingFilters.status.includes(opt.value)
                 )}
                 onChange={(_, newValue) => {
-                  handleFilterChange(
+                  handlePendingFilterChange(
                     "status",
                     newValue.map((v) => v.value)
                   );
@@ -321,13 +360,13 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // ✅ Destructure key separately
+                    const { key, ...tagProps } = getTagProps({ index });
                     return (
                       <Chip
-                        key={key} // ✅ Pass key directly
+                        key={key}
                         label={option.label}
                         size="small"
-                        {...tagProps} // ✅ Spread remaining props without key
+                        {...tagProps}
                       />
                     );
                   })
@@ -335,13 +374,16 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               />
             </Grid>
 
+            {/* Type Dropdown */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Type</InputLabel>
                 <Select
-                  value={filters.type}
+                  value={pendingFilters.type}
                   label="Type"
-                  onChange={(e) => handleFilterChange("type", e.target.value)}
+                  onChange={(e) =>
+                    handlePendingFilterChange("type", e.target.value)
+                  }
                   disabled={loading}
                 >
                   {typeOptions.map((option) => (
@@ -353,13 +395,16 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               </FormControl>
             </Grid>
 
+            {/* Source Dropdown */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Source</InputLabel>
                 <Select
-                  value={filters.source}
+                  value={pendingFilters.source}
                   label="Source"
-                  onChange={(e) => handleFilterChange("source", e.target.value)}
+                  onChange={(e) =>
+                    handlePendingFilterChange("source", e.target.value)
+                  }
                   disabled={loading}
                 >
                   {sourceOptions.map((option) => (
@@ -371,64 +416,74 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               </FormControl>
             </Grid>
 
+            {/* Assignment Multi-Select */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Assignment</InputLabel>
-                <Select
-                  value={
-                    currentUser?.role === "salesperson"
-                      ? currentUser.id.toString()
-                      : filters.assignedTo
-                  }
-                  label="Assignment"
-                  onChange={(e) =>
-                    handleFilterChange("assignedTo", e.target.value)
-                  }
-                  disabled={loading || currentUser?.role === "salesperson"}
-                >
-                  {currentUser?.role === "salesperson"
-                    ? [
-                        {
-                          value: currentUser.id.toString(),
-                          label: currentUser.name,
-                        },
-                      ].map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))
-                    : assignmentOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                multiple
+                size="small"
+                options={assignmentOptions}
+                getOptionLabel={(option) => option.label}
+                value={assignmentOptions.filter((opt) =>
+                  pendingFilters.assignedTo.includes(opt.value)
+                )}
+                onChange={(_, newValue) => {
+                  handlePendingFilterChange(
+                    "assignedTo",
+                    newValue.map((v) => v.value)
+                  );
+                }}
+                disabled={loading || currentUser?.role === "salesperson"}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Assigned To"
+                    placeholder="Select salespeople"
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index });
+                    return (
+                      <Chip
+                        key={key}
+                        label={option.label}
+                        size="small"
+                        {...tagProps}
+                      />
+                    );
+                  })
+                }
+              />
             </Grid>
 
+            {/* Country - Instant Search */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <TextField
                 label="Country"
                 value={localCountry}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setLocalCountry(value); // Update local state immediately for UI
-                  debouncedCountryRef.current(value, filters, onFiltersChange); // Debounce server call
+                  setLocalCountry(value);
+                  debouncedCountryRef.current(value, filters, onFiltersChange);
                 }}
-                disabled={loading}
+                disabled={loading || isCountryDisabled}
                 fullWidth
                 size="small"
+                placeholder={
+                  isCountryDisabled ? "Disabled for Domestic leads" : ""
+                }
               />
             </Grid>
 
+            {/* Product - Instant Search */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <TextField
                 label="Product/Service"
                 value={localProduct}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setLocalProduct(value); // Update local state immediately for UI
-                  debouncedProductRef.current(value, filters, onFiltersChange); // Debounce server call
+                  setLocalProduct(value);
+                  debouncedProductRef.current(value, filters, onFiltersChange);
                 }}
                 disabled={loading}
                 fullWidth
@@ -436,14 +491,15 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               />
             </Grid>
 
+            {/* Tags Dropdown */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Tags</InputLabel>
                 <Select
-                  value={filters.tags || ""}
+                  value={pendingFilters.tags || ""}
                   label="Tags"
                   onChange={(e) => {
-                    handleFilterChange("tags", e.target.value);
+                    handlePendingFilterChange("tags", e.target.value);
                   }}
                   disabled={loading}
                 >
@@ -453,18 +509,19 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 </Select>
               </FormControl>
             </Grid>
+
+            {/* Date Field Dropdown */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Date Field</InputLabel>
                 <Select
-                  value={filters.dateField}
+                  value={pendingFilters.dateField}
                   label="Date Field"
                   onChange={(e) =>
-                    handleFilterChange("dateField", e.target.value)
+                    handlePendingFilterChange("dateField", e.target.value)
                   }
                   disabled={loading || currentUser?.role === "salesperson"}
                 >
-                  {/* Always render all options, but control visibility/interaction through disabled prop */}
                   <MenuItem value="date">Lead Date</MenuItem>
                   <MenuItem value="created_at">Created Date</MenuItem>
                   <MenuItem value="assigned_date">Assigned Date</MenuItem>
@@ -472,13 +529,15 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               </FormControl>
             </Grid>
 
-            {/* Single Date Range Picker */}
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            {/* Date Range Picker */}
+            <Grid size={{ xs: 12, sm: 12, md: 8, lg: 6 }}>
               <Box display="flex" gap={1} alignItems="center">
                 <DatePicker
                   label="From"
-                  value={filters.dateFrom}
-                  onChange={(value) => handleFilterChange("dateFrom", value)}
+                  value={pendingFilters.dateFrom}
+                  onChange={(value) =>
+                    handlePendingFilterChange("dateFrom", value)
+                  }
                   disabled={loading}
                   slotProps={{
                     textField: {
@@ -492,9 +551,11 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 </Typography>
                 <DatePicker
                   label="To"
-                  value={filters.dateTo}
-                  minDate={filters.dateFrom || undefined}
-                  onChange={(value) => handleFilterChange("dateTo", value)}
+                  value={pendingFilters.dateTo}
+                  minDate={pendingFilters.dateFrom || undefined}
+                  onChange={(value) =>
+                    handlePendingFilterChange("dateTo", value)
+                  }
                   disabled={loading}
                   slotProps={{
                     textField: {
@@ -505,36 +566,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 />
               </Box>
             </Grid>
-
-            {/* <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <DatePicker
-                label="Date From"
-                value={filters.dateFrom}
-                onChange={(value) => handleFilterChange("dateFrom", value)}
-                disabled={loading}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <DatePicker
-                label="Date To"
-                value={filters.dateTo}
-                onChange={(value) => handleFilterChange("dateTo", value)}
-                disabled={loading}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                  },
-                }}
-              />
-            </Grid> */}
           </Grid>
 
           {/* Active Filters Display */}
@@ -548,7 +579,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   <Chip
                     label={`Search: "${filters.search}"`}
                     size="small"
-                    onDelete={() => handleFilterChange("search", "")}
+                    onDelete={() => {
+                      setLocalSearch("");
+                      onFiltersChange({ ...filters, search: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -562,7 +596,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                         : `${filters.status.length} selected`
                     }`}
                     size="small"
-                    onDelete={() => handleFilterChange("status", [])}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({ ...prev, status: [] }));
+                      onFiltersChange({ ...filters, status: [] });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -573,7 +610,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                         ?.label
                     }`}
                     size="small"
-                    onDelete={() => handleFilterChange("type", "")}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({ ...prev, type: "" }));
+                      onFiltersChange({ ...filters, type: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -581,19 +621,30 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   <Chip
                     label={`Source: ${filters.source}`}
                     size="small"
-                    onDelete={() => handleFilterChange("source", "")}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({ ...prev, source: "" }));
+                      onFiltersChange({ ...filters, source: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
-                {filters.assignedTo && (
+                {filters.assignedTo.length > 0 && (
                   <Chip
                     label={`Assigned: ${
-                      assignmentOptions.find(
-                        (opt) => opt.value === filters.assignedTo
-                      )?.label
+                      filters.assignedTo.length === 1
+                        ? assignmentOptions.find(
+                            (opt) => opt.value === filters.assignedTo[0]
+                          )?.label
+                        : `${filters.assignedTo.length} selected`
                     }`}
                     size="small"
-                    onDelete={() => handleFilterChange("assignedTo", "")}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({
+                        ...prev,
+                        assignedTo: [],
+                      }));
+                      onFiltersChange({ ...filters, assignedTo: [] });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -601,7 +652,10 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   <Chip
                     label={`Country: ${filters.country}`}
                     size="small"
-                    onDelete={() => handleFilterChange("country", "")}
+                    onDelete={() => {
+                      setLocalCountry("");
+                      onFiltersChange({ ...filters, country: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -609,16 +663,21 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   <Chip
                     label={`Product: ${filters.product}`}
                     size="small"
-                    onDelete={() => handleFilterChange("product", "")}
+                    onDelete={() => {
+                      setLocalProduct("");
+                      onFiltersChange({ ...filters, product: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
-
                 {filters.tags && (
                   <Chip
                     label={`Tag: ${filters.tags.toUpperCase()}`}
                     size="small"
-                    onDelete={() => handleFilterChange("tags", "")}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({ ...prev, tags: "" }));
+                      onFiltersChange({ ...filters, tags: "" });
+                    }}
                     variant="outlined"
                   />
                 )}
@@ -632,21 +691,33 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                         : "Assigned"
                     } From: ${filters.dateFrom.toLocaleDateString()}`}
                     size="small"
-                    onDelete={() => handleFilterChange("dateFrom", null)}
-                    variant="outlined"
-                  />
-                )}
-                {filters.dateTo && (
-                  <Chip
-                    label={`To: ${filters.dateTo.toLocaleDateString()}`}
-                    size="small"
-                    onDelete={() => handleFilterChange("dateTo", null)}
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({
+                        ...prev,
+                        dateFrom: null,
+                      }));
+                      onFiltersChange({ ...filters, dateFrom: null });
+                    }}
                     variant="outlined"
                   />
                 )}
               </Box>
             </Box>
           )}
+
+          <Box display="flex" gap={2} justifyContent="center" mt={3}>
+            <Button variant="outlined" onClick={handleReset} disabled={loading}>
+              Reset Filters
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleApplyFilters}
+              disabled={loading}
+              startIcon={isWorkingOnLeads ? <RefreshIcon /> : undefined}
+            >
+              {isWorkingOnLeads ? "Refresh & Apply Filters" : "Apply Filters"}
+            </Button>
+          </Box>
         </Collapse>
       </Paper>
     </LocalizationProvider>

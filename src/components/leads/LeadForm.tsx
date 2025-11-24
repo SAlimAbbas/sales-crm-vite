@@ -74,7 +74,11 @@ const LeadForm: React.FC<LeadFormProps> = ({
           country: values.country,
           product: values.product,
           owner_name: values.owner_name || undefined,
-          website: values.website || undefined,
+          website: values.website
+            ? values.website.match(/^https?:\/\//)
+              ? values.website
+              : "https://" + values.website
+            : undefined,
           email: values.email || undefined,
           assigned_to: values.assigned_to
             ? Number(values.assigned_to)
@@ -154,6 +158,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
     "Referral",
     "Social Media",
     "Cold Call",
+    "Paid Campaign",
     "Email Campaign",
     "Trade Show",
     "Other",

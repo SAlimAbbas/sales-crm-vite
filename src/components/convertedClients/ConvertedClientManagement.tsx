@@ -205,6 +205,7 @@ const ConvertedClientManagement: React.FC = () => {
           sortDirection={sortDirection}
           onRefresh={refetch}
           rowsPerPageOptions={[50, 75, 100]}
+          userRole={user?.role || "user"}
         />
       </Paper>
 

@@ -44,6 +44,12 @@ const LeadManagement: React.FC = () => {
     null
   );
 
+  // Add these new states after existing state declarations
+  const [isWorkingOnLeads, setIsWorkingOnLeads] = useState(false);
+  const [snapshotLeadIds, setSnapshotLeadIds] = useState<number[]>([]);
+  const [lastAppliedFilters, setLastAppliedFilters] = useState<string>("");
+  const [forceRefresh, setForceRefresh] = useState(false);
+
   const [openFollowupForm, setOpenFollowupForm] = useState(false);
   const [selectedLeadIdForFollowup, setSelectedLeadIdForFollowup] = useState<
     number | null
@@ -97,7 +103,7 @@ const LeadManagement: React.FC = () => {
     type: "",
     source: "",
     country: "",
-    assignedTo: "",
+    assignedTo: [],
     dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role
     dateFrom: null,
     dateTo: null,
@@ -122,7 +128,10 @@ const LeadManagement: React.FC = () => {
       type: filters.type,
       source: filters.source,
       country: filters.country,
-      assigned_to: filters.assignedTo,
+      assigned_to:
+        filters.assignedTo.length > 0
+          ? filters.assignedTo.join(",")
+          : undefined,
       date_field: filters.dateField,
       date_from: filters.dateFrom
         ? format(filters.dateFrom, "yyyy-MM-dd")
@@ -132,8 +141,13 @@ const LeadManagement: React.FC = () => {
         : undefined,
       product: filters.product,
       tags: filters.tags,
-      sort: user?.role === "salesperson" ? "assigned_date" : sortField, // ✅ Override sort for salesperson
+      sort: user?.role === "salesperson" ? "assigned_date" : sortField,
       order: sortDirection,
+      // ✅ Add snapshot IDs if working on leads
+      snapshot_ids:
+        isWorkingOnLeads && snapshotLeadIds.length > 0
+          ? snapshotLeadIds.join(",")
+          : undefined,
     };
 
     return Object.fromEntries(
@@ -149,6 +163,8 @@ const LeadManagement: React.FC = () => {
     sortField,
     sortDirection,
     user?.role,
+    isWorkingOnLeads,
+    snapshotLeadIds,
   ]);
 
   const {
@@ -164,6 +180,28 @@ const LeadManagement: React.FC = () => {
     // ✅ Add these to prevent unnecessary re-renders
     notifyOnChangeProps: ["data", "error"],
   });
+
+  useEffect(() => {
+    if (leadsData?.data) {
+      // Create a unique key for current filter state
+      const currentFilterKey = JSON.stringify({
+        filters,
+        statusFilter,
+        page,
+      });
+
+      // Only create snapshot when filters have changed AND data has loaded
+      if (currentFilterKey !== lastAppliedFilters) {
+        const currentLeadIds = leadsData.data.map((lead: any) => lead.id);
+        if (currentLeadIds.length > 0) {
+          setSnapshotLeadIds(currentLeadIds);
+          setIsWorkingOnLeads(true);
+          setLastAppliedFilters(currentFilterKey);
+          setForceRefresh(false);
+        }
+      }
+    }
+  }, [leadsData?.data, forceRefresh]);
 
   // Tab configuration
   const statusTabs = useMemo(() => {
@@ -193,19 +231,36 @@ const LeadManagement: React.FC = () => {
     setStatusFilter(value);
     setPage(0);
     setSelectedLeadIds([]);
-    // Clear status filter if using tabs
-    setFilters((prev) => ({ ...prev, status: [] })); // ✅ Change from "" to []
+    setIsWorkingOnLeads(false); // ✅ Reset snapshot mode
+    setSnapshotLeadIds([]); // ✅ Clear snapshot
+    setLastAppliedFilters(""); // ✅ Clear last applied filter key
+    setFilters((prev) => ({ ...prev, status: [] }));
   };
 
-  const handleFiltersChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters);
-    setPage(0);
-    setSelectedLeadIds([]);
-    // If status filter is applied via advanced filters, clear tab selection
-    if (newFilters.status && statusFilter !== "all") {
-      setStatusFilter("all");
-    }
-  }, []);
+  const handleFiltersChange = useCallback(
+    (newFilters: FilterState, shouldForceRefresh = false) => {
+      setFilters(newFilters);
+      setPage(0);
+      setSelectedLeadIds([]);
+
+      // ✅ If this is a refresh (same filters), force the snapshot update
+      if (shouldForceRefresh) {
+        setForceRefresh(true);
+        setIsWorkingOnLeads(false);
+        setSnapshotLeadIds([]);
+      } else {
+        // New filters applied
+        setIsWorkingOnLeads(false);
+        setSnapshotLeadIds([]);
+        setLastAppliedFilters("");
+      }
+
+      if (newFilters.status.length > 0 && statusFilter !== "all") {
+        setStatusFilter("all");
+      }
+    },
+    [statusFilter]
+  );
 
   const handleFiltersReset = useCallback(() => {
     setFilters({
@@ -214,7 +269,7 @@ const LeadManagement: React.FC = () => {
       type: "",
       source: "",
       country: "",
-      assignedTo: "",
+      assignedTo: [],
       dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role
       dateFrom: null,
       dateTo: null,
@@ -223,7 +278,10 @@ const LeadManagement: React.FC = () => {
     });
     setPage(0);
     setSelectedLeadIds([]);
-  }, []);
+    setIsWorkingOnLeads(false); // ✅ Reset snapshot mode when filters reset
+    setSnapshotLeadIds([]);
+    setLastAppliedFilters("");
+  }, [user?.role]);
 
   const handleSort = useCallback((field: string, direction: "asc" | "desc") => {
     setSortField(field);
@@ -365,6 +423,7 @@ const LeadManagement: React.FC = () => {
         onFiltersChange={handleFiltersChange}
         onReset={handleFiltersReset}
         loading={isLoading}
+        isWorkingOnLeads={isWorkingOnLeads}
       />
 
       {/* Bulk Actions */}

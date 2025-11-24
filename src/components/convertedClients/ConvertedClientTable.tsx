@@ -44,6 +44,7 @@ interface ConvertedClientTableProps {
   sortDirection: "asc" | "desc";
   onRefresh: () => void;
   rowsPerPageOptions?: number[];
+  userRole: string;
 }
 
 const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
@@ -61,6 +62,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
   sortDirection,
   onRefresh,
   rowsPerPageOptions = [50, 75, 100],
+  userRole,
 }) => {
   const [planFeaturesDialog, setPlanFeaturesDialog] = useState<{
     open: boolean;
@@ -88,7 +90,6 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
         return "default";
     }
   };
-
   const getPaymentStatusLabel = (status: string) => {
     return status
       .split("_")
@@ -368,10 +369,10 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           noWrap
                           sx={{ maxWidth: 200 }}
                         >
-                          {client.plan_features.substring(0, 50)}
-                          {client.plan_features.length > 50 && "..."}
+                          {client.plan_features.substring(0, 30)}
+                          {client.plan_features.length > 30 && "..."}
                         </Typography>
-                        {client.plan_features.length > 50 && (
+                        {client.plan_features.length > 30 && (
                           <Button
                             size="small"
                             onClick={() =>
@@ -403,16 +404,18 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete(client)}
-                          disabled={loading}
-                          color="error"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      {userRole === "admin" && (
+                        <Tooltip title="Delete">
+                          <IconButton
+                            size="small"
+                            onClick={() => onDelete(client)}
+                            disabled={loading}
+                            color="error"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
