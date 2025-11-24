@@ -93,8 +93,9 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 
   const downloadTemplate = () => {
     const template = `date,company_name,contact_number,source,country,product,owner_name,website,email
-2024-01-15,ABC Company,+1234567890,Website,USA,Product A,John Doe,https://abc.com,john@abc.com
-2024-01-15,XYZ Corp,+1987654321,Referral,India,Product B,,,info@xyz.com`;
+2024-01-15,ABC Company,+1234567890,Websites,USA,Product A,John Doe,https://abc.com,john@abc.com
+2024-01-15,XYZ Corp,+1987654321,Referral,India,Product B,,,info@xyz.com
+2024-01-16,Test Company,+1122334455,Social Media,Canada,Product C,Jane Smith,example.com,jane@test.com`;
 
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);

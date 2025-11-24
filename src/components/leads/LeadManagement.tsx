@@ -44,11 +44,10 @@ const LeadManagement: React.FC = () => {
     null
   );
 
-  // Add these new states after existing state declarations
-  const [isWorkingOnLeads, setIsWorkingOnLeads] = useState(false);
-  const [snapshotLeadIds, setSnapshotLeadIds] = useState<number[]>([]);
-  const [lastAppliedFilters, setLastAppliedFilters] = useState<string>("");
-  const [forceRefresh, setForceRefresh] = useState(false);
+  // Snapshot state management
+  const [snapshotHash, setSnapshotHash] = useState<string | null>(null);
+  const [snapshotTotal, setSnapshotTotal] = useState<number | null>(null);
+  const [isWorkingOnSnapshot, setIsWorkingOnSnapshot] = useState(false);
 
   const [openFollowupForm, setOpenFollowupForm] = useState(false);
   const [selectedLeadIdForFollowup, setSelectedLeadIdForFollowup] = useState<
@@ -143,11 +142,8 @@ const LeadManagement: React.FC = () => {
       tags: filters.tags,
       sort: user?.role === "salesperson" ? "assigned_date" : sortField,
       order: sortDirection,
-      // ✅ Add snapshot IDs if working on leads
-      snapshot_ids:
-        isWorkingOnLeads && snapshotLeadIds.length > 0
-          ? snapshotLeadIds.join(",")
-          : undefined,
+      // ✅ Add snapshot hash if working on snapshot
+      snapshot_hash: isWorkingOnSnapshot ? snapshotHash : undefined,
     };
 
     return Object.fromEntries(
@@ -163,8 +159,8 @@ const LeadManagement: React.FC = () => {
     sortField,
     sortDirection,
     user?.role,
-    isWorkingOnLeads,
-    snapshotLeadIds,
+    snapshotHash,
+    isWorkingOnSnapshot, // ✅ Key dependency
   ]);
 
   const {
@@ -181,27 +177,19 @@ const LeadManagement: React.FC = () => {
     notifyOnChangeProps: ["data", "error"],
   });
 
+  // Capture snapshot from response
   useEffect(() => {
-    if (leadsData?.data) {
-      // Create a unique key for current filter state
-      const currentFilterKey = JSON.stringify({
-        filters,
-        statusFilter,
-        page,
-      });
+    if (leadsData?.snapshot_hash) {
+      setSnapshotHash(leadsData.snapshot_hash);
+      setSnapshotTotal(leadsData.snapshot_total);
 
-      // Only create snapshot when filters have changed AND data has loaded
-      if (currentFilterKey !== lastAppliedFilters) {
-        const currentLeadIds = leadsData.data.map((lead: any) => lead.id);
-        if (currentLeadIds.length > 0) {
-          setSnapshotLeadIds(currentLeadIds);
-          setIsWorkingOnLeads(true);
-          setLastAppliedFilters(currentFilterKey);
-          setForceRefresh(false);
-        }
+      // If this is a fresh query (not already working on snapshot)
+      if (!isWorkingOnSnapshot && !leadsData.is_snapshot) {
+        // User just applied filters - we have a new snapshot available
+        // But don't activate it yet
       }
     }
-  }, [leadsData?.data, forceRefresh]);
+  }, [leadsData, isWorkingOnSnapshot]);
 
   // Tab configuration
   const statusTabs = useMemo(() => {
@@ -231,35 +219,33 @@ const LeadManagement: React.FC = () => {
     setStatusFilter(value);
     setPage(0);
     setSelectedLeadIds([]);
-    setIsWorkingOnLeads(false); // ✅ Reset snapshot mode
-    setSnapshotLeadIds([]); // ✅ Clear snapshot
-    setLastAppliedFilters(""); // ✅ Clear last applied filter key
+    setIsWorkingOnSnapshot(false); // ✅ Exit snapshot mode
+    setSnapshotHash(null);
+    setSnapshotTotal(null);
     setFilters((prev) => ({ ...prev, status: [] }));
   };
 
   const handleFiltersChange = useCallback(
-    (newFilters: FilterState, shouldForceRefresh = false) => {
+    (newFilters: FilterState, shouldUseSnapshot = false) => {
       setFilters(newFilters);
       setPage(0);
       setSelectedLeadIds([]);
 
-      // ✅ If this is a refresh (same filters), force the snapshot update
-      if (shouldForceRefresh) {
-        setForceRefresh(true);
-        setIsWorkingOnLeads(false);
-        setSnapshotLeadIds([]);
+      if (shouldUseSnapshot && snapshotHash) {
+        // User clicked "Work on These Leads" - activate snapshot
+        setIsWorkingOnSnapshot(true);
       } else {
-        // New filters applied
-        setIsWorkingOnLeads(false);
-        setSnapshotLeadIds([]);
-        setLastAppliedFilters("");
+        // New filter - clear snapshot mode
+        setIsWorkingOnSnapshot(false);
+        setSnapshotHash(null);
+        setSnapshotTotal(null);
       }
 
       if (newFilters.status.length > 0 && statusFilter !== "all") {
         setStatusFilter("all");
       }
     },
-    [statusFilter]
+    [statusFilter, snapshotHash]
   );
 
   const handleFiltersReset = useCallback(() => {
@@ -278,9 +264,9 @@ const LeadManagement: React.FC = () => {
     });
     setPage(0);
     setSelectedLeadIds([]);
-    setIsWorkingOnLeads(false); // ✅ Reset snapshot mode when filters reset
-    setSnapshotLeadIds([]);
-    setLastAppliedFilters("");
+    setIsWorkingOnSnapshot(false); // ✅ Reset snapshot mode when filters reset
+    setSnapshotHash(null);
+    setSnapshotTotal(null);
   }, [user?.role]);
 
   const handleSort = useCallback((field: string, direction: "asc" | "desc") => {
@@ -423,7 +409,8 @@ const LeadManagement: React.FC = () => {
         onFiltersChange={handleFiltersChange}
         onReset={handleFiltersReset}
         loading={isLoading}
-        isWorkingOnLeads={isWorkingOnLeads}
+        isWorkingOnSnapshot={isWorkingOnSnapshot}
+        snapshotTotal={snapshotTotal}
       />
 
       {/* Bulk Actions */}

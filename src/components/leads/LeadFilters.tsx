@@ -56,11 +56,12 @@ export interface FilterState {
 
 interface LeadFiltersProps {
   filters: FilterState;
-  onFiltersChange: (filters: FilterState) => void;
+  onFiltersChange: (filters: FilterState, shouldUseSnapshot?: boolean) => void; // ✅ Add param
   onReset: () => void;
   loading?: boolean;
   currentUser?: any;
-  isWorkingOnLeads?: boolean;
+  isWorkingOnSnapshot?: boolean; // ✅ Add prop
+  snapshotTotal?: number | null; // ✅ Add prop
 }
 
 const initialFilters: FilterState = {
@@ -83,7 +84,8 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   onReset,
   currentUser,
   loading = false,
-  isWorkingOnLeads = false,
+  isWorkingOnSnapshot = false,
+  snapshotTotal = null,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search);
@@ -192,18 +194,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
 
   const handleApplyFilters = () => {
     setHasPendingChanges(false);
+    onFiltersChange(pendingFilters, false); // ✅ Apply new filters (exit snapshot)
+  };
 
-    // ✅ Check if filters are actually the same (it's a refresh, not a filter change)
-    const filtersUnchanged =
-      JSON.stringify(filters) === JSON.stringify(pendingFilters);
-
-    // Pass a flag to indicate if this is a refresh
-    if (isWorkingOnLeads && filtersUnchanged) {
-      // @ts-ignore - We know onFiltersChange can accept a second parameter
-      onFiltersChange(pendingFilters, true); // ✅ Pass true for shouldForceRefresh
-    } else {
-      onFiltersChange(pendingFilters);
-    }
+  const handleWorkOnTheseLeads = () => {
+    setHasPendingChanges(false);
+    onFiltersChange(pendingFilters, true); // ✅ Activate snapshot mode
   };
 
   const handleReset = () => {
@@ -709,14 +705,44 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
             <Button variant="outlined" onClick={handleReset} disabled={loading}>
               Reset Filters
             </Button>
-            <Button
-              variant="contained"
-              onClick={handleApplyFilters}
-              disabled={loading}
-              startIcon={isWorkingOnLeads ? <RefreshIcon /> : undefined}
-            >
-              {isWorkingOnLeads ? "Refresh & Apply Filters" : "Apply Filters"}
-            </Button>
+
+            {isWorkingOnSnapshot ? (
+              <>
+                <Chip
+                  label={`Working on ${snapshotTotal} leads`}
+                  color="primary"
+                  variant="outlined"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleApplyFilters}
+                  disabled={loading}
+                  startIcon={<RefreshIcon />}
+                >
+                  Exit & Refresh Data
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  onClick={handleApplyFilters}
+                  disabled={loading}
+                >
+                  Apply Filters
+                </Button>
+                {snapshotTotal && snapshotTotal > 0 && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleWorkOnTheseLeads}
+                    disabled={loading}
+                  >
+                    Work on These {snapshotTotal} Leads
+                  </Button>
+                )}
+              </>
+            )}
           </Box>
         </Collapse>
       </Paper>
