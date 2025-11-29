@@ -112,8 +112,21 @@ const LeadManagement: React.FC = () => {
 
   const { showNotification } = useNotification();
 
-  // ✅ Memoize cleanParams to prevent unnecessary changes
   const cleanParams = useMemo(() => {
+    // ✅ If in snapshot mode, send minimal params
+    if (isWorkingOnSnapshot && snapshotHash) {
+      const snapshotParams = {
+        page: page + 1,
+        per_page: rowsPerPage,
+        search: filters.search,
+        sort: user?.role === "salesperson" ? "assigned_date" : sortField,
+        order: sortDirection,
+        snapshot_hash: snapshotHash,
+      };
+      return snapshotParams;
+    }
+
+    // ✅ Normal mode - send all filters
     const params = {
       page: page + 1,
       per_page: rowsPerPage,
@@ -142,8 +155,6 @@ const LeadManagement: React.FC = () => {
       tags: filters.tags,
       sort: user?.role === "salesperson" ? "assigned_date" : sortField,
       order: sortDirection,
-      // ✅ Add snapshot hash if working on snapshot
-      snapshot_hash: isWorkingOnSnapshot ? snapshotHash : undefined,
     };
 
     return Object.fromEntries(
@@ -160,7 +171,7 @@ const LeadManagement: React.FC = () => {
     sortDirection,
     user?.role,
     snapshotHash,
-    isWorkingOnSnapshot, // ✅ Key dependency
+    isWorkingOnSnapshot,
   ]);
 
   const {
@@ -173,23 +184,29 @@ const LeadManagement: React.FC = () => {
     placeholderData: (previousData: any) => previousData,
     staleTime: 0,
     refetchOnWindowFocus: false,
-    // ✅ Add these to prevent unnecessary re-renders
     notifyOnChangeProps: ["data", "error"],
+    // ✅ Add this to prevent cache issues
   });
 
-  // Capture snapshot from response
+  // Replace the existing useEffect with this:
   useEffect(() => {
     if (leadsData?.snapshot_hash) {
       setSnapshotHash(leadsData.snapshot_hash);
       setSnapshotTotal(leadsData.snapshot_total);
-
-      // If this is a fresh query (not already working on snapshot)
-      if (!isWorkingOnSnapshot && !leadsData.is_snapshot) {
-        // User just applied filters - we have a new snapshot available
-        // But don't activate it yet
-      }
     }
-  }, [leadsData, isWorkingOnSnapshot]);
+
+    // Handle snapshot expiration
+    if (
+      isWorkingOnSnapshot &&
+      !leadsData?.snapshot_hash &&
+      !leadsData?.is_snapshot
+    ) {
+      showNotification("Snapshot expired. Showing fresh data.", "info");
+      setIsWorkingOnSnapshot(false);
+      setSnapshotHash(null);
+      setSnapshotTotal(null);
+    }
+  }, [leadsData]);
 
   // Tab configuration
   const statusTabs = useMemo(() => {
@@ -401,6 +418,34 @@ const LeadManagement: React.FC = () => {
           ))}
         </Tabs>
       </Paper>
+
+      {/* ✅ ADD THIS - Snapshot Mode Indicator */}
+      {isWorkingOnSnapshot && (
+        <Paper sx={{ mb: 2, p: 2, bgcolor: "info.light" }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="body1">
+              📌 <strong>Snapshot Mode Active</strong> - Working on{" "}
+              {snapshotTotal} locked leads
+            </Typography>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                setIsWorkingOnSnapshot(false);
+                setSnapshotHash(null);
+                setSnapshotTotal(null);
+                refetch();
+              }}
+            >
+              Exit Snapshot Mode
+            </Button>
+          </Box>
+        </Paper>
+      )}
 
       {/* Advanced Filters */}
       <LeadFilters

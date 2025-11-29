@@ -11,6 +11,7 @@ import {
   ConvertedClient,
   ConvertedClientFormData,
 } from "../../types/convertedClient";
+import { userService } from "../../services/userService";
 
 interface ConvertedClientFormProps {
   open: boolean;
@@ -23,7 +24,12 @@ const validationSchema = yup.object({
   lead_id: yup.number().nullable(),
   company_name: yup.string().required("Company name is required"),
   client_name: yup.string().required("Client name is required"),
-  number: yup.string().required("Contact number is required"), // Add this
+  number: yup.string().required("Contact number is required"),
+  company_gst_number: yup.string().nullable(), // Add
+  gst_issued: yup.string().nullable(), // Add
+  company_address: yup.string().nullable(), // Add
+  company_email: yup.string().email("Invalid email").nullable(), // Add
+  executive_id: yup.number().nullable(), // Add
   client_type: yup
     .string()
     .oneOf(["domestic", "international"])
@@ -40,6 +46,8 @@ const validationSchema = yup.object({
   paid_amount_date: yup.string().nullable(),
   pending_amount_condition: yup.string().nullable(),
   pending_amount_date: yup.string().nullable(),
+  upgrade_payment_amount: yup.number().min(0, "Must be positive").nullable(), // Add
+  upgrade_payment_date: yup.string().nullable(), // Add
   plan_features: yup.string().nullable(),
   currency: yup.string().max(3).nullable(),
 });
@@ -59,12 +67,24 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
     enabled: open && !client,
   });
 
+  const { data: salespeople } = useQuery<any>({
+    queryKey: ["salespeople"],
+    queryFn: () => userService.getUsers({ role: "salesperson" }),
+    enabled: open,
+    select: (data) => data?.data || data,
+  });
+
   const formik = useFormik({
     initialValues: {
       lead_id: client?.lead_id || 0,
       company_name: client?.company_name || "",
       client_name: client?.client_name || "",
       number: client?.number || "",
+      company_gst_number: client?.company_gst_number || "", // Add
+      gst_issued: client?.gst_issued || "", // Add
+      company_address: client?.company_address || "", // Add
+      company_email: client?.company_email || "", // Add
+      executive_id: client?.executive_id || 0, // Add
       client_type: client?.client_type || "domestic",
       plan_type: client?.plan_type || "basic",
       plan_amount: client?.plan_amount || 0,
@@ -76,6 +96,10 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
       pending_amount_date: client?.pending_amount_date
         ? client.pending_amount_date.split("T")[0]
         : "",
+      upgrade_payment_amount: client?.upgrade_payment_amount || 0, // Add
+      upgrade_payment_date: client?.upgrade_payment_date
+        ? client.upgrade_payment_date.split("T")[0]
+        : "", // Add
       plan_features: client?.plan_features || "",
       currency: client?.currency || "",
     },
@@ -88,6 +112,11 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
           company_name: values.company_name,
           client_name: values.client_name,
           number: values.number,
+          company_gst_number: values.company_gst_number || undefined, // Add
+          gst_issued: values.gst_issued || undefined, // Add
+          company_address: values.company_address || undefined, // Add
+          company_email: values.company_email || undefined, // Add
+          executive_id: values.executive_id || undefined, // Add
           client_type: values.client_type as "domestic" | "international",
           plan_type: values.plan_type as
             | "basic"
@@ -100,6 +129,8 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
           pending_amount_condition:
             values.pending_amount_condition || undefined,
           pending_amount_date: values.pending_amount_date || undefined,
+          upgrade_payment_amount: values.upgrade_payment_amount || undefined, // Add
+          upgrade_payment_date: values.upgrade_payment_date || undefined, // Add
           plan_features: values.plan_features || undefined,
           currency: values.currency || undefined,
         };
@@ -140,6 +171,11 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
         company_name: client.company_name,
         client_name: client.client_name,
         number: client.number,
+        company_gst_number: client.company_gst_number || "", // Add
+        gst_issued: client.gst_issued || "", // Add
+        company_address: client.company_address || "", // Add
+        company_email: client.company_email || "", // Add
+        executive_id: client.executive_id || 0, // Add
         client_type: client.client_type,
         plan_type: client.plan_type,
         plan_amount: client.plan_amount,
@@ -147,6 +183,10 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
         paid_amount_date: client.paid_amount_date
           ? client.paid_amount_date.split("T")[0]
           : "",
+        upgrade_payment_amount: client.upgrade_payment_amount || 0, // Add
+        upgrade_payment_date: client.upgrade_payment_date
+          ? client.upgrade_payment_date.split("T")[0]
+          : "", // Add
         pending_amount_condition: client.pending_amount_condition || "",
         pending_amount_date: client.pending_amount_date
           ? client.pending_amount_date.split("T")[0]
@@ -160,16 +200,18 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
   }, [open, client]);
 
   // Auto-fill company name when lead is selected
-  // Replace the existing auto-fill useEffect with this:
   useEffect(() => {
     if (formik.values.lead_id && convertedLeads && !client && !isManualEntry) {
       const selectedLead = convertedLeads.find(
         (l: any) => l.id === formik.values.lead_id
       );
       if (selectedLead) {
+        console.log(selectedLead);
         formik.setFieldValue("company_name", selectedLead.company_name);
         formik.setFieldValue("client_name", selectedLead.owner_name || "");
         formik.setFieldValue("number", selectedLead.contact_number);
+        formik.setFieldValue("company_email", selectedLead.email || "");
+        formik.setFieldValue("executive_id", selectedLead.assigned_to || 0); // This sets the executive
         formik.setFieldValue(
           "client_type",
           selectedLead.country.toLowerCase() === "india"
@@ -329,6 +371,87 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
             />
           </Grid>
 
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormInput
+              label="Company Email"
+              name="company_email"
+              type="email"
+              value={formik.values.company_email}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.company_email
+                  ? formik.errors.company_email
+                  : undefined
+              }
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormInput
+              label="Company GST Number"
+              name="company_gst_number"
+              value={formik.values.company_gst_number}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.company_gst_number
+                  ? formik.errors.company_gst_number
+                  : undefined
+              }
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormInput
+              label="GST Issued"
+              name="gst_issued"
+              value={formik.values.gst_issued}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.gst_issued ? formik.errors.gst_issued : undefined
+              }
+              placeholder="Enter GST details if issued"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <FormInput
+              label="Company Address"
+              name="company_address"
+              value={formik.values.company_address}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.company_address
+                  ? formik.errors.company_address
+                  : undefined
+              }
+              multiline
+              rows={2}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormSelect
+              label="Executive Name"
+              value={formik.values.executive_id}
+              onChange={(value) => formik.setFieldValue("executive_id", value)}
+              options={[
+                { value: 0, label: "Not Assigned" },
+                ...(salespeople?.map((user: any) => ({
+                  value: user.id,
+                  label: user.name,
+                })) || []),
+              ]}
+              error={
+                formik.touched.executive_id
+                  ? formik.errors.executive_id
+                  : undefined
+              }
+              disabled={
+                !isManualEntry && formik.values.lead_id !== 0 && !client
+              }
+            />
+          </Grid>
+
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FormSelect
               label="Client Type"
@@ -442,6 +565,36 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
               error={
                 formik.touched.pending_amount_date
                   ? formik.errors.pending_amount_date
+                  : undefined
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormInput
+              label="Upgrade Payment Amount"
+              name="upgrade_payment_amount"
+              type="number"
+              value={formik.values.upgrade_payment_amount}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.upgrade_payment_amount
+                  ? formik.errors.upgrade_payment_amount
+                  : undefined
+              }
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormInput
+              label="Upgrade Payment Date"
+              name="upgrade_payment_date"
+              type="date"
+              value={formik.values.upgrade_payment_date}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.upgrade_payment_date
+                  ? formik.errors.upgrade_payment_date
                   : undefined
               }
               InputLabelProps={{ shrink: true }}

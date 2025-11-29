@@ -20,11 +20,14 @@ import {
   Tooltip,
   LinearProgress,
   Button,
+  Grid,
+  Divider,
 } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import { ConvertedClient } from "../../types/convertedClient";
 import { format } from "date-fns";
@@ -72,6 +75,14 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
     open: false,
     features: "",
     companyName: "",
+  });
+
+  const [detailsDialog, setDetailsDialog] = useState<{
+    open: boolean;
+    client: ConvertedClient | null;
+  }>({
+    open: false,
+    client: null,
   });
   const handleSort = (field: string) => {
     const isAsc = sortField === field && sortDirection === "asc";
@@ -140,123 +151,37 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
           <TableHead>
             <TableRow>
               <TableCell>
-                {sortableColumns.includes("company_name") ? (
-                  <TableSortLabel
-                    active={sortField === "company_name"}
-                    direction={
-                      sortField === "company_name" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("company_name")}
-                  >
-                    Company
-                  </TableSortLabel>
-                ) : (
-                  "Company"
-                )}
+                <TableSortLabel
+                  active={sortField === "company_name"}
+                  direction={
+                    sortField === "company_name" ? sortDirection : "asc"
+                  }
+                  onClick={() => handleSort("company_name")}
+                >
+                  Company
+                </TableSortLabel>
               </TableCell>
-              <TableCell>
-                {sortableColumns.includes("client_name") ? (
-                  <TableSortLabel
-                    active={sortField === "client_name"}
-                    direction={
-                      sortField === "client_name" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("client_name")}
-                  >
-                    Client Name
-                  </TableSortLabel>
-                ) : (
-                  "Client Name"
-                )}
-              </TableCell>
+              <TableCell>Client Name</TableCell>
               <TableCell>Contact Number</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>
-                {sortableColumns.includes("plan_type") ? (
-                  <TableSortLabel
-                    active={sortField === "plan_type"}
-                    direction={
-                      sortField === "plan_type" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("plan_type")}
-                  >
-                    Plan
-                  </TableSortLabel>
-                ) : (
-                  "Plan"
-                )}
+                <TableSortLabel
+                  active={sortField === "plan_type"}
+                  direction={sortField === "plan_type" ? sortDirection : "asc"}
+                  onClick={() => handleSort("plan_type")}
+                >
+                  Plan
+                </TableSortLabel>
               </TableCell>
-              <TableCell align="right">
-                {sortableColumns.includes("plan_amount") ? (
-                  <TableSortLabel
-                    active={sortField === "plan_amount"}
-                    direction={
-                      sortField === "plan_amount" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("plan_amount")}
-                  >
-                    Plan Amount
-                  </TableSortLabel>
-                ) : (
-                  "Plan Amount"
-                )}
-              </TableCell>
-              <TableCell align="right">
-                {sortableColumns.includes("paid_amount") ? (
-                  <TableSortLabel
-                    active={sortField === "paid_amount"}
-                    direction={
-                      sortField === "paid_amount" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("paid_amount")}
-                  >
-                    Paid
-                  </TableSortLabel>
-                ) : (
-                  "Paid"
-                )}
-              </TableCell>
-              <TableCell align="right">
-                {sortableColumns.includes("pending_amount") ? (
-                  <TableSortLabel
-                    active={sortField === "pending_amount"}
-                    direction={
-                      sortField === "pending_amount" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("pending_amount")}
-                  >
-                    Pending
-                  </TableSortLabel>
-                ) : (
-                  "Pending"
-                )}
-              </TableCell>
-              <TableCell>Payment Progress</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>
-                {sortableColumns.includes("paid_amount_date") ? (
-                  <TableSortLabel
-                    active={sortField === "paid_amount_date"}
-                    direction={
-                      sortField === "paid_amount_date" ? sortDirection : "asc"
-                    }
-                    onClick={() => handleSort("paid_amount_date")}
-                  >
-                    Paid Date
-                  </TableSortLabel>
-                ) : (
-                  "Paid Date"
-                )}
-              </TableCell>
-              <TableCell>Plan Features</TableCell>
-
+              <TableCell align="right">Total Amount Paid</TableCell>
+              <TableCell>Payment Status</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading && clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={13} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                   <Typography variant="body2" sx={{ mt: 2 }}>
                     Loading clients...
@@ -265,7 +190,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
               </TableRow>
             ) : clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={13} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                   <Typography variant="body1" color="textSecondary">
                     No converted clients found
                   </Typography>
@@ -280,9 +205,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     </Typography>
                   </TableCell>
                   <TableCell>{client.client_name}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{client.number}</Typography>
-                  </TableCell>
+                  <TableCell>{client.number}</TableCell>
                   <TableCell>
                     <Chip
                       label={client.client_type.toUpperCase()}
@@ -302,47 +225,16 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="body2" fontWeight={500}>
-                      {formatCurrency(client.plan_amount, client.currency)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" color="success.main">
-                      {formatCurrency(client.paid_amount, client.currency)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
                     <Typography
                       variant="body2"
-                      color={
-                        client.pending_amount > 0
-                          ? "error.main"
-                          : "text.secondary"
-                      }
+                      fontWeight={600}
+                      color="success.main"
                     >
-                      {formatCurrency(client.pending_amount, client.currency)}
+                      {formatCurrency(
+                        client.total_amount_paid,
+                        client.currency
+                      )}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ minWidth: 150 }}>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={client.payment_percentage}
-                          sx={{ flex: 1, height: 8, borderRadius: 1 }}
-                          color={
-                            client.payment_percentage === 100
-                              ? "success"
-                              : client.payment_percentage > 0
-                              ? "warning"
-                              : "error"
-                          }
-                        />
-                        <Typography variant="caption" fontWeight={500}>
-                          {client.payment_percentage}%
-                        </Typography>
-                      </Box>
-                    </Box>
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -353,48 +245,20 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       }
                     />
                   </TableCell>
-                  <TableCell>
-                    {client.paid_amount_date
-                      ? format(
-                          new Date(client.paid_amount_date),
-                          "MMM dd, yyyy"
-                        )
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {client.plan_features ? (
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          noWrap
-                          sx={{ maxWidth: 200 }}
-                        >
-                          {client.plan_features.substring(0, 30)}
-                          {client.plan_features.length > 30 && "..."}
-                        </Typography>
-                        {client.plan_features.length > 30 && (
-                          <Button
-                            size="small"
-                            onClick={() =>
-                              setPlanFeaturesDialog({
-                                open: true,
-                                features: client.plan_features || "",
-                                companyName: client.company_name,
-                              })
-                            }
-                          >
-                            View Full
-                          </Button>
-                        )}
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
                   <TableCell align="center">
                     <Box display="flex" gap={0.5} justifyContent="center">
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setDetailsDialog({ open: true, client })
+                          }
+                          disabled={loading}
+                          color="info"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Edit">
                         <IconButton
                           size="small"
@@ -404,18 +268,16 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      {userRole === "admin" && (
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            onClick={() => onDelete(client)}
-                            disabled={loading}
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          onClick={() => onDelete(client)}
+                          disabled={loading}
+                          color="error"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -463,6 +325,402 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                 companyName: "",
               })
             }
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Client Details Dialog */}
+      <Dialog
+        open={detailsDialog.open}
+        onClose={() => setDetailsDialog({ open: false, client: null })}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Client Details - {detailsDialog.client?.company_name}
+        </DialogTitle>
+        <DialogContent dividers>
+          {detailsDialog.client && (
+            <Box>
+              {/* Total Amount Paid - Highlighted */}
+              <Box
+                sx={{
+                  bgcolor: "success.light",
+                  p: 2,
+                  borderRadius: 1,
+                  mb: 3,
+                  textAlign: "center",
+                }}
+              >
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  color="background.default"
+                >
+                  Total Amount Paid:{" "}
+                  {formatCurrency(
+                    detailsDialog.client.total_amount_paid,
+                    detailsDialog.client.currency
+                  )}
+                </Typography>
+                <Typography variant="caption" color="background.default">
+                  (Paid + Upgrade Amount)
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                {/* Company Information */}
+                <Grid size={12}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    Company Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Company Name
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.company_name}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Client Name
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.client_name}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Contact Number
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.number}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Company Email
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.company_email || "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    GST Number
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.company_gst_number || "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    GST Issued
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.gst_issued || "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={12}>
+                  <Typography variant="caption" color="text.secondary">
+                    Company Address
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.company_address || "-"}
+                  </Typography>
+                </Grid>
+
+                {/* Plan Information */}
+                <Grid size={12} sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    Plan Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Client Type
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    <Chip
+                      label={detailsDialog.client.client_type.toUpperCase()}
+                      size="small"
+                      color={
+                        detailsDialog.client.client_type === "domestic"
+                          ? "primary"
+                          : "secondary"
+                      }
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Plan Type
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    <Chip
+                      label={detailsDialog.client.plan_type.toUpperCase()}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Currency
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.currency}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Executive Name
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.executive?.name || "-"}
+                  </Typography>
+                </Grid>
+
+                {/* Payment Information */}
+                <Grid size={12} sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    Payment Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Plan Amount (Pitched)
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {formatCurrency(
+                      detailsDialog.client.plan_amount,
+                      detailsDialog.client.currency
+                    )}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Paid Amount
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="success.main"
+                  >
+                    {formatCurrency(
+                      detailsDialog.client.paid_amount,
+                      detailsDialog.client.currency
+                    )}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Paid Amount Date
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.paid_amount_date
+                      ? format(
+                          new Date(detailsDialog.client.paid_amount_date),
+                          "MMM dd, yyyy"
+                        )
+                      : "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Pending Amount
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="error.main"
+                  >
+                    {formatCurrency(
+                      detailsDialog.client.pending_amount,
+                      detailsDialog.client.currency
+                    )}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Pending Amount Condition
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.pending_amount_condition || "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Pending Amount Date
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.pending_amount_date
+                      ? format(
+                          new Date(detailsDialog.client.pending_amount_date),
+                          "MMM dd, yyyy"
+                        )
+                      : "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Upgrade Payment Amount
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="info.main"
+                  >
+                    {formatCurrency(
+                      detailsDialog.client.upgrade_payment_amount,
+                      detailsDialog.client.currency
+                    )}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Upgrade Payment Date
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.upgrade_payment_date
+                      ? format(
+                          new Date(detailsDialog.client.upgrade_payment_date),
+                          "MMM dd, yyyy"
+                        )
+                      : "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Payment Status
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    <Chip
+                      label={getPaymentStatusLabel(
+                        detailsDialog.client.payment_status
+                      )}
+                      size="small"
+                      color={
+                        getPaymentStatusColor(
+                          detailsDialog.client.payment_status
+                        ) as any
+                      }
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Payment Progress
+                  </Typography>
+                  <Box sx={{ mt: 1 }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <LinearProgress
+                        variant="determinate"
+                        value={detailsDialog.client.payment_percentage}
+                        sx={{ flex: 1, height: 8, borderRadius: 1 }}
+                        color={
+                          detailsDialog.client.payment_percentage === 100
+                            ? "success"
+                            : detailsDialog.client.payment_percentage > 0
+                            ? "warning"
+                            : "error"
+                        }
+                      />
+                      <Typography variant="caption" fontWeight={500}>
+                        {detailsDialog.client.payment_percentage}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                {/* Plan Features */}
+                {detailsDialog.client.plan_features && (
+                  <>
+                    <Grid size={12} sx={{ mt: 2 }}>
+                      <Typography variant="h6" gutterBottom color="primary">
+                        Plan Features
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+                    </Grid>
+
+                    <Grid size={12}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          whiteSpace: "pre-wrap",
+                          bgcolor: "background.paper",
+                          p: 2,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {detailsDialog.client.plan_features}
+                      </Typography>
+                    </Grid>
+                  </>
+                )}
+
+                {/* Additional Information */}
+                <Grid size={12} sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    Additional Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Created By
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {detailsDialog.client.created_by_user?.name || "-"}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Created At
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {format(
+                      new Date(detailsDialog.client.created_at),
+                      "MMM dd, yyyy HH:mm"
+                    )}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDetailsDialog({ open: false, client: null })}
           >
             Close
           </Button>

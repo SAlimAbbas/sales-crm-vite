@@ -309,9 +309,9 @@ const Dashboard: React.FC = () => {
                       cy="50%"
                       labelLine={false}
                       label={(props: any) =>
-                        `${props.name}: ${(props.percent * 100).toFixed(0)}%`
+                        `${props.name}: ${(props.percent * 100).toFixed(1)}%`
                       }
-                      outerRadius={80}
+                      outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
                     >

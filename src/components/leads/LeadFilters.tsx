@@ -22,6 +22,7 @@ import {
   IconButton,
   Divider,
   InputAdornment,
+  Alert,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -93,6 +94,11 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   const [localProduct, setLocalProduct] = useState(filters.product);
   const [pendingFilters, setPendingFilters] = useState<FilterState>(filters);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+
+  //Checkinf if pending filters are different from applied filters
+  const hasFilterChanges = useMemo(() => {
+    return JSON.stringify(pendingFilters) !== JSON.stringify(filters);
+  }, [pendingFilters, filters]);
 
   const isCountryDisabled = useMemo(() => {
     return pendingFilters.type === "domestic";
@@ -565,7 +571,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
           </Grid>
 
           {/* Active Filters Display */}
-          {activeFiltersCount > 0 && (
+          {!isWorkingOnSnapshot && activeFiltersCount > 0 && (
             <Box mt={2}>
               <Typography variant="body2" color="textSecondary" gutterBottom>
                 Active Filters:
@@ -701,10 +707,26 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
             </Box>
           )}
 
+          {/* ✅ Show snapshot info instead */}
+          {isWorkingOnSnapshot && (
+            <Box mt={2}>
+              <Alert severity="info">
+                📌 Working on locked set of {snapshotTotal} leads. Filters are
+                disabled in snapshot mode.
+              </Alert>
+            </Box>
+          )}
+
           <Box display="flex" gap={2} justifyContent="center" mt={3}>
-            <Button variant="outlined" onClick={handleReset} disabled={loading}>
-              Reset Filters
-            </Button>
+            {activeFiltersCount > 0 && (
+              <Button
+                variant="outlined"
+                onClick={handleReset}
+                disabled={loading}
+              >
+                Clear Filters
+              </Button>
+            )}
 
             {isWorkingOnSnapshot ? (
               <>
@@ -727,20 +749,22 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 <Button
                   variant="contained"
                   onClick={handleApplyFilters}
-                  disabled={loading}
+                  disabled={loading || !hasFilterChanges}
                 >
                   Apply Filters
                 </Button>
-                {snapshotTotal && snapshotTotal > 0 && (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleWorkOnTheseLeads}
-                    disabled={loading}
-                  >
-                    Work on These {snapshotTotal} Leads
-                  </Button>
-                )}
+                {snapshotTotal &&
+                  snapshotTotal > 0 &&
+                  activeFiltersCount > 0 && (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleWorkOnTheseLeads}
+                      disabled={loading}
+                    >
+                      Work on These {snapshotTotal} Leads
+                    </Button>
+                  )}
               </>
             )}
           </Box>
