@@ -251,7 +251,7 @@ const AttendanceReportsSection: React.FC = () => {
             elevation={0}
             sx={{
               p: 2,
-              backgroundColor: "grey.50",
+              backgroundColor: "background.default",
               borderRadius: 1,
               minHeight: 200,
             }}
@@ -262,7 +262,9 @@ const AttendanceReportsSection: React.FC = () => {
           </Paper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedReport(null)}>Close</Button>
+          <Button variant="contained" onClick={() => setSelectedReport(null)}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Paper>

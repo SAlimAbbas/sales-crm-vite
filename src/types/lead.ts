@@ -22,6 +22,8 @@ export interface Lead {
   updated_at: string;
   assigned_user?: User;
   created_by_user?: User;
+  lead_executive_id?: number;
+  lead_executive?: User;
 }
 
 export interface LeadFormData {

@@ -720,6 +720,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
         </DialogContent>
         <DialogActions>
           <Button
+            variant="contained"
             onClick={() => setDetailsDialog({ open: false, client: null })}
           >
             Close

@@ -171,11 +171,16 @@ const LeadForm: React.FC<LeadFormProps> = ({
       title={lead ? "Edit Lead" : "Create Lead"}
       maxWidth="lg"
       actions={
-        <Box>
-          <Button type="button" onClick={onClose}>
+        <Box display="flex" justifyContent="flex-end" gap={1}>
+          <Button variant="outlined" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" form="lead-form" disabled={loading}>
+          <Button
+            variant="contained"
+            type="submit"
+            form="lead-form"
+            disabled={loading}
+          >
             {loading ? "Saving..." : lead ? "Update" : "Create"}
           </Button>
         </Box>
@@ -288,39 +293,41 @@ const LeadForm: React.FC<LeadFormProps> = ({
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <FormSelect
-              label="Assign To"
-              value={
-                user?.role === "salesperson"
-                  ? user?.id.toString()
-                  : formik.values.assigned_to
-              }
-              onChange={(value) => formik.setFieldValue("assigned_to", value)}
-              options={
-                user?.role === "salesperson"
-                  ? [
-                      {
-                        value: user?.id.toString() || "",
-                        label: user?.name || "",
-                      },
-                    ]
-                  : [
-                      { value: "", label: "Unassigned" },
-                      ...(usersData?.data?.map((user: any) => ({
-                        value: user.id.toString(),
-                        label: user.name,
-                      })) || []),
-                    ]
-              }
-              disabled={user?.role === "salesperson"} //  Disable for salesperson
-              error={
-                formik.touched.assigned_to
-                  ? formik.errors.assigned_to
-                  : undefined
-              }
-            />
-          </Grid>
+          {user?.role !== "lead_executive" && (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <FormSelect
+                label="Assign To"
+                value={
+                  user?.role === "salesperson"
+                    ? user?.id.toString()
+                    : formik.values.assigned_to
+                }
+                onChange={(value) => formik.setFieldValue("assigned_to", value)}
+                options={
+                  user?.role === "salesperson"
+                    ? [
+                        {
+                          value: user?.id.toString() || "",
+                          label: user?.name || "",
+                        },
+                      ]
+                    : [
+                        { value: "", label: "Unassigned" },
+                        ...(usersData?.data?.map((user: any) => ({
+                          value: user.id.toString(),
+                          label: user.name,
+                        })) || []),
+                      ]
+                }
+                disabled={user?.role === "salesperson"} //  Disable for salesperson
+                error={
+                  formik.touched.assigned_to
+                    ? formik.errors.assigned_to
+                    : undefined
+                }
+              />
+            </Grid>
+          )}
         </Grid>
       </form>
     </CustomModal>

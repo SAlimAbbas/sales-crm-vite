@@ -259,11 +259,16 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
       title={client ? "Edit Converted Client" : "Add Converted Client"}
       maxWidth="lg"
       actions={
-        <Box>
-          <Button type="button" onClick={onClose}>
+        <Box display="flex" justifyContent="flex-end" gap={1}>
+          <Button variant="outlined" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" form="converted-client-form" disabled={loading}>
+          <Button
+            variant="contained"
+            type="submit"
+            form="converted-client-form"
+            disabled={loading}
+          >
             {loading ? "Saving..." : client ? "Update" : "Create"}
           </Button>
         </Box>

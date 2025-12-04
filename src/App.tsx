@@ -34,6 +34,8 @@ import "./App.css";
 import { NotificationSystemProvider } from "./contexts/NotificationSystemContext";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import ConvertedClientManagement from "./components/convertedClients/ConvertedClientManagement";
+import LeadExecutiveDashboard from "./components/leads/LeadExecutiveDashboard";
+import DashboardRouter from "./components/common/DashboardRouter";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -79,8 +81,14 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <Routes>
-                <Route index element={<Dashboard />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
+                {/* ✅ Add conditional dashboard routing */}
+                <Route index element={<DashboardRouter />} />
+
+                <Route
+                  path="lead-executive/dashboard"
+                  element={<LeadExecutiveDashboard />}
+                />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="leads" element={<LeadManagement />} />
                 <Route path="tasks" element={<TaskManagement />} />

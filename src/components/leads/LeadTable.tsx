@@ -104,6 +104,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
   currentUser,
   rowsPerPageOptions = [50, 75, 100, 500],
 }) => {
+  const isLeadExecutive = currentUser?.role === "lead_executive";
+
   const headCells: HeadCell[] = [
     { id: "company_name", label: "Company", sortable: true, minWidth: 300 },
     { id: "owner_name", label: "Name", sortable: true, minWidth: 120 },
@@ -131,6 +133,12 @@ const LeadTable: React.FC<LeadTableProps> = ({
               label: "Assigned To",
               sortable: false,
               minWidth: 100,
+            },
+            {
+              id: "lead_executive_id" as keyof Lead, // ✅ NEW FIELD
+              label: "Lead Executive",
+              sortable: false,
+              minWidth: 140,
             },
             {
               id: "date" as keyof Lead,
@@ -181,6 +189,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     type: 140,
     status: 160,
     assigned_to: 140,
+    lead_executive_id: 140,
     date: 120,
     created_at: 100,
     assigned_date: 80,
@@ -284,6 +293,10 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
     // Admin can edit any lead
     if (currentUser.role === "admin") return true;
+
+    if (currentUser.role === "lead_executive") {
+      return !lead.assigned_to; // Can edit only if not assigned
+    }
 
     // Salesperson and Manager can only edit leads they created
     if (currentUser.role === "salesperson" || currentUser.role === "manager") {
@@ -478,7 +491,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
         <Table stickyHeader aria-labelledby="tableTitle" size="medium">
           <TableHead>
             <TableRow>
-              {enableMultiSelect && (
+              {enableMultiSelect && !isLeadExecutive && (
                 <TableCell padding="checkbox">
                   <Tooltip title="Hold Shift to select range, Ctrl/Cmd to multi-select">
                     <Checkbox
@@ -567,15 +580,22 @@ const LeadTable: React.FC<LeadTableProps> = ({
               return (
                 <TableRow
                   hover
-                  onClick={(event) => handleClick(event, lead.id, index)}
+                  onClick={(event) =>
+                    !isLeadExecutive && handleClick(event, lead.id, index)
+                  } // ✅ Add !isLeadExecutive
                   role="checkbox"
                   aria-checked={isItemSelected}
                   tabIndex={-1}
                   key={lead.id}
                   selected={isItemSelected}
-                  sx={{ cursor: enableMultiSelect ? "pointer" : "default" }}
+                  sx={{
+                    cursor:
+                      enableMultiSelect && !isLeadExecutive
+                        ? "pointer"
+                        : "default",
+                  }} // ✅ Update
                 >
-                  {enableMultiSelect && (
+                  {enableMultiSelect && !isLeadExecutive && (
                     <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
@@ -736,30 +756,42 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <Tooltip title="Click to change status">
-                      <Box
-                        onClick={(e) => handleStatusClick(e, lead)}
-                        sx={{
-                          cursor: "pointer",
-                          display: "inline-block",
-                          "&:hover": {
-                            opacity: 0.8,
-                            transform: "scale(1.05)",
-                            transition: "all 0.2s",
-                          },
-                        }}
-                      >
-                        <Chip
-                          label={lead.status.replace(/_/g, " ").toUpperCase()}
-                          size="small"
-                          color={getStatusColor(lead.status) as any}
-                          variant="filled"
-                        />
-                      </Box>
-                    </Tooltip>
+                    {isLeadExecutive ? (
+                      // ✅ Static display for lead executives - no click handler
+                      <Chip
+                        label={lead.assigned_to ? "ASSIGNED" : "UNASSIGNED"}
+                        size="small"
+                        color={lead.assigned_to ? "success" : "default"}
+                        variant="filled"
+                      />
+                    ) : (
+                      // Regular clickable status for others
+                      <Tooltip title="Click to change status">
+                        <Box
+                          onClick={(e) => handleStatusClick(e, lead)}
+                          sx={{
+                            cursor: "pointer",
+                            display: "inline-block",
+                            "&:hover": {
+                              opacity: 0.8,
+                              transform: "scale(1.05)",
+                              transition: "all 0.2s",
+                            },
+                          }}
+                        >
+                          <Chip
+                            label={lead.status.replace(/_/g, " ").toUpperCase()}
+                            size="small"
+                            color={getStatusColor(lead.status) as any}
+                            variant="filled"
+                          />
+                        </Box>
+                      </Tooltip>
+                    )}
                   </TableCell>
 
-                  {currentUser?.role === "admin" && (
+                  {(currentUser?.role === "admin" ||
+                    currentUser?.role === "lead_executive") && (
                     <>
                       <TableCell
                         style={{
@@ -772,6 +804,20 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       >
                         <Typography variant="body2" noWrap>
                           {lead.assigned_user?.name || "Unassigned"}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell
+                        style={{
+                          width: columnWidths.lead_executive_id,
+                          maxWidth: columnWidths.lead_executive_id,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Typography variant="body2" noWrap>
+                          {lead.lead_executive?.name || "N/A"}
                         </Typography>
                       </TableCell>
 
@@ -917,7 +963,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
               <TableRow>
                 <TableCell
                   colSpan={
-                    enableMultiSelect ? headCells.length + 1 : headCells.length
+                    (enableMultiSelect && !isLeadExecutive ? 1 : 0) +
+                    headCells.length // ✅ Update
                   }
                   align="center"
                   sx={{ py: 4 }}

@@ -352,7 +352,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     newValue.map((v) => v.value)
                   );
                 }}
-                disabled={loading}
+                disabled={currentUser?.role === "lead_executive" || loading}
                 renderInput={(params) => (
                   <TextField
                     {...params}

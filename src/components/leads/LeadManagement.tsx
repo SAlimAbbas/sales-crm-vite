@@ -375,17 +375,21 @@ const LeadManagement: React.FC = () => {
       >
         <Typography variant="h4">Lead Management</Typography>
         <Box display="flex" gap={1}>
-          {(user?.role === "admin" || user?.role === "manager") && (
+          {(user?.role === "admin" ||
+            user?.role === "manager" ||
+            user?.role === "lead_executive") && (
             <>
-              <Button
-                variant="text"
-                startIcon={<DownloadIcon />}
-                onClick={handleExport}
-                disabled={isLoading || selectedLeadIds.length > 0}
-              >
-                Export{" "}
-                {selectedLeadIds.length > 0 && "(Disabled - Use bulk action)"}
-              </Button>
+              {user?.role === "admin" && (
+                <Button
+                  variant="text"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleExport}
+                  disabled={isLoading || selectedLeadIds.length > 0}
+                >
+                  Export{" "}
+                  {selectedLeadIds.length > 0 && "(Disabled - Use bulk action)"}
+                </Button>
+              )}
               <Button
                 variant="outlined"
                 startIcon={<UploadIcon />}

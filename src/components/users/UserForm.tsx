@@ -157,6 +157,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const roleOptions = [
     { value: "salesperson", label: "Salesperson" },
     { value: "manager", label: "Manager" },
+    { value: "lead_executive", label: "Lead Executive" },
     ...(currentUser?.role === "admin"
       ? [{ value: "admin", label: "Admin" }]
       : []),
@@ -267,47 +268,50 @@ const UserForm: React.FC<UserFormProps> = ({
               />
             </Grid>
           )}
-          {formik.values.role !== "admin" && (
-            <>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormSelect
-                  label="Shift"
-                  name="shift"
-                  value={formik.values.shift}
-                  onChange={(value) => formik.setFieldValue("shift", value)}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.shift ? formik.errors.shift : undefined}
-                  helperText={
-                    formik.touched.shift ? formik.errors.shift || "" : ""
-                  }
-                  options={[
-                    { value: "", label: "Select Shift" },
-                    { value: "Day", label: "Day" },
-                    { value: "Night", label: "Night" },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormSelect
-                  label="Type"
-                  name="type"
-                  value={formik.values.type}
-                  onChange={(value) => formik.setFieldValue("type", value)}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.type ? formik.errors.type : undefined}
-                  helperText={
-                    formik.touched.type ? formik.errors.type || "" : ""
-                  }
-                  disabled={isTypeDisabled}
-                  options={[
-                    { value: "", label: "Select Type" },
-                    { value: "Domestic", label: "Domestic" },
-                    { value: "International", label: "International" },
-                  ]}
-                />
-              </Grid>
-            </>
-          )}
+          {formik.values.role !== "admin" &&
+            formik.values.role !== "lead_executive" && (
+              <>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormSelect
+                    label="Shift"
+                    name="shift"
+                    value={formik.values.shift}
+                    onChange={(value) => formik.setFieldValue("shift", value)}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.shift ? formik.errors.shift : undefined
+                    }
+                    helperText={
+                      formik.touched.shift ? formik.errors.shift || "" : ""
+                    }
+                    options={[
+                      { value: "", label: "Select Shift" },
+                      { value: "Day", label: "Day" },
+                      { value: "Night", label: "Night" },
+                    ]}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormSelect
+                    label="Type"
+                    name="type"
+                    value={formik.values.type}
+                    onChange={(value) => formik.setFieldValue("type", value)}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.type ? formik.errors.type : undefined}
+                    helperText={
+                      formik.touched.type ? formik.errors.type || "" : ""
+                    }
+                    disabled={isTypeDisabled}
+                    options={[
+                      { value: "", label: "Select Type" },
+                      { value: "Domestic", label: "Domestic" },
+                      { value: "International", label: "International" },
+                    ]}
+                  />
+                </Grid>
+              </>
+            )}
           {!user && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormInput

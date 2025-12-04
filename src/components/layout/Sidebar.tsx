@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       text: "Dashboard",
       icon: <DashboardIcon />,
       path: "/",
-      roles: ["admin", "manager", "salesperson"],
+      roles: ["admin", "manager", "salesperson", "lead_executive"],
     },
     {
       text: "Users",
@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       text: "Leads",
       icon: <BusinessIcon />,
       path: "/leads",
-      roles: ["admin", "manager", "salesperson"],
+      roles: ["admin", "manager", "salesperson", "lead_executive"],
     },
     {
       text: "Tasks",
