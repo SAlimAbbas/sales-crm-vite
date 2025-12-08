@@ -48,6 +48,7 @@ export interface FilterState {
   source: string;
   country: string;
   assignedTo: string[];
+  leadExecutive: string[];
   dateField: string;
   dateFrom: Date | null;
   dateTo: Date | null;
@@ -72,6 +73,7 @@ const initialFilters: FilterState = {
   source: "",
   country: "",
   assignedTo: [],
+  leadExecutive: [],
   dateField: "date",
   dateFrom: null,
   dateTo: null,
@@ -104,10 +106,58 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     return pendingFilters.type === "domestic";
   }, [pendingFilters.type]);
 
-  const { data: usersData } = useQuery<any>({
-    queryKey: ["salespeople"],
-    queryFn: () => userService.getUsers({ role: "salesperson" }),
-    select: (data) => data?.data || data,
+  // ✅ Add this helper function
+  const normalizeUserResponse = (response: any): User[] => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if ("data" in response && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  };
+
+  const { data: usersData } = useQuery<User[]>({
+    // ✅ Change type to User[]
+    queryKey: ["assignable-users-filter"],
+    queryFn: async () => {
+      if (currentUser?.role === "admin") {
+        const [managers, salespeople] = await Promise.all([
+          userService.getUsers({ role: "manager" }),
+          userService.getUsers({ role: "salesperson" }),
+        ]);
+
+        // ✅ Use normalizer
+        const managersArray = normalizeUserResponse(managers);
+        const salespeopleArray = normalizeUserResponse(salespeople);
+
+        return [...managersArray, ...salespeopleArray];
+      } else if (currentUser?.role === "manager") {
+        const team = await userService.getUsers({
+          manager_id: currentUser.id,
+          role: "salesperson",
+        });
+
+        // ✅ Use normalizer
+        const teamArray = normalizeUserResponse(team);
+        return [currentUser, ...teamArray];
+      }
+
+      const salespeople = await userService.getUsers({ role: "salesperson" });
+      return normalizeUserResponse(salespeople); // ✅ Use normalizer
+    },
+    // ✅ Remove the select - not needed anymore
+  });
+
+  // Add this new query after the existing usersData query
+  const { data: leadExecutivesData } = useQuery<User[]>({
+    queryKey: ["lead-executives-filter"],
+    queryFn: async () => {
+      if (currentUser?.role !== "admin") return [];
+
+      const executives = await userService.getUsers({ role: "lead_executive" });
+      return normalizeUserResponse(executives);
+    },
+    enabled: currentUser?.role === "admin", // Only fetch for admin
   });
 
   const filtersRef = useRef(filters);
@@ -257,7 +307,15 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   ];
 
   const assignmentOptions = [
-    ...(usersData?.data || usersData || []).map((user: User) => ({
+    ...(usersData || []).map((user: User) => ({
+      // ✅ Direct mapping
+      value: user.id.toString(),
+      label: `${user.name}${user.role === "manager" ? " (Manager)" : ""}`,
+    })),
+  ];
+
+  const leadExecutiveOptions = [
+    ...(leadExecutivesData || []).map((user: User) => ({
       value: user.id.toString(),
       label: user.name,
     })),
@@ -268,7 +326,8 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     return Object.entries(filters).filter(([key, value]) => {
       if (key === "search") return value.trim() !== "";
       if (key === "dateFrom" || key === "dateTo") return value !== null;
-      if (key === "status" || key === "assignedTo")
+      if (key === "status" || key === "assignedTo" || key === "leadExecutive")
+        // ✅ Add leadExecutive
         return Array.isArray(value) && value.length > 0;
       if (key === "dateField") return false;
       return value !== "";
@@ -458,6 +517,48 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               />
             </Grid>
 
+            {/* Lead Executive Multi-Select - Admin Only */}
+            {currentUser?.role === "admin" && (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={leadExecutiveOptions}
+                  getOptionLabel={(option) => option.label}
+                  value={leadExecutiveOptions.filter((opt) =>
+                    pendingFilters.leadExecutive.includes(opt.value)
+                  )}
+                  onChange={(_, newValue) => {
+                    handlePendingFilterChange(
+                      "leadExecutive",
+                      newValue.map((v) => v.value)
+                    );
+                  }}
+                  disabled={loading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Lead Executive"
+                      placeholder="Select executives"
+                    />
+                  )}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <Chip
+                          key={key}
+                          label={option.label}
+                          size="small"
+                          {...tagProps}
+                        />
+                      );
+                    })
+                  }
+                />
+              </Grid>
+            )}
+
             {/* Country - Instant Search */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <TextField
@@ -646,6 +747,27 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                         assignedTo: [],
                       }));
                       onFiltersChange({ ...filters, assignedTo: [] });
+                    }}
+                    variant="outlined"
+                  />
+                )}
+
+                {filters.leadExecutive && filters.leadExecutive.length > 0 && (
+                  <Chip
+                    label={`Lead Executive: ${
+                      filters.leadExecutive.length === 1
+                        ? leadExecutiveOptions.find(
+                            (opt) => opt.value === filters.leadExecutive[0]
+                          )?.label
+                        : `${filters.leadExecutive.length} selected`
+                    }`}
+                    size="small"
+                    onDelete={() => {
+                      setPendingFilters((prev) => ({
+                        ...prev,
+                        leadExecutive: [],
+                      }));
+                      onFiltersChange({ ...filters, leadExecutive: [] });
                     }}
                     variant="outlined"
                   />

@@ -1,17 +1,19 @@
 import { apiService } from "./api";
-import { User, UserFormData, UsersResponse, PaginationParams } from "../types";
+import { User, UsersResponse, UserFormData } from "../types";
 
-// Extended interface for user filtering
-export interface UserFilters extends PaginationParams {
-  search?: string;
-  role?: "admin" | "manager" | "salesperson";
-  is_active?: boolean;
+// ✅ Add this interface
+export interface UserQueryParams {
+  role?: string;
   manager_id?: number;
+  page?: number;
+  per_page?: number;
+  is_active?: boolean;
 }
 
 export const userService = {
-  getUsers: (params?: PaginationParams) =>
-    apiService.get<UsersResponse>("/users", params),
+  getUsers: (params?: UserQueryParams) => {
+    return apiService.get<UsersResponse>("/users", params);
+  },
 
   getUser: (id: number) => apiService.get<User>(`/users/${id}`),
 
@@ -22,8 +24,9 @@ export const userService = {
 
   deleteUser: (id: number) => apiService.delete(`/users/${id}`),
 
-  updateStatus: (id: number, isActive: boolean) =>
-    apiService.patch<User>(`/users/${id}/status`, { is_active: isActive }),
+  updateUserStatus: (id: number, is_active: boolean) =>
+    apiService.patch<User>(`/users/${id}/status`, { is_active }),
 
-  restoreUser: (id: number) => apiService.patch<User>(`/users/${id}/restore`),
+  restoreUser: (id: number) =>
+    apiService.patch<User>(`/users/${id}/restore`, {}),
 };

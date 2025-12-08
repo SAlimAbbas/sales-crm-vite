@@ -10,6 +10,7 @@ import FormDatePicker from "../ui/FormElements/FormDatePicker";
 import { leadService } from "../../services/leadService";
 import { userService } from "../../services/userService";
 import { Lead, LeadFormData } from "../../types";
+import { User } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface LeadFormProps {
@@ -41,9 +42,45 @@ const LeadForm: React.FC<LeadFormProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  // ✅ Add this helper function
+  const normalizeUserResponse = (response: any): User[] => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if ("data" in response && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  };
+
   const { data: usersData } = useQuery<any>({
-    queryKey: ["salespeople"],
-    queryFn: () => userService.getUsers({ role: "salesperson" }),
+    // ✅ Change type to User[]
+    queryKey: ["assignable-users-form"],
+    queryFn: async () => {
+      if (user?.role === "admin") {
+        const [managers, salespeople] = await Promise.all([
+          userService.getUsers({ role: "manager" }),
+          userService.getUsers({ role: "salesperson" }),
+        ]);
+
+        // ✅ Use normalizer
+        const managersArray = normalizeUserResponse(managers);
+        const salespeopleArray = normalizeUserResponse(salespeople);
+
+        return [...managersArray, ...salespeopleArray];
+      } else if (user?.role === "manager") {
+        const team = await userService.getUsers({
+          manager_id: user.id,
+          role: "salesperson",
+        });
+
+        // ✅ Use normalizer
+        const teamArray = normalizeUserResponse(team);
+        return [user, ...teamArray];
+      }
+
+      const salespeople = await userService.getUsers({ role: "salesperson" });
+      return normalizeUserResponse(salespeople); // ✅ Use normalizer
+    },
     enabled: open,
   });
 
@@ -313,10 +350,13 @@ const LeadForm: React.FC<LeadFormProps> = ({
                       ]
                     : [
                         { value: "", label: "Unassigned" },
-                        ...(usersData?.data?.map((user: any) => ({
-                          value: user.id.toString(),
-                          label: user.name,
-                        })) || []),
+                        ...(usersData || []).map((u: User) => ({
+                          // ✅ Direct mapping, no need for conditional
+                          value: u.id.toString(),
+                          label: `${u.name}${
+                            u.role === "manager" ? " (Manager)" : ""
+                          }`,
+                        })),
                       ]
                 }
                 disabled={user?.role === "salesperson"} //  Disable for salesperson

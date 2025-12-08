@@ -51,10 +51,10 @@ export const leadService = {
     apiService.postFormData<BulkActionResponse>("/leads/bulk-upload", formData),
 
   // Bulk assign leads to salesperson
-  bulkAssign: (leadIds: number[], salespersonId: number) =>
+  bulkAssign: (leadIds: number[], assigneeId: number) =>
     apiService.post<BulkActionResponse>("/leads/bulk-assign", {
       lead_ids: leadIds,
-      salesperson_id: salespersonId,
+      assignee_id: assigneeId, // Changed from salesperson_id
     }),
 
   // Bulk update status
@@ -75,7 +75,7 @@ export const leadService = {
       "/leads/bulk-export",
       { lead_ids: leadIds },
       "selected_leads_export.xlsx",
-      'post'
+      "post"
     ),
 
   // Get salespeople for assignment (specific endpoint)
@@ -87,7 +87,12 @@ export const leadService = {
 
   // Export leads
   exportLeads: (filters?: LeadFilters) =>
-  apiService.downloadFile("/leads/export", filters, "leads_export.xlsx", 'get'),
+    apiService.downloadFile(
+      "/leads/export",
+      filters,
+      "leads_export.xlsx",
+      "get"
+    ),
 
   // Get lead statistics
   getLeadStats: () =>

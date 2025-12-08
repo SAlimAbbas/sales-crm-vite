@@ -19,6 +19,8 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [scheduleFor, setScheduleFor] = useState<string>("");
+
   const [uploadResult, setUploadResult] = useState<{
     success: number;
     failed: number;
@@ -50,25 +52,36 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
       const formData = new FormData();
       formData.append("file", files[0]);
 
-      const result = await leadService.bulkUpload(formData);
-      setUploadResult(result);
+      if (scheduleFor) {
+        formData.append("schedule_for", scheduleFor);
+      }
 
-      // Show only ONE notification based on the result
-      if (result.failed === 0 && result.success > 0) {
+      const result = await leadService.bulkUpload(formData);
+      if (scheduleFor) {
         showNotification(
-          `Successfully uploaded ${result.success} leads`,
+          `Upload scheduled for ${new Date(scheduleFor).toLocaleString()}`,
           "success"
         );
-      } else if (result.success > 0 && result.failed > 0) {
-        showNotification(
-          `Uploaded ${result.success} leads, ${result.failed} failed`,
-          "warning"
-        );
-      } else if (result.failed > 0 && result.success === 0) {
-        showNotification(
-          `Upload failed: ${result.failed} leads could not be processed`,
-          "error"
-        );
+        handleClose();
+      } else {
+        setUploadResult(result);
+        // Show only ONE notification based on the result
+        if (result.failed === 0 && result.success > 0) {
+          showNotification(
+            `Successfully uploaded ${result.success} leads`,
+            "success"
+          );
+        } else if (result.success > 0 && result.failed > 0) {
+          showNotification(
+            `Uploaded ${result.success} leads, ${result.failed} failed`,
+            "warning"
+          );
+        } else if (result.failed > 0 && result.success === 0) {
+          showNotification(
+            `Upload failed: ${result.failed} leads could not be processed`,
+            "error"
+          );
+        }
       }
 
       // Only call onSuccess if there were successful uploads
@@ -147,6 +160,27 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
           value={files}
           onChange={setFiles}
         />
+
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Schedule Upload (Optional)
+          </Typography>
+          <input
+            type="datetime-local"
+            value={scheduleFor}
+            onChange={(e) => setScheduleFor(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <Typography variant="caption" color="textSecondary">
+            Leave empty for immediate upload
+          </Typography>
+        </Box>
 
         {loading && (
           <Box sx={{ mt: 2 }}>

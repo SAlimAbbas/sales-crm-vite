@@ -82,11 +82,54 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
   const { showNotification } = useNotification();
 
-  const { data: usersData } = useQuery<any>({
-    queryKey: ["salespeople"],
-    queryFn: () => userService.getUsers({ role: "salesperson" }),
-    enabled: assignDialog.open,
-    select: (data) => data?.data || data, // Handle both ApiResponse<UsersResponse> and UsersResponse
+  const normalizeUserResponse = (
+    response: any | User[] | undefined
+  ): User[] => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if ("data" in response && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  };
+
+  // ✅ Query with refetch capability
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    refetch: refetchUsers,
+  } = useQuery<User[]>({
+    queryKey: ["assignable-users", currentUser.role, currentUser.id],
+    queryFn: async () => {
+      if (currentUser.role === "admin") {
+        const [managersRes, salespeopleRes] = await Promise.all([
+          userService.getUsers({ role: "manager" }),
+          userService.getUsers({ role: "salesperson" }),
+        ]);
+
+        const managers = normalizeUserResponse(managersRes);
+        const salespeople = normalizeUserResponse(salespeopleRes);
+
+        return [...managers, ...salespeople];
+      } else if (currentUser.role === "manager") {
+        const teamDataRes = await userService.getUsers({
+          manager_id: currentUser.id,
+          role: "salesperson",
+        });
+
+        const teamData = normalizeUserResponse(teamDataRes);
+        return [currentUser, ...teamData];
+      }
+
+      const salespeopleRes = await userService.getUsers({
+        role: "salesperson",
+      });
+
+      return normalizeUserResponse(salespeopleRes);
+    },
+    enabled: false, // Start disabled
+    initialData: [],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -95,6 +138,17 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  // ✅ Handler for opening assign dialog
+  const handleAssignMenuClick = () => {
+    refetchUsers(); // Manually trigger the query
+    setAssignDialog({
+      open: true,
+      salespersonId: "",
+      loading: false,
+    });
+    handleMenuClose();
   };
 
   const handleBulkAssign = async () => {
@@ -140,7 +194,6 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       onClearSelection();
       setUpdateDialog({ open: false, status: "", loading: false });
     } catch (error: any) {
-      console.error("Bulk update error:", error.response?.data); // Add this for debugging
       showNotification(
         error.response?.data?.message || "Failed to update leads",
         "error"
@@ -261,18 +314,11 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         {currentUser.role === "admin" || currentUser.role === "manager" ? (
-          <MenuItem
-            onClick={() => {
-              setAssignDialog({
-                open: true,
-                salespersonId: "",
-                loading: false,
-              });
-              handleMenuClose();
-            }}
-          >
+          <MenuItem onClick={handleAssignMenuClick}>
+            {" "}
+            {/* ✅ Use the handler */}
             <AssignIcon fontSize="small" sx={{ mr: 1 }} />
-            Assign to Salesperson
+            Assign to Salesperson or Manager
           </MenuItem>
         ) : null}
 
@@ -325,34 +371,43 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       >
         <DialogTitle>
           Assign {selectedIds.length} Lead{selectedIds.length > 1 ? "s" : ""} to
-          Salesperson
+          {currentUser.role === "admin"
+            ? " Manager/Salesperson"
+            : " Team Member"}
         </DialogTitle>
 
         <DialogContent>
           <Box sx={{ pt: 1 }}>
             <Alert severity="info" sx={{ mb: 2 }}>
-              This will assign all selected leads to the chosen salesperson and
+              This will assign all selected leads to the chosen person and
               update their status to "Assigned".
             </Alert>
 
             <FormControl fullWidth>
-              <InputLabel>Select Salesperson</InputLabel>
+              <InputLabel>Select Assignee</InputLabel>
               <Select
                 value={assignDialog.salespersonId}
-                label="Select Salesperson"
+                label="Select Assignee"
                 onChange={(e) =>
                   setAssignDialog({
                     ...assignDialog,
                     salespersonId: e.target.value,
                   })
                 }
-                disabled={assignDialog.loading}
+                disabled={assignDialog.loading || usersLoading}
               >
-                {(usersData?.data || usersData || []).map((user: User) => (
-                  <MenuItem key={user.id} value={user.id.toString()}>
-                    {user.name} ({user.email})
-                  </MenuItem>
-                ))}
+                {usersLoading ? (
+                  <MenuItem disabled>Loading users...</MenuItem>
+                ) : usersData && usersData.length > 0 ? (
+                  usersData.map((user: User) => (
+                    <MenuItem key={user.id} value={user.id.toString()}>
+                      {user.name} ({user.email})
+                      {user.role === "manager" && " - Manager"}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No users available</MenuItem>
+                )}
               </Select>
             </FormControl>
 
