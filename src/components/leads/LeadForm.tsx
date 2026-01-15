@@ -58,8 +58,8 @@ const LeadForm: React.FC<LeadFormProps> = ({
     queryFn: async () => {
       if (user?.role === "admin") {
         const [managers, salespeople] = await Promise.all([
-          userService.getUsers({ role: "manager" }),
-          userService.getUsers({ role: "salesperson" }),
+          userService.getUsers({ role: "manager", is_active: true }),
+          userService.getUsers({ role: "salesperson", is_active: true }),
         ]);
 
         // ✅ Use normalizer
@@ -71,6 +71,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
         const team = await userService.getUsers({
           manager_id: user.id,
           role: "salesperson",
+          is_active: true,
         });
 
         // ✅ Use normalizer
@@ -78,7 +79,10 @@ const LeadForm: React.FC<LeadFormProps> = ({
         return [user, ...teamArray];
       }
 
-      const salespeople = await userService.getUsers({ role: "salesperson" });
+      const salespeople = await userService.getUsers({
+        role: "salesperson",
+        is_active: true,
+      });
       return normalizeUserResponse(salespeople); // ✅ Use normalizer
     },
     enabled: open,

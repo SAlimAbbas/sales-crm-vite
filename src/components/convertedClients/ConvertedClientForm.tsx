@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Grid, Alert, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  Alert,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useQuery } from "@tanstack/react-query";
@@ -34,10 +42,16 @@ const validationSchema = yup.object({
     .string()
     .oneOf(["domestic", "international"])
     .required("Client type is required"),
+  gst_on_paid: yup.boolean().nullable(), // Changed
+  gst_on_upgrade: yup.boolean().nullable(), // Changed
   plan_type: yup
     .string()
-    .oneOf(["basic", "premium", "vip", "advanced"])
-    .required("Plan type is required"),
+    .oneOf(["basic", "premium", "vip", "advanced", "trial"])
+    .required("Plan type is required"), // Added trial
+  upgrade_plan_type: yup
+    .string()
+    .oneOf(["basic", "premium", "vip", "advanced", "trial"])
+    .nullable(), // Add
   plan_amount: yup
     .number()
     .min(0, "Must be positive")
@@ -73,6 +87,8 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
     enabled: open,
     select: (data) => data?.data || data,
   });
+console.log(client);
+  console.log(client?.gst_on_paid, client?.gst_on_upgrade);
 
   const formik = useFormik({
     initialValues: {
@@ -86,7 +102,10 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
       company_email: client?.company_email || "", // Add
       executive_id: client?.executive_id || 0, // Add
       client_type: client?.client_type || "domestic",
+      gst_on_paid: client?.gst_on_paid || false, // Changed
+      gst_on_upgrade: client?.gst_on_upgrade || false, // Changed
       plan_type: client?.plan_type || "basic",
+      upgrade_plan_type: client?.upgrade_plan_type || "", // Add
       plan_amount: client?.plan_amount || 0,
       paid_amount: client?.paid_amount || 0,
       paid_amount_date: client?.paid_amount_date
@@ -96,7 +115,7 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
       pending_amount_date: client?.pending_amount_date
         ? client.pending_amount_date.split("T")[0]
         : "",
-      upgrade_payment_amount: client?.upgrade_payment_amount || 0, // Add
+      upgrade_payment_amount: client?.upgrade_payment_amount ?? 0, // Add
       upgrade_payment_date: client?.upgrade_payment_date
         ? client.upgrade_payment_date.split("T")[0]
         : "", // Add
@@ -105,32 +124,45 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
     },
     validationSchema,
     onSubmit: async (values) => {
+      console.log("btn clicked");
+      console.log("values - ",values);
       setLoading(true);
       try {
         const formData: ConvertedClientFormData = {
-          lead_id: values.lead_id === 0 ? null : values.lead_id,
+          lead_id: values.lead_id,
           company_name: values.company_name,
           client_name: values.client_name,
           number: values.number,
-          company_gst_number: values.company_gst_number || undefined, // Add
-          gst_issued: values.gst_issued || undefined, // Add
-          company_address: values.company_address || undefined, // Add
-          company_email: values.company_email || undefined, // Add
-          executive_id: values.executive_id || undefined, // Add
+          company_gst_number: values.company_gst_number || undefined,
+          gst_issued: values.gst_issued || undefined,
+          company_address: values.company_address || undefined,
+          company_email: values.company_email || undefined,
+          executive_id: values.executive_id || undefined,
           client_type: values.client_type as "domestic" | "international",
+          gst_on_paid: values.gst_on_paid, // Changed
+          gst_on_upgrade: values.gst_on_upgrade, // Changed
           plan_type: values.plan_type as
             | "basic"
             | "premium"
             | "vip"
-            | "advanced",
+            | "advanced"
+            | "trial",
+          upgrade_plan_type: values.upgrade_plan_type
+            ? (values.upgrade_plan_type as
+                | "basic"
+                | "premium"
+                | "vip"
+                | "advanced"
+                | "trial")
+            : undefined, // Fixed
           plan_amount: values.plan_amount,
           paid_amount: values.paid_amount || undefined,
           paid_amount_date: values.paid_amount_date || undefined,
           pending_amount_condition:
             values.pending_amount_condition || undefined,
           pending_amount_date: values.pending_amount_date || undefined,
-          upgrade_payment_amount: values.upgrade_payment_amount || undefined, // Add
-          upgrade_payment_date: values.upgrade_payment_date || undefined, // Add
+          upgrade_payment_amount: values.upgrade_payment_amount || undefined,
+          upgrade_payment_date: values.upgrade_payment_date || undefined,
           plan_features: values.plan_features || undefined,
           currency: values.currency || undefined,
         };
@@ -177,13 +209,16 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
         company_email: client.company_email || "", // Add
         executive_id: client.executive_id || 0, // Add
         client_type: client.client_type,
+        gst_on_paid: client.gst_on_paid || false, // Changed
+        gst_on_upgrade: client.gst_on_upgrade || false, // Changed
         plan_type: client.plan_type,
+        upgrade_plan_type: client.upgrade_plan_type || "", // Add
         plan_amount: client.plan_amount,
         paid_amount: client.paid_amount,
         paid_amount_date: client.paid_amount_date
           ? client.paid_amount_date.split("T")[0]
           : "",
-        upgrade_payment_amount: client.upgrade_payment_amount || 0, // Add
+        upgrade_payment_amount: client.upgrade_payment_amount ?? 0, // Add
         upgrade_payment_date: client.upgrade_payment_date
           ? client.upgrade_payment_date.split("T")[0]
           : "", // Add
@@ -206,7 +241,6 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
         (l: any) => l.id === formik.values.lead_id
       );
       if (selectedLead) {
-        console.log(selectedLead);
         formik.setFieldValue("company_name", selectedLead.company_name);
         formik.setFieldValue("client_name", selectedLead.owner_name || "");
         formik.setFieldValue("number", selectedLead.contact_number);
@@ -245,6 +279,7 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
     { value: "premium", label: "Premium" },
     { value: "vip", label: "VIP" },
     { value: "advanced", label: "Advanced" },
+    { value: "trial", label: "Trial" }, // Add
   ];
 
   const clientTypeOptions = [
@@ -472,6 +507,39 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
             />
           </Grid>
 
+          {formik.values.client_type === "domestic" && (
+            <>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={Boolean(formik.values.gst_on_paid)}
+                      onChange={(e) =>
+                        formik.setFieldValue("gst_on_paid", e.target.checked)
+                      }
+                      name="gst_on_paid"
+                    />
+                  }
+                  label="Apply 18% GST on Paid Amount"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={Boolean(formik.values.gst_on_upgrade)}
+                      onChange={(e) =>
+                        formik.setFieldValue("gst_on_upgrade", e.target.checked)
+                      }
+                      name="gst_on_upgrade"
+                    />
+                  }
+                  label="Apply 18% GST on Upgrade Amount"
+                />
+              </Grid>
+            </>
+          )}
+
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FormSelect
               label="Plan Type"
@@ -482,6 +550,22 @@ const ConvertedClientForm: React.FC<ConvertedClientFormProps> = ({
                 formik.touched.plan_type ? formik.errors.plan_type : undefined
               }
               required
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <FormSelect
+              label="Upgrade Plan Type"
+              value={formik.values.upgrade_plan_type}
+              onChange={(value) =>
+                formik.setFieldValue("upgrade_plan_type", value)
+              }
+              options={[{ value: "", label: "No Upgrade" }, ...planTypeOptions]}
+              error={
+                formik.touched.upgrade_plan_type
+                  ? formik.errors.upgrade_plan_type
+                  : undefined
+              }
             />
           </Grid>
 

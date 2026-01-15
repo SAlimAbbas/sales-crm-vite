@@ -8,6 +8,7 @@ export interface UserQueryParams {
   page?: number;
   per_page?: number;
   is_active?: boolean;
+  search?: string;
 }
 
 export const userService = {
@@ -24,7 +25,7 @@ export const userService = {
 
   deleteUser: (id: number) => apiService.delete(`/users/${id}`),
 
-  updateUserStatus: (id: number, is_active: boolean) =>
+  updateStatus: (id: number, is_active: boolean) =>
     apiService.patch<User>(`/users/${id}/status`, { is_active }),
 
   restoreUser: (id: number) =>

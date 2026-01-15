@@ -103,8 +103,8 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     queryFn: async () => {
       if (currentUser.role === "admin") {
         const [managersRes, salespeopleRes] = await Promise.all([
-          userService.getUsers({ role: "manager" }),
-          userService.getUsers({ role: "salesperson" }),
+          userService.getUsers({ role: "manager", is_active: true }),
+          userService.getUsers({ role: "salesperson", is_active: true }),
         ]);
 
         const managers = normalizeUserResponse(managersRes);
@@ -115,6 +115,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
         const teamDataRes = await userService.getUsers({
           manager_id: currentUser.id,
           role: "salesperson",
+          is_active: true,
         });
 
         const teamData = normalizeUserResponse(teamDataRes);
@@ -123,6 +124,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
       const salespeopleRes = await userService.getUsers({
         role: "salesperson",
+        is_active: true,
       });
 
       return normalizeUserResponse(salespeopleRes);

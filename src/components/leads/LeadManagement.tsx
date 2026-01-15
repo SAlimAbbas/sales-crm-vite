@@ -101,7 +101,7 @@ const LeadManagement: React.FC = () => {
     status: [],
     type: "",
     source: "",
-    country: "",
+    country: [],
     assignedTo: [],
     leadExecutive: [],
     dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role
@@ -140,7 +140,10 @@ const LeadManagement: React.FC = () => {
           : undefined,
       type: filters.type,
       source: filters.source,
-      country: filters.country,
+      country:
+        filters.country.length > 0
+          ? filters.country.join(",") // ✅ Join array with comma
+          : undefined,
       assigned_to:
         filters.assignedTo.length > 0
           ? filters.assignedTo.join(",")
@@ -276,7 +279,7 @@ const LeadManagement: React.FC = () => {
       status: [],
       type: "",
       source: "",
-      country: "",
+      country: [],
       assignedTo: [],
       leadExecutive: [],
       dateField: user?.role === "salesperson" ? "assigned_date" : "date", // ✅ Reset based on role

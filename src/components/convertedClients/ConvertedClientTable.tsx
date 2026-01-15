@@ -101,6 +101,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
         return "default";
     }
   };
+
   const getPaymentStatusLabel = (status: string) => {
     return status
       .split("_")
@@ -173,6 +174,17 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   Plan
                 </TableSortLabel>
               </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={sortField === "paid_amount_date"}
+                  direction={
+                    sortField === "paid_amount_date" ? sortDirection : "asc"
+                  }
+                  onClick={() => handleSort("paid_amount_date")}
+                >
+                  Paid Date
+                </TableSortLabel>
+              </TableCell>
               <TableCell align="right">Total Amount Paid</TableCell>
               <TableCell>Payment Status</TableCell>
               <TableCell align="center">Actions</TableCell>
@@ -181,7 +193,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
           <TableBody>
             {loading && clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                   <Typography variant="body2" sx={{ mt: 2 }}>
                     Loading clients...
@@ -190,7 +202,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
               </TableRow>
             ) : clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                   <Typography variant="body1" color="textSecondary">
                     No converted clients found
                   </Typography>
@@ -218,23 +230,95 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     />
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={client.plan_type.toUpperCase()}
-                      size="small"
-                      variant="outlined"
-                    />
+                    <Box>
+                      <Chip
+                        label={client.plan_type.toUpperCase()}
+                        size="small"
+                        variant="outlined"
+                      />
+                      {client.upgrade_plan_type && (
+                        <Chip
+                          label={`→ ${client.upgrade_plan_type.toUpperCase()}`}
+                          size="small"
+                          color="info"
+                          sx={{ ml: 0.5 }}
+                        />
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {client.paid_amount_date
+                      ? format(
+                          new Date(client.paid_amount_date),
+                          "MMM dd, yyyy"
+                        )
+                      : "-"}
                   </TableCell>
                   <TableCell align="right">
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      color="success.main"
-                    >
-                      {formatCurrency(
-                        client.total_amount_paid,
-                        client.currency
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        color="success.main"
+                      >
+                        {formatCurrency(
+                          client.total_amount_paid,
+                          client.currency
+                        )}
+                      </Typography>
+                      {client.gst_on_paid &&
+                      client.client_type === "domestic" &&
+                      client.gst_amount_paid > 0 ? (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          + GST (Paid):{" "}
+                          {formatCurrency(
+                            client.gst_amount_paid,
+                            client.currency
+                          )}
+                        </Typography>
+                      ) : (
+                        ""
                       )}
-                    </Typography>
+                      {client.gst_on_upgrade &&
+                      client.client_type === "domestic" &&
+                      client.gst_amount_upgrade > 0 ? (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          + GST (Upgrade):{" "}
+                          {formatCurrency(
+                            client.gst_amount_upgrade,
+                            client.currency
+                          )}
+                        </Typography>
+                      ) : (
+                        ""
+                      )}
+                      {(client.gst_on_paid && client.gst_amount_paid > 0) ||
+                      (client.gst_on_upgrade &&
+                        client.gst_amount_upgrade > 0) ? (
+                        <Typography
+                          variant="caption"
+                          fontWeight={600}
+                          color="primary.main"
+                          display="block"
+                        >
+                          Total:{" "}
+                          {formatCurrency(
+                            client.total_with_gst,
+                            client.currency
+                          )}
+                        </Typography>
+                      ) : (
+                        ""
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -354,19 +438,67 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   textAlign: "center",
                 }}
               >
-                <Typography
-                  variant="h5"
-                  fontWeight={700}
-                  color="background.default"
-                >
+                <Typography variant="h5" fontWeight={700} color="success.dark">
                   Total Amount Paid:{" "}
                   {formatCurrency(
                     detailsDialog.client.total_amount_paid,
                     detailsDialog.client.currency
                   )}
                 </Typography>
-                <Typography variant="caption" color="background.default">
-                  (Paid + Upgrade Amount)
+                {detailsDialog.client.gst_on_paid &&
+                  detailsDialog.client.client_type === "domestic" &&
+                  detailsDialog.client.gst_amount_paid > 0 && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      GST on Paid Amount (18%):{" "}
+                      {formatCurrency(
+                        detailsDialog.client.gst_amount_paid,
+                        detailsDialog.client.currency
+                      )}
+                    </Typography>
+                  )}
+                {detailsDialog.client.gst_on_upgrade &&
+                  detailsDialog.client.client_type === "domestic" &&
+                  detailsDialog.client.gst_amount_upgrade > 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      GST on Upgrade Amount (18%):{" "}
+                      {formatCurrency(
+                        detailsDialog.client.gst_amount_upgrade,
+                        detailsDialog.client.currency
+                      )}
+                    </Typography>
+                  )}
+                {((detailsDialog.client.gst_on_paid &&
+                  detailsDialog.client.gst_amount_paid > 0) ||
+                  (detailsDialog.client.gst_on_upgrade &&
+                    detailsDialog.client.gst_amount_upgrade > 0)) && (
+                  <>
+                    <Divider sx={{ my: 1 }} />
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
+                      color="background.default"
+                    >
+                      Total with GST:{" "}
+                      {formatCurrency(
+                        detailsDialog.client.total_with_gst,
+                        detailsDialog.client.currency
+                      )}
+                    </Typography>
+                  </>
+                )}
+                <Typography variant="caption" color="text.secondary">
+                  (Paid + Upgrade Amount
+                  {(detailsDialog.client.gst_on_paid &&
+                    detailsDialog.client.gst_amount_paid > 0) ||
+                  (detailsDialog.client.gst_on_upgrade &&
+                    detailsDialog.client.gst_amount_upgrade > 0)
+                    ? " + GST"
+                    : ""}
+                  )
                 </Typography>
               </Box>
 
@@ -477,6 +609,14 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       size="small"
                       variant="outlined"
                     />
+                    {detailsDialog.client.upgrade_plan_type && (
+                      <Chip
+                        label={`→ ${detailsDialog.client.upgrade_plan_type.toUpperCase()}`}
+                        size="small"
+                        color="info"
+                        sx={{ ml: 0.5 }}
+                      />
+                    )}
                   </Typography>
                 </Grid>
 
@@ -506,15 +646,99 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
+                {/* Highlighted Plan Amount and Upgrade Amount */}
+                <Grid size={12}>
+                  <Box
+                    sx={{
+                      bgcolor: "info.light",
+                      p: 2,
+                      borderRadius: 1,
+                      display: "flex",
+                      justifyContent: "space-around",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box textAlign="center">
+                      <Typography variant="caption" color="text.secondary">
+                        Plan Amount (Pitched)
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        color="info.dark"
+                      >
+                        {formatCurrency(
+                          detailsDialog.client.plan_amount,
+                          detailsDialog.client.currency
+                        )}
+                      </Typography>
+                    </Box>
+                    {detailsDialog.client.upgrade_payment_amount > 0 && (
+                      <>
+                        <Divider orientation="vertical" flexItem />
+                        <Box textAlign="center">
+                          <Typography variant="caption" color="text.secondary">
+                            Upgrade Amount
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            fontWeight={700}
+                            color="warning.dark"
+                          >
+                            {formatCurrency(
+                              detailsDialog.client.upgrade_payment_amount,
+                              detailsDialog.client.currency
+                            )}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+                  </Box>
+                </Grid>
+
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Plan Amount (Pitched)
+                    GST on Paid Amount (18%)
                   </Typography>
                   <Typography variant="body2" fontWeight={500}>
-                    {formatCurrency(
-                      detailsDialog.client.plan_amount,
-                      detailsDialog.client.currency
-                    )}
+                    <Chip
+                      label={
+                        detailsDialog.client.gst_on_paid &&
+                        detailsDialog.client.client_type === "domestic"
+                          ? "Yes"
+                          : "No"
+                      }
+                      size="small"
+                      color={
+                        detailsDialog.client.gst_on_paid &&
+                        detailsDialog.client.client_type === "domestic"
+                          ? "success"
+                          : "default"
+                      }
+                    />
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    GST on Upgrade Amount (18%)
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    <Chip
+                      label={
+                        detailsDialog.client.gst_on_upgrade &&
+                        detailsDialog.client.client_type === "domestic"
+                          ? "Yes"
+                          : "No"
+                      }
+                      size="small"
+                      color={
+                        detailsDialog.client.gst_on_upgrade &&
+                        detailsDialog.client.client_type === "domestic"
+                          ? "success"
+                          : "default"
+                      }
+                    />
                   </Typography>
                 </Grid>
 
@@ -563,6 +787,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     )}
                   </Typography>
                 </Grid>
+
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Pending Amount Condition
@@ -675,7 +900,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                         variant="body2"
                         sx={{
                           whiteSpace: "pre-wrap",
-                          bgcolor: "background.paper",
+                          bgcolor: "grey.50",
                           p: 2,
                           borderRadius: 1,
                         }}
@@ -699,7 +924,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     Created By
                   </Typography>
                   <Typography variant="body2" fontWeight={500}>
-                    {detailsDialog.client.created_by_user?.name || "-"}
+                    {detailsDialog.client.created_by?.name || "-"}
                   </Typography>
                 </Grid>
 

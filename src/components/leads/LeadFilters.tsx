@@ -46,7 +46,7 @@ export interface FilterState {
   status: string[];
   type: string;
   source: string;
-  country: string;
+  country: string[];
   assignedTo: string[];
   leadExecutive: string[];
   dateField: string;
@@ -71,7 +71,7 @@ const initialFilters: FilterState = {
   status: [],
   type: "",
   source: "",
-  country: "",
+  country: [],
   assignedTo: [],
   leadExecutive: [],
   dateField: "date",
@@ -92,7 +92,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search);
-  const [localCountry, setLocalCountry] = useState(filters.country);
   const [localProduct, setLocalProduct] = useState(filters.product);
   const [pendingFilters, setPendingFilters] = useState<FilterState>(filters);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
@@ -186,7 +185,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   // Sync local state with filters
   useEffect(() => {
     setLocalSearch(filters.search);
-    setLocalCountry(filters.country);
     setLocalProduct(filters.product);
   }, [filters.search, filters.country, filters.product]);
 
@@ -194,25 +192,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   useEffect(() => {
     return () => {
       debouncedSearchRef.current.cancel();
-      debouncedCountryRef.current.cancel();
       debouncedProductRef.current.cancel();
     };
   }, []);
-
-  const debouncedCountryRef = useRef(
-    debounce(
-      (
-        value: string,
-        currentFilters: FilterState,
-        callback: (filters: FilterState) => void
-      ) => {
-        if (value.length >= 2 || value.length === 0) {
-          callback({ ...currentFilters, country: value });
-        }
-      },
-      500
-    )
-  );
 
   const debouncedProductRef = useRef(
     debounce(
@@ -260,7 +242,6 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
 
   const handleReset = () => {
     setLocalSearch("");
-    setLocalCountry("");
     setLocalProduct("");
     setPendingFilters(initialFilters);
     setHasPendingChanges(false); // ✅ Clear the flag on reset
@@ -327,10 +308,13 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
       if (key === "search") return value.trim() !== "";
       if (key === "dateFrom" || key === "dateTo") return value !== null;
       if (key === "status" || key === "assignedTo" || key === "leadExecutive")
-        // ✅ Add leadExecutive
         return Array.isArray(value) && value.length > 0;
-      if (key === "dateField") return false;
-      return value !== "";
+      if (key === "country") return Array.isArray(value) && value.length > 0; // ✅ Add this check
+      if (key === "dateField") return false; // ✅ This should already be there
+      if (key === "tags") return value !== "" && value !== null; // ✅ Only count if not empty
+      if (key === "type" || key === "source" || key === "product")
+        return value !== "" && value !== null; // ✅ Explicitly check these
+      return false; // ✅ Default to false for any other fields
     }).length;
   }, [filters]);
 
@@ -559,21 +543,41 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               </Grid>
             )}
 
-            {/* Country - Instant Search */}
+            {/* Country - Multi-Select with Free Text */}
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <TextField
-                label="Country"
-                value={localCountry}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setLocalCountry(value);
-                  debouncedCountryRef.current(value, filters, onFiltersChange);
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={[]}
+                value={pendingFilters.country}
+                onChange={(_, newValue) => {
+                  handlePendingFilterChange("country", newValue);
                 }}
                 disabled={loading || isCountryDisabled}
-                fullWidth
-                size="small"
-                placeholder={
-                  isCountryDisabled ? "Disabled for Domestic leads" : ""
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Country"
+                    placeholder={
+                      isCountryDisabled
+                        ? "Disabled for Domestic leads"
+                        : "Type country and press Enter"
+                    }
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index });
+                    return (
+                      <Chip
+                        key={key}
+                        label={option}
+                        size="small"
+                        {...tagProps}
+                      />
+                    );
+                  })
                 }
               />
             </Grid>
@@ -772,13 +776,17 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     variant="outlined"
                   />
                 )}
-                {filters.country && (
+                {filters.country.length > 0 && (
                   <Chip
-                    label={`Country: ${filters.country}`}
+                    label={`Country: ${
+                      filters.country.length === 1
+                        ? filters.country[0]
+                        : `${filters.country.length} selected`
+                    }`}
                     size="small"
                     onDelete={() => {
-                      setLocalCountry("");
-                      onFiltersChange({ ...filters, country: "" });
+                      setPendingFilters((prev) => ({ ...prev, country: [] }));
+                      onFiltersChange({ ...filters, country: [] });
                     }}
                     variant="outlined"
                   />

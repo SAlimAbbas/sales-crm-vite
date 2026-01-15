@@ -7,27 +7,33 @@ export interface ConvertedClient {
   company_name: string;
   client_name: string;
   number: string;
-  company_gst_number: string | null; // Add
-  gst_issued: string | null; // Add
-  company_address: string | null; // Add
-  company_email: string | null; // Add
-  executive_id: number | null; // Add
+  company_gst_number: string | null;
+  gst_issued: string | null;
+  company_address: string | null;
+  company_email: string | null;
+  executive_id: number | null;
   client_type: "domestic" | "international";
-  plan_type: "basic" | "premium" | "vip" | "advanced";
+  gst_on_paid: boolean; // Changed
+  gst_on_upgrade: boolean; // Changed
+  plan_type: "basic" | "premium" | "vip" | "advanced" | "trial"; // Added trial
+  upgrade_plan_type: "basic" | "premium" | "vip" | "advanced" | "trial" | null; // Add
   plan_amount: number;
   paid_amount: number;
   paid_amount_date: string | null;
   pending_amount: number;
   pending_amount_condition: string | null;
   pending_amount_date: string | null;
-  upgrade_payment_amount: number; // Add
-  upgrade_payment_date: string | null; // Add
-  total_amount_paid: number;
+  upgrade_payment_amount: number;
+  upgrade_payment_date: string | null;
   plan_features: string | null;
   currency: string;
-  created_by: number;
+  created_by: User;
   payment_status: "fully_paid" | "partially_paid" | "unpaid";
   payment_percentage: number;
+  total_amount_paid: number;
+  gst_amount_paid: number; // Changed
+  gst_amount_upgrade: number; // Changed
+  total_with_gst: number;
   created_at: string;
   updated_at: string;
   lead?: Lead;
@@ -36,24 +42,27 @@ export interface ConvertedClient {
 }
 
 export interface ConvertedClientFormData {
-  lead_id: number | null;
+  lead_id: number;
   company_name: string;
   client_name: string;
   number: string;
-  company_gst_number?: string; // Add
-  gst_issued?: string; // Add
-  company_address?: string; // Add
-  company_email?: string; // Add
-  executive_id?: number; // Add
+  company_gst_number?: string;
+  gst_issued?: string;
+  company_address?: string;
+  company_email?: string;
+  executive_id?: number;
   client_type: "domestic" | "international";
-  plan_type: "basic" | "premium" | "vip" | "advanced";
+  gst_on_paid?: boolean; // Changed
+  gst_on_upgrade?: boolean; // Changed
+  plan_type: "basic" | "premium" | "vip" | "advanced" | "trial"; // Added trial
+  upgrade_plan_type?: "basic" | "premium" | "vip" | "advanced" | "trial"; // Add
   plan_amount: number;
   paid_amount?: number;
   paid_amount_date?: string;
   pending_amount_condition?: string;
   pending_amount_date?: string;
-  upgrade_payment_amount?: number; // Add
-  upgrade_payment_date?: string; // Add
+  upgrade_payment_amount?: number;
+  upgrade_payment_date?: string;
   plan_features?: string;
   currency?: string;
 }
