@@ -158,6 +158,7 @@ const UserForm: React.FC<UserFormProps> = ({
     { value: "salesperson", label: "Salesperson" },
     { value: "manager", label: "Manager" },
     { value: "lead_executive", label: "Lead Executive" },
+    { value: "backend", label: "Backend Staff" },
     ...(currentUser?.role === "admin"
       ? [{ value: "admin", label: "Admin" }]
       : []),
@@ -269,7 +270,7 @@ const UserForm: React.FC<UserFormProps> = ({
             </Grid>
           )}
           {formik.values.role !== "admin" &&
-            formik.values.role !== "lead_executive" && (
+            formik.values.role !== "lead_executive" && formik.values.role !== "backend" && (
               <>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormSelect

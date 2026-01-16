@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  role: "admin" | "manager" | "salesperson" | "lead_executive";
+  role: "admin" | "manager" | "salesperson" | "lead_executive" | "backend";
   shift?: "Day" | "Night";
   type?: "Domestic" | "International";
   is_active: boolean;
@@ -19,7 +19,7 @@ export interface UserFormData {
   name: string;
   email: string;
   phone?: string;
-  role: "admin" | "manager" | "salesperson" | "lead_executive";
+  role: "admin" | "manager" | "salesperson" | "lead_executive" | "backend";
   shift?: "Day" | "Night";
   type?: "Domestic" | "International";
   password?: string;

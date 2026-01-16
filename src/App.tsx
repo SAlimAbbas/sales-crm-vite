@@ -36,6 +36,7 @@ import NotificationsPage from "./components/notifications/NotificationsPage";
 import ConvertedClientManagement from "./components/convertedClients/ConvertedClientManagement";
 import LeadExecutiveDashboard from "./components/leads/LeadExecutiveDashboard";
 import DashboardRouter from "./components/common/DashboardRouter";
+import BackendDashboard from "./components/dashboard/BackendDashboard";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -88,6 +89,7 @@ const AppRoutes: React.FC = () => {
                   path="lead-executive/dashboard"
                   element={<LeadExecutiveDashboard />}
                 />
+                <Route path="backend/dashboard" element={<BackendDashboard />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="leads" element={<LeadManagement />} />

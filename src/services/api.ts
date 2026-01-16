@@ -57,7 +57,8 @@ export const apiService = {
       url === "/users" ||
       url === "/analytics/dashboard" ||
       url.startsWith("/notifications") ||
-      url.startsWith("/lead-executive")
+      url.startsWith("/lead-executive") ||
+      url.startsWith("/backend")
     ) {
       // ✅ Handle all notification endpoints
       return api.get<T>(url, { params }).then((response) => response.data);

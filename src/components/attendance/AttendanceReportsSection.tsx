@@ -39,7 +39,7 @@ const AttendanceReportsSection: React.FC = () => {
 
   const { data: usersData } = useQuery<any>({
     queryKey: ["employees-list"],
-    queryFn: () => userService.getUsers(), // This gets all users
+    queryFn: () => userService.getUsers({ is_active: true }), // This gets all users
   });
 
   const { data: attendanceData, isLoading } = useQuery<any>({
@@ -102,6 +102,8 @@ const AttendanceReportsSection: React.FC = () => {
             <MenuItem value="">All Roles</MenuItem>
             <MenuItem value="manager">Managers</MenuItem>
             <MenuItem value="salesperson">Salespeople</MenuItem>
+            <MenuItem value="lead_executive">Lead Executives</MenuItem>
+            <MenuItem value="backend">Backend Staff</MenuItem>
           </Select>
         </FormControl>
 
