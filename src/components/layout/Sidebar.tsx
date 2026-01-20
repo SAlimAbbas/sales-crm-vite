@@ -130,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             }}
           />
           <Typography variant="h6" noWrap component="div">
-            EW Sales Leads
+            Exporters Worlds <br />CRM
           </Typography>
         </Box>
       </DrawerHeader>

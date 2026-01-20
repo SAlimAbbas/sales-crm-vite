@@ -3,6 +3,7 @@ import { Box } from "@mui/material";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { MainContent } from "../../styles/components/layoutStyles";
+import Footer from "./Footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         {children}
+        <Footer />
       </MainContent>
     </Box>
   );

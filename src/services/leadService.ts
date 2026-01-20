@@ -51,11 +51,12 @@ export const leadService = {
     apiService.postFormData<BulkActionResponse>("/leads/bulk-upload", formData),
 
   // Bulk assign leads to salesperson
-  bulkAssign: (leadIds: number[], assigneeId: number) =>
-    apiService.post<BulkActionResponse>("/leads/bulk-assign", {
-      lead_ids: leadIds,
-      assignee_id: assigneeId, // Changed from salesperson_id
-    }),
+  bulkAssign: (leadIds: number[], assigneeId: number, scheduleFor?: string) =>
+  apiService.post<BulkActionResponse>("/leads/bulk-assign", {
+    lead_ids: leadIds,
+    assignee_id: assigneeId,
+    schedule_for: scheduleFor, // Add this
+  }),
 
   // Bulk update status
   bulkUpdateStatus: (leadIds: number[], status: string) =>

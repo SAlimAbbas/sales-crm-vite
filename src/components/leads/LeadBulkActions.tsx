@@ -37,13 +37,14 @@ interface LeadBulkActionsProps {
   onClearSelection: () => void;
   onRefresh: () => void;
   disabled?: boolean;
-  currentUser: any; // Add this line
+  currentUser: any;
 }
 
 interface BulkAssignDialog {
   open: boolean;
   salespersonId: string;
   loading: boolean;
+  scheduleFor: string; // ✅ Added
 }
 
 interface BulkUpdateDialog {
@@ -69,6 +70,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     open: false,
     salespersonId: "",
     loading: false,
+    scheduleFor: "", // ✅ Added
   });
   const [updateDialog, setUpdateDialog] = useState<BulkUpdateDialog>({
     open: false,
@@ -83,7 +85,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
   const { showNotification } = useNotification();
 
   const normalizeUserResponse = (
-    response: any | User[] | undefined
+    response: any | User[] | undefined,
   ): User[] => {
     if (!response) return [];
     if (Array.isArray(response)) return response;
@@ -93,7 +95,6 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     return [];
   };
 
-  // ✅ Query with refetch capability
   const {
     data: usersData,
     isLoading: usersLoading,
@@ -129,9 +130,9 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
       return normalizeUserResponse(salespeopleRes);
     },
-    enabled: false, // Start disabled
+    enabled: false,
     initialData: [],
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -142,13 +143,13 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     setAnchorEl(null);
   };
 
-  // ✅ Handler for opening assign dialog
   const handleAssignMenuClick = () => {
-    refetchUsers(); // Manually trigger the query
+    refetchUsers();
     setAssignDialog({
       open: true,
       salespersonId: "",
       loading: false,
+      scheduleFor: "", // ✅ Added
     });
     handleMenuClose();
   };
@@ -161,19 +162,28 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     try {
       await leadService.bulkAssign(
         selectedIds,
-        parseInt(assignDialog.salespersonId)
+        parseInt(assignDialog.salespersonId),
+        assignDialog.scheduleFor || undefined, // ✅ Added
       );
-      showNotification(
-        `Successfully assigned ${selectedIds.length} leads`,
-        "success"
-      );
+
+      // ✅ Updated message based on scheduling
+      const message = assignDialog.scheduleFor
+        ? `Successfully scheduled ${selectedIds.length} leads for assignment on ${new Date(assignDialog.scheduleFor).toLocaleString()}`
+        : `Successfully assigned ${selectedIds.length} leads`;
+
+      showNotification(message, "success");
       onRefresh();
       onClearSelection();
-      setAssignDialog({ open: false, salespersonId: "", loading: false });
+      setAssignDialog({
+        open: false,
+        salespersonId: "",
+        loading: false,
+        scheduleFor: "",
+      }); // ✅ Updated
     } catch (error: any) {
       showNotification(
         error.response?.data?.message || "Failed to assign leads",
-        "error"
+        "error",
       );
     } finally {
       setAssignDialog({ ...assignDialog, loading: false });
@@ -186,11 +196,10 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     setUpdateDialog({ ...updateDialog, loading: true });
 
     try {
-      // Note: You'll need to implement this endpoint in your backend
       await leadService.bulkUpdateStatus(selectedIds, updateDialog.status);
       showNotification(
         `Successfully updated ${selectedIds.length} leads`,
-        "success"
+        "success",
       );
       onRefresh();
       onClearSelection();
@@ -198,7 +207,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     } catch (error: any) {
       showNotification(
         error.response?.data?.message || "Failed to update leads",
-        "error"
+        "error",
       );
     } finally {
       setUpdateDialog({ ...updateDialog, loading: false });
@@ -209,11 +218,10 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     setDeleteDialog({ ...deleteDialog, loading: true });
 
     try {
-      // Note: You'll need to implement this endpoint in your backend
       await leadService.bulkDelete(selectedIds);
       showNotification(
         `Successfully deleted ${selectedIds.length} leads`,
-        "success"
+        "success",
       );
       onRefresh();
       onClearSelection();
@@ -221,7 +229,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     } catch (error: any) {
       showNotification(
         error.response?.data?.message || "Failed to delete leads",
-        "error"
+        "error",
       );
     } finally {
       setDeleteDialog({ ...deleteDialog, loading: false });
@@ -233,12 +241,12 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       await leadService.bulkExportLeads(selectedIds);
       showNotification(
         `Successfully exported ${selectedIds.length} leads`,
-        "success"
+        "success",
       );
     } catch (error: any) {
       showNotification(
         error.response?.data?.message || "Failed to export leads",
-        "error"
+        "error",
       );
     }
   };
@@ -253,15 +261,15 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
     { value: LEAD_STATUS.RINGING, label: "Ringing" },
     { value: LEAD_STATUS.CALL_BACK, label: "Call Back" },
     { value: LEAD_STATUS.FOLLOW_UP, label: "Follow Up" },
-    { value: LEAD_STATUS.NOT_INTERESTED, label: "Not Interested" }, // ✅ Changed
+    { value: LEAD_STATUS.NOT_INTERESTED, label: "Not Interested" },
     { value: LEAD_STATUS.WHATSAPPED, label: "WhatsApped" },
     { value: LEAD_STATUS.INVALID_CONTACT, label: "Invalid Contact" },
     { value: LEAD_STATUS.NOT_ON_WHATSAPP, label: "Not on WhatsApp" },
-    { value: LEAD_STATUS.BUSY, label: "Busy" }, // ✅ Add
-    { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" }, // ✅ Add
-    { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" }, // ✅ Add
-    { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" }, // ✅ Add
-    { value: LEAD_STATUS.NOT_REACHABLE, label: "Not Reachable" }, // ✅ Add
+    { value: LEAD_STATUS.BUSY, label: "Busy" },
+    { value: LEAD_STATUS.CALL_DISCONNECTED, label: "Call Disconnected" },
+    { value: LEAD_STATUS.NO_RESPONSE, label: "No Response" },
+    { value: LEAD_STATUS.SWITCHED_OFF, label: "Switched Off" },
+    { value: LEAD_STATUS.NOT_REACHABLE, label: "Not Reachable" },
   ];
 
   if (selectedIds.length === 0) {
@@ -317,8 +325,6 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       >
         {currentUser.role === "admin" || currentUser.role === "manager" ? (
           <MenuItem onClick={handleAssignMenuClick}>
-            {" "}
-            {/* ✅ Use the handler */}
             <AssignIcon fontSize="small" sx={{ mr: 1 }} />
             Assign to Salesperson or Manager
           </MenuItem>
@@ -364,9 +370,15 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       {/* Bulk Assign Dialog */}
       <Dialog
         open={assignDialog.open}
-        onClose={() =>
-          !assignDialog.loading &&
-          setAssignDialog({ open: false, salespersonId: "", loading: false })
+        onClose={
+          () =>
+            !assignDialog.loading &&
+            setAssignDialog({
+              open: false,
+              salespersonId: "",
+              loading: false,
+              scheduleFor: "",
+            }) // ✅ Updated
         }
         maxWidth="sm"
         fullWidth
@@ -413,11 +425,42 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
               </Select>
             </FormControl>
 
+            {/* ✅ NEW: Schedule Assignment Field */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Schedule Assignment (Optional)
+              </Typography>
+              <input
+                type="datetime-local"
+                value={assignDialog.scheduleFor}
+                onChange={(e) =>
+                  setAssignDialog({
+                    ...assignDialog,
+                    scheduleFor: e.target.value,
+                  })
+                }
+                min={new Date().toISOString().slice(0, 16)}
+                disabled={assignDialog.loading}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+              <Typography variant="caption" color="textSecondary">
+                Leave empty for immediate assignment
+              </Typography>
+            </Box>
+
             {assignDialog.loading && (
               <Box sx={{ mt: 2 }}>
                 <LinearProgress />
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Assigning leads...
+                  {assignDialog.scheduleFor
+                    ? "Scheduling assignment..."
+                    : "Assigning leads..."}
                 </Typography>
               </Box>
             )}
@@ -431,6 +474,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
                 open: false,
                 salespersonId: "",
                 loading: false,
+                scheduleFor: "", // ✅ Updated
               })
             }
             disabled={assignDialog.loading}
@@ -442,7 +486,14 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
             variant="contained"
             disabled={assignDialog.loading || !assignDialog.salespersonId}
           >
-            {assignDialog.loading ? "Assigning..." : "Assign"}
+            {assignDialog.loading
+              ? assignDialog.scheduleFor
+                ? "Scheduling..."
+                : "Assigning..."
+              : assignDialog.scheduleFor
+                ? "Schedule Assignment"
+                : "Assign Now"}{" "}
+            {/* ✅ Updated button text */}
           </Button>
         </DialogActions>
       </Dialog>

@@ -8,7 +8,7 @@ const Footer: React.FC = () => {
       sx={{
         py: 3,
         px: 2,
-        mt: "auto",
+        mt: 3,
         backgroundColor: (theme) =>
           theme.palette.mode === "light"
             ? theme.palette.grey[200]
@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
     >
       <Container maxWidth="lg">
         <Typography variant="body2" color="text.secondary" align="center">
-          © {new Date().getFullYear()} EW Sales Leads. All rights reserved.
+          © {new Date().getFullYear()} Exporters Worlds. All rights reserved.
         </Typography>
       </Container>
     </Box>

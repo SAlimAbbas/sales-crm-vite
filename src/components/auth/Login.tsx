@@ -40,7 +40,7 @@ const GlassContainer = styled(motion.div)({
   padding: "48px",
   boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
   width: "100%",
-  maxWidth: "440px",
+  maxWidth: "470px",
 });
 
 const GradientButton = styled(Button)({
@@ -255,7 +255,7 @@ const Login: React.FC = () => {
                   mb: 1,
                 }}
               >
-                EW Sales Leads
+                Exporters Worlds
               </Typography>
               <Typography
                 variant="body1"
