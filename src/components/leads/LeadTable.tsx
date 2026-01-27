@@ -176,7 +176,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number>(-1);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [selectedLeadForTag, setSelectedLeadForTag] = useState<Lead | null>(
-    null
+    null,
   );
 
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
@@ -241,7 +241,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const handleMouseDown = (
     e: React.MouseEvent,
     columnId: string,
-    currentWidth: number
+    currentWidth: number,
   ) => {
     e.preventDefault();
     setResizing({
@@ -329,7 +329,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const handleClick = (
     event: React.MouseEvent<unknown>,
     id: number,
-    index: number
+    index: number,
   ) => {
     if (!enableMultiSelect) return;
 
@@ -372,7 +372,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
-    lead: Lead
+    lead: Lead,
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedLead(lead);
@@ -414,7 +414,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     } catch (error: any) {
       showNotification(
         error.response?.data?.message || "Failed to update status",
-        "error"
+        "error",
       );
       setStatusDialog({ ...statusDialog, loading: false });
     }
@@ -549,7 +549,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       handleMouseDown(
                         e,
                         headCell.id as string,
-                        columnWidths[headCell.id]
+                        columnWidths[headCell.id],
                       )
                     }
                     sx={{
@@ -603,6 +603,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         inputProps={{
                           "aria-labelledby": labelId,
                         }}
+                        disabled={lead.is_scheduled_assignment}
                       />
                     </TableCell>
                   )}
@@ -698,7 +699,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                             navigator.clipboard.writeText(lead.contact_number);
                             showNotification?.(
                               "Phone number copied!",
-                              "success"
+                              "success",
                             );
                           }}
                           sx={{ padding: "2px" }}
@@ -805,6 +806,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         <Typography variant="body2" noWrap>
                           {lead.assigned_user?.name || "Unassigned"}
                         </Typography>
+                        {lead.is_scheduled_assignment &&
+                          lead.scheduled_assign_at && (
+                            <Chip
+                              label="Scheduled"
+                              size="small"
+                              color="warning"
+                              sx={{ fontSize: "0.7rem", height: "20px" }}
+                            />
+                          )}
                       </TableCell>
 
                       <TableCell
@@ -862,9 +872,20 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      <Typography variant="body2" noWrap>
-                        {lead.assigned_user?.name || "Unassigned"}
-                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography variant="body2" noWrap>
+                          {lead.assigned_user?.name || "Unassigned"}
+                        </Typography>
+                        {lead.is_scheduled_assignment &&
+                          lead.scheduled_assign_at && (
+                            <Chip
+                              label="Scheduled"
+                              size="small"
+                              color="warning"
+                              sx={{ fontSize: "0.7rem", height: "20px" }}
+                            />
+                          )}
+                      </Box>
                     </TableCell>
                   )}
 

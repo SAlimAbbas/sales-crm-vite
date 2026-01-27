@@ -24,6 +24,8 @@ export interface Lead {
   created_by_user?: User;
   lead_executive_id?: number;
   lead_executive?: User;
+  is_scheduled_assignment?: boolean;
+  scheduled_assign_at: string | null;
 }
 
 export interface LeadFormData {

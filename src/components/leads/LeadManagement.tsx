@@ -41,7 +41,7 @@ const LeadManagement: React.FC = () => {
 
   const [openTaskForm, setOpenTaskForm] = useState(false);
   const [selectedLeadForTask, setSelectedLeadForTask] = useState<Lead | null>(
-    null
+    null,
   );
 
   // Snapshot state management
@@ -136,8 +136,8 @@ const LeadManagement: React.FC = () => {
         statusFilter !== "all"
           ? statusFilter
           : filters.status.length > 0
-          ? filters.status.join(",")
-          : undefined,
+            ? filters.status.join(",")
+            : undefined,
       type: filters.type,
       source: filters.source,
       country:
@@ -167,8 +167,8 @@ const LeadManagement: React.FC = () => {
 
     return Object.fromEntries(
       Object.entries(params).filter(
-        ([_, value]) => value !== "" && value !== undefined && value !== null
-      )
+        ([_, value]) => value !== "" && value !== undefined && value !== null,
+      ),
     );
   }, [
     page,
@@ -195,6 +195,14 @@ const LeadManagement: React.FC = () => {
     notifyOnChangeProps: ["data", "error"],
     // ✅ Add this to prevent cache issues
   });
+
+  // Add this near the top of the component, after other state declarations
+  const filteredLeadsForSelection = useMemo(() => {
+    if (!leadsData?.data) return [];
+
+    // Filter out leads that are already scheduled for assignment
+    return leadsData.data.filter((lead: Lead) => !lead.is_scheduled_assignment);
+  }, [leadsData]);
 
   // Replace the existing useEffect with this:
   useEffect(() => {
@@ -232,7 +240,7 @@ const LeadManagement: React.FC = () => {
       return allTabs.filter(
         (tab) =>
           tab.value !== LEAD_STATUS.ASSIGNED &&
-          tab.value !== LEAD_STATUS.UNASSIGNED
+          tab.value !== LEAD_STATUS.UNASSIGNED,
       );
     }
 
@@ -270,7 +278,7 @@ const LeadManagement: React.FC = () => {
         setStatusFilter("all");
       }
     },
-    [statusFilter, snapshotHash]
+    [statusFilter, snapshotHash],
   );
 
   const handleFiltersReset = useCallback(() => {
@@ -336,7 +344,7 @@ const LeadManagement: React.FC = () => {
     handleFormClose();
     showNotification(
       selectedLead ? "Lead updated successfully" : "Lead created successfully",
-      "success"
+      "success",
     );
   };
 
