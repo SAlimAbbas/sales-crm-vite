@@ -201,14 +201,14 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
       (
         value: string,
         currentFilters: FilterState,
-        callback: (filters: FilterState) => void
+        callback: (filters: FilterState) => void,
       ) => {
         if (value.length >= 2 || value.length === 0) {
           callback({ ...currentFilters, product: value });
         }
       },
-      500
-    )
+      500,
+    ),
   );
 
   const debouncedSearchRef = useRef(
@@ -216,7 +216,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
       if (searchTerm.length >= 3 || searchTerm.length === 0) {
         callback({ ...filtersRef.current, search: searchTerm });
       }
-    }, 500)
+    }, 500),
   );
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,12 +278,22 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   const sourceOptions = [
     { value: "", label: "All Sources" },
     { value: "Websites", label: "Websites" },
-    { value: "Referral", label: "Referral" },
+    {
+      value: "Website Registrations (Exporters Worlds)",
+      label: "Website Registrations (Exporters Worlds)",
+    },
+    {
+      value: "Website Demo (Exporters Worlds)",
+      label: "Website Demo (Exporters Worlds)",
+    },
+    {
+      value: "Free Inquiry (Exporters Worlds)",
+      label: "Free Inquiry (Exporters Worlds)",
+    },
     { value: "Social Media", label: "Social Media" },
     { value: "Cold Call", label: "Cold Call" },
     { value: "Paid Campaign", label: "Paid Campaign" },
     { value: "Email Campaign", label: "Email Campaign" },
-    { value: "Trade Show", label: "Trade Show" },
     { value: "Other", label: "Other" },
   ];
 
@@ -387,12 +397,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 options={statusOptions}
                 getOptionLabel={(option) => option.label}
                 value={statusOptions.filter((opt) =>
-                  pendingFilters.status.includes(opt.value)
+                  pendingFilters.status.includes(opt.value),
                 )}
                 onChange={(_, newValue) => {
                   handlePendingFilterChange(
                     "status",
-                    newValue.map((v) => v.value)
+                    newValue.map((v) => v.value),
                   );
                 }}
                 disabled={currentUser?.role === "lead_executive" || loading}
@@ -469,12 +479,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                 options={assignmentOptions}
                 getOptionLabel={(option) => option.label}
                 value={assignmentOptions.filter((opt) =>
-                  pendingFilters.assignedTo.includes(opt.value)
+                  pendingFilters.assignedTo.includes(opt.value),
                 )}
                 onChange={(_, newValue) => {
                   handlePendingFilterChange(
                     "assignedTo",
-                    newValue.map((v) => v.value)
+                    newValue.map((v) => v.value),
                   );
                 }}
                 disabled={loading || currentUser?.role === "salesperson"}
@@ -510,12 +520,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   options={leadExecutiveOptions}
                   getOptionLabel={(option) => option.label}
                   value={leadExecutiveOptions.filter((opt) =>
-                    pendingFilters.leadExecutive.includes(opt.value)
+                    pendingFilters.leadExecutive.includes(opt.value),
                   )}
                   onChange={(_, newValue) => {
                     handlePendingFilterChange(
                       "leadExecutive",
-                      newValue.map((v) => v.value)
+                      newValue.map((v) => v.value),
                     );
                   }}
                   disabled={loading}
@@ -698,7 +708,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     label={`Status: ${
                       filters.status.length === 1
                         ? statusOptions.find(
-                            (opt) => opt.value === filters.status[0]
+                            (opt) => opt.value === filters.status[0],
                           )?.label
                         : `${filters.status.length} selected`
                     }`}
@@ -740,7 +750,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     label={`Assigned: ${
                       filters.assignedTo.length === 1
                         ? assignmentOptions.find(
-                            (opt) => opt.value === filters.assignedTo[0]
+                            (opt) => opt.value === filters.assignedTo[0],
                           )?.label
                         : `${filters.assignedTo.length} selected`
                     }`}
@@ -761,7 +771,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                     label={`Lead Executive: ${
                       filters.leadExecutive.length === 1
                         ? leadExecutiveOptions.find(
-                            (opt) => opt.value === filters.leadExecutive[0]
+                            (opt) => opt.value === filters.leadExecutive[0],
                           )?.label
                         : `${filters.leadExecutive.length} selected`
                     }`}
@@ -819,8 +829,8 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                       filters.dateField === "date"
                         ? "Lead Date"
                         : filters.dateField === "created_at"
-                        ? "Created"
-                        : "Assigned"
+                          ? "Created"
+                          : "Assigned"
                     } From: ${filters.dateFrom.toLocaleDateString()}`}
                     size="small"
                     onDelete={() => {

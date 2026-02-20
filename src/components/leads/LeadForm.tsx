@@ -196,12 +196,13 @@ const LeadForm: React.FC<LeadFormProps> = ({
 
   const sourceOptions = [
     "Websites",
-    "Referral",
+    "Website Registrations (Exporters Worlds)",
+    "Website Demo (Exporters Worlds)",
+    "Free Inquiry (Exporters Worlds)",
     "Social Media",
     "Cold Call",
     "Paid Campaign",
     "Email Campaign",
-    "Trade Show",
     "Other",
   ];
 
