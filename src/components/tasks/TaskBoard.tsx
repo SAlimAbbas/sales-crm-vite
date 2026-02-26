@@ -214,7 +214,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                           onEdit={onEdit}
                           onDelete={onDelete}
                           onStatusChange={onStatusChange}
-                          compact
+                          compact={false}
                         />
                       ))}
                     </Box>

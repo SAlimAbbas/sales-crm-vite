@@ -97,6 +97,9 @@ const TaskManagement: React.FC = () => {
             {value}
           </Typography>
           <Typography variant="body2" color="textSecondary">
+            {row.description || "No description"}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
             {row.lead?.company_name || "No related lead"}
           </Typography>
         </Box>
