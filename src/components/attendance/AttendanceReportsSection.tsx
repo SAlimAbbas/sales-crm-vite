@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Paper,
   Typography,
@@ -27,9 +27,11 @@ import { userService } from "../../services/userService";
 import { format } from "date-fns";
 
 const AttendanceReportsSection: React.FC = () => {
+  const [selectedRole, setSelectedRole] = useState<string>("salesperson");
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>(
+    new Date().toISOString().split("T")[0], // today's date
+  );
   const [endDate, setEndDate] = useState<string>("");
   const [selectedReport, setSelectedReport] = useState<{
     employeeName: string;
@@ -67,6 +69,10 @@ const AttendanceReportsSection: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
+  useEffect(() => {
+    setSelectedUser("");
+  }, [selectedRole]);
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom fontWeight="600">
@@ -74,24 +80,6 @@ const AttendanceReportsSection: React.FC = () => {
       </Typography>
 
       <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Employee</InputLabel>
-          <Select
-            value={selectedUser}
-            label="Employee"
-            onChange={(e) => setSelectedUser(e.target.value)}
-          >
-            <MenuItem value="">All Employees</MenuItem>
-            {(usersData?.data?.data || usersData?.data || [])
-              .filter((user: any) => user.role !== "admin") // Add this filter
-              .map((user: any) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.name} ({user.role})
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Role</InputLabel>
           <Select
@@ -104,6 +92,26 @@ const AttendanceReportsSection: React.FC = () => {
             <MenuItem value="salesperson">Salespeople</MenuItem>
             <MenuItem value="lead_executive">Lead Executives</MenuItem>
             <MenuItem value="backend">Backend Staff</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Employee</InputLabel>
+          <Select
+            value={selectedUser}
+            label="Employee"
+            onChange={(e) => setSelectedUser(e.target.value)}
+          >
+            <MenuItem value="">All Employees</MenuItem>
+            {(usersData?.data?.data || usersData?.data || [])
+              .filter((user: any) => {
+                if (selectedRole === "") return user.role !== "admin"; // show all non-admin
+                return user.role === selectedRole;
+              })
+              .map((user: any) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.name} ({user.role})
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
 
@@ -172,14 +180,14 @@ const AttendanceReportsSection: React.FC = () => {
                   <TableCell>
                     {format(
                       new Date(log.clock_in_time),
-                      "MMM dd, yyyy hh:mm a"
+                      "MMM dd, yyyy hh:mm a",
                     )}
                   </TableCell>
                   <TableCell>
                     {log.clock_out_time
                       ? format(
                           new Date(log.clock_out_time),
-                          "MMM dd, yyyy hh:mm a"
+                          "MMM dd, yyyy hh:mm a",
                         )
                       : "-"}
                   </TableCell>
@@ -207,7 +215,7 @@ const AttendanceReportsSection: React.FC = () => {
                             employeeName: log.user?.name || "Unknown",
                             date: format(
                               new Date(log.clock_in_time),
-                              "MMM dd, yyyy"
+                              "MMM dd, yyyy",
                             ),
                             report: log.daily_report,
                           })
