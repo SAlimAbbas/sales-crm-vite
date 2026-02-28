@@ -47,6 +47,8 @@ import {
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 import AttendanceReportsSection from "../attendance/AttendanceReportsSection";
+import AnnouncementBanner from "../announcement/AnnouncementBanner";
+import ManageAnnouncementsSection from "../announcement/ManageAnnouncementsSection";
 
 const COLORS = {
   primary: "#1976d2",
@@ -199,7 +201,6 @@ const Dashboard: React.FC = () => {
           )}
         </Box>
       </Box>
-
       <Grid container spacing={3}>
         {/* Stats Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -242,6 +243,12 @@ const Dashboard: React.FC = () => {
         <Grid size={12}>
           <QuickActions />
         </Grid>
+
+        {user?.role === "admin" && (
+          <Grid size={12}>
+            <ManageAnnouncementsSection />
+          </Grid>
+        )}
 
         {/* Lead Trends Chart */}
         {charts?.daily_trends && charts.daily_trends.length > 0 && (

@@ -4,6 +4,7 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { MainContent } from "../../styles/components/layoutStyles";
 import Footer from "./Footer";
+import AnnouncementBanner from "../announcement/AnnouncementBanner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           transition: "margin-left 0.3s ease",
         }}
       >
+        <AnnouncementBanner />
         {children}
         <Footer />
       </MainContent>
