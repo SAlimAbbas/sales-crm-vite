@@ -47,11 +47,11 @@ const isDismissedToday = (id: number): boolean => {
   const stored = localStorage.getItem(getDismissedKey(id));
   if (!stored) return false;
 
-  const dismissedAt = new Date(stored); // now parses as IST locale string
+  const dismissedAt = new Date(stored); 
   const now = new Date();
 
   const todayAt10AM = new Date();
-  todayAt10AM.setHours(10, 0, 0, 0); // this uses local time (IST on IST machine)
+  todayAt10AM.setHours(10, 0, 0, 0); 
 
   if (dismissedAt < todayAt10AM && now >= todayAt10AM) return false;
 
