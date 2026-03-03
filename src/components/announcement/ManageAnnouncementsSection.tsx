@@ -135,6 +135,16 @@ const ManageAnnouncementsSection: React.FC = () => {
     },
   });
 
+  const formatDateForInput = (date: string) => {
+    if (!date) return "";
+    return date.split("T")[0]; // "2026-03-02" — no conversion needed
+  };
+
+  const formatDateForDisplay = (date: string) => {
+    if (!date) return "-";
+    return format(new Date(date + "T00:00:00"), "MMM dd, yyyy");
+  };
+
   const handleOpen = (announcement?: Announcement) => {
     if (announcement) {
       setEditingId(announcement.id);
@@ -143,8 +153,8 @@ const ManageAnnouncementsSection: React.FC = () => {
         description: announcement.description,
         type: announcement.type,
         target_roles: announcement.target_roles,
-        start_date: announcement.start_date,
-        end_date: announcement.end_date,
+        start_date: formatDateForInput(announcement.start_date),
+        end_date: formatDateForInput(announcement.end_date),
         is_active: announcement.is_active,
       });
     } else {
@@ -247,7 +257,7 @@ const ManageAnnouncementsSection: React.FC = () => {
                   <TableCell>{a.title}</TableCell>
                   <TableCell>
                     <Chip
-                      label={a.type}
+                      label={a.type === "error" ? "alert" : a.type}
                       color={
                         a.type === "info"
                           ? "info"
@@ -272,12 +282,8 @@ const ManageAnnouncementsSection: React.FC = () => {
                       ))}
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    {format(new Date(a.start_date), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(a.end_date), "MMM dd, yyyy")}
-                  </TableCell>
+                  <TableCell>{formatDateForDisplay(a.start_date)}</TableCell>
+                  <TableCell>{formatDateForDisplay(a.end_date)}</TableCell>
                   <TableCell>
                     <Chip
                       label={a.is_active ? "Active" : "Inactive"}
