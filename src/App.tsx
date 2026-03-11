@@ -37,6 +37,7 @@ import ConvertedClientManagement from "./components/convertedClients/ConvertedCl
 import LeadExecutiveDashboard from "./components/leads/LeadExecutiveDashboard";
 import DashboardRouter from "./components/common/DashboardRouter";
 import BackendDashboard from "./components/dashboard/BackendDashboard";
+import PerformanceReport from "./components/performanceReport/PerformanceReport";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -96,6 +97,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="tasks" element={<TaskManagement />} />
                 <Route path="followups" element={<FollowupManagement />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
+                <Route path="performance" element={<PerformanceReport />} />
                 <Route
                   path="converted-clients"
                   element={<ConvertedClientManagement />}

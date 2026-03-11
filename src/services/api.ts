@@ -24,7 +24,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor
@@ -42,7 +42,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Generic API calls
@@ -58,7 +58,8 @@ export const apiService = {
       url === "/analytics/dashboard" ||
       url.startsWith("/notifications") ||
       url.startsWith("/lead-executive") ||
-      url.startsWith("/backend")
+      url.startsWith("/backend") ||
+      url.startsWith("/performance")
     ) {
       // ✅ Handle all notification endpoints
       return api.get<T>(url, { params }).then((response) => response.data);
@@ -91,7 +92,7 @@ export const apiService = {
     url: string,
     params?: any,
     filename?: string,
-    method: "get" | "post" = "get"
+    method: "get" | "post" = "get",
   ) => {
     const request =
       method === "post"

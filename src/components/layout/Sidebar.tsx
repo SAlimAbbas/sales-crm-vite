@@ -14,6 +14,7 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Business as BusinessIcon,
+  Assessment as AssessmentIcon,
   Assignment as AssignmentIcon,
   Schedule as ScheduleIcon,
   Analytics as AnalyticsIcon,
@@ -78,7 +79,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       icon: <BusinessIcon />,
       path: "/converted-clients",
       roles: ["admin", "manager"],
-      // element: <ConvertedClientManagement />,
+    },
+    {
+      text: "Performance Reports",
+      icon: <AssessmentIcon />,
+      path: "/performance",
+      roles: ["admin"],
     },
   ];
 
@@ -96,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   };
 
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user?.role || "")
+    item.roles.includes(user?.role || ""),
   );
 
   return (
@@ -130,7 +136,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             }}
           />
           <Typography variant="h6" noWrap component="div">
-            Exporters Worlds <br />CRM
+            Exporters Worlds <br />
+            CRM
           </Typography>
         </Box>
       </DrawerHeader>
