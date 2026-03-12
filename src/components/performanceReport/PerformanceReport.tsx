@@ -425,6 +425,43 @@ const PerformanceReport: React.FC = () => {
       });
     }
 
+    // Motivational closing section
+    const finalY = (doc as any).lastAutoTable.finalY + 12;
+    const centerX = pageW / 2;
+
+    // Divider
+    doc.setDrawColor(25, 118, 210);
+    doc.setLineWidth(0.3);
+    doc.line(10, finalY, pageW - 10, finalY);
+
+    // Quote
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "bolditalic");
+    doc.text(
+      ` "Your dream doesn't have an expiry date. Take a deep breath,`,
+      centerX,
+      finalY + 8,
+      { align: "center" },
+    );
+    doc.text(
+      `reset your goals, and go harder next month!" `,
+      centerX,
+      finalY + 14,
+      { align: "center" },
+    );
+
+    // Report created by line
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Report created by: Sales Manager  |  ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
+      centerX,
+      finalY + 22,
+      { align: "center" },
+    );
+
     // Footer on every page
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
