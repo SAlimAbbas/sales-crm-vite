@@ -30,12 +30,12 @@ export const getStatusColor = (status: string): string => {
   const statusColors: Record<string, string> = {
     // Lead statuses
     [LEAD_STATUS.CONVERTED]: "success",
-    [LEAD_STATUS.PROSPECTS]: "info",
+    [LEAD_STATUS.PROSPECTS]: "warning",
     [LEAD_STATUS.ASSIGNED]: "primary",
     [LEAD_STATUS.UNASSIGNED]: "default",
     [LEAD_STATUS.RINGING]: "warning",
     [LEAD_STATUS.CALL_BACK]: "warning",
-    [LEAD_STATUS.FOLLOW_UP]: "info",
+    [LEAD_STATUS.FOLLOW_UP]: "yellow",
     [LEAD_STATUS.NOT_INTERESTED]: "error",
     [LEAD_STATUS.INVALID_CONTACT]: "error",
     [LEAD_STATUS.WHATSAPPED]: "success",

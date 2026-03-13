@@ -196,6 +196,37 @@ const LeadTable: React.FC<LeadTableProps> = ({
     actions: 80,
   });
 
+  const StatusChip = ({
+    status,
+    label,
+    size = "small",
+  }: {
+    status: string;
+    label: string;
+    size?: "small" | "medium";
+  }) => {
+    const color = getStatusColor(status);
+
+    if (color === "yellow") {
+      return (
+        <Chip
+          label={label}
+          size={size}
+          variant="filled"
+          sx={{
+            backgroundColor: "#facc15",
+            color: "#713f12",
+            fontWeight: 600,
+          }}
+        />
+      );
+    }
+
+    return (
+      <Chip label={label} size={size} color={color as any} variant="filled" />
+    );
+  };
+
   const [resizing, setResizing] = useState<{
     columnId: string;
     startX: number;
@@ -780,11 +811,9 @@ const LeadTable: React.FC<LeadTableProps> = ({
                             },
                           }}
                         >
-                          <Chip
+                          <StatusChip
+                            status={lead.status}
                             label={lead.status.replace(/_/g, " ").toUpperCase()}
-                            size="small"
-                            color={getStatusColor(lead.status) as any}
-                            variant="filled"
                           />
                         </Box>
                       </Tooltip>
@@ -1108,12 +1137,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 {statusOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Chip
-                        label={option.label}
-                        size="small"
-                        color={getStatusColor(option.value) as any}
-                        variant="filled"
-                      />
+                      <StatusChip status={option.value} label={option.label} />
                     </Box>
                   </MenuItem>
                 ))}
