@@ -23,6 +23,9 @@ export const userService = {
   updateUser: (id: number, data: Partial<UserFormData>) =>
     apiService.put<User>(`/users/${id}`, data),
 
+  updatePassword: (id: number, password: string) =>
+    apiService.patch(`/users/${id}/password`, { password }),
+
   deleteUser: (id: number) => apiService.delete(`/users/${id}`),
 
   updateStatus: (id: number, is_active: boolean) =>

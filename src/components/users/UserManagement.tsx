@@ -74,8 +74,8 @@ const UserManagement: React.FC = () => {
             value === "admin"
               ? "error"
               : value === "manager"
-              ? "warning"
-              : "primary"
+                ? "warning"
+                : "primary"
           }
           variant="outlined"
         />
@@ -212,7 +212,7 @@ const UserManagement: React.FC = () => {
       await userService.updateStatus(selectedUser.id, newStatus);
       showNotification(
         `User ${newStatus ? "activated" : "deactivated"} successfully`,
-        "success"
+        "success",
       );
       refetch();
     } catch (error) {
@@ -248,7 +248,7 @@ const UserManagement: React.FC = () => {
     handleFormClose();
     showNotification(
       selectedUser ? "User updated successfully" : "User created successfully",
-      "success"
+      "success",
     );
   };
 
@@ -301,7 +301,10 @@ const UserManagement: React.FC = () => {
             rowsPerPage,
             total: usersData?.total || 0,
             onPageChange: setPage,
-            onRowsPerPageChange: setRowsPerPage,
+            onRowsPerPageChange: (newRowsPerPage: number) => {
+              setRowsPerPage(newRowsPerPage);
+              setPage(0);
+            },
           }}
           emptyMessage="No users found"
         />

@@ -90,6 +90,9 @@ const UserForm: React.FC<UserFormProps> = ({
 
         if (user) {
           await userService.updateUser(user.id, formData);
+          if (values.password && currentUser?.role === "admin") {
+            await userService.updatePassword(user.id, values.password);
+          }
         } else {
           await userService.createUser(formData);
         }
@@ -263,14 +266,15 @@ const UserForm: React.FC<UserFormProps> = ({
                     (manager: User) => ({
                       value: manager.id.toString(),
                       label: `${manager.name} (${manager.email})`,
-                    })
+                    }),
                   ),
                 ]}
               />
             </Grid>
           )}
           {formik.values.role !== "admin" &&
-            formik.values.role !== "lead_executive" && formik.values.role !== "backend" && (
+            formik.values.role !== "lead_executive" &&
+            formik.values.role !== "backend" && (
               <>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormSelect
@@ -331,6 +335,37 @@ const UserForm: React.FC<UserFormProps> = ({
                 required
                 InputProps={{
                   // ✅ Correct - wrap in InputProps
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          )}
+
+          {user && currentUser?.role === "admin" && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormInput
+                label="New Password (leave blank to keep current)"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.password ? formik.errors.password : undefined
+                }
+                helperText={
+                  formik.touched.password ? formik.errors.password || "" : ""
+                }
+                InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
