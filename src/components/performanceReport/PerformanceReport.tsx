@@ -273,7 +273,7 @@ const PerformanceReport: React.FC = () => {
     r.counters_target || "-", // ADD
     r.counters_achieved || "-", // ADD
     r.counters_target > 0 ? `${r.counters_achievement_percent}%` : "-", // ADD
-    r.notes || "-",
+    (r.notes || "-").replace(/[^\x00-\x7F]/g, ""),
   ];
 
   // ── Download Excel ──────────────────────────────────────────────────────────
