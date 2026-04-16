@@ -179,7 +179,7 @@ const AnalyticsDashboard: React.FC = () => {
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
             title="Total Leads"
@@ -213,10 +213,10 @@ const AnalyticsDashboard: React.FC = () => {
             color="warning"
           />
         </Grid>
-      </Grid>
+      </Grid> */}
 
       {/* Charts Section */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -224,8 +224,8 @@ const AnalyticsDashboard: React.FC = () => {
             </Typography>
             <LeadsChart data={charts?.daily_trends || []} />
           </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        </Grid> */}
+        {/* <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Conversion Breakdown
@@ -233,7 +233,7 @@ const AnalyticsDashboard: React.FC = () => {
             <ConversionChart data={charts?.conversion_breakdown} />
           </Paper>
         </Grid>
-      </Grid>
+      </Grid> */}
 
       {/* Leads by Status */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -254,7 +254,7 @@ const AnalyticsDashboard: React.FC = () => {
             </Box>
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Invalid Leads
@@ -266,11 +266,11 @@ const AnalyticsDashboard: React.FC = () => {
               of total leads are invalid
             </Typography>
           </Paper>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       {/* Performance Section - Only for managers and admins */}
-      {user?.role !== "salesperson" &&
+      {/* {user?.role !== "salesperson" &&
         performance &&
         performance.length > 0 && (
           <Paper sx={{ p: 3, mb: 4 }}>
@@ -279,7 +279,7 @@ const AnalyticsDashboard: React.FC = () => {
             </Typography>
             <PerformanceChart data={performance} />
           </Paper>
-        )}
+        )} */}
 
       {/* Reports Modal/Section */}
       {showReports && (
