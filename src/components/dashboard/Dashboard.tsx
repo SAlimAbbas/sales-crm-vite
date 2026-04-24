@@ -44,12 +44,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Area,
-  AreaChart,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 import AttendanceReportsSection from "../attendance/AttendanceReportsSection";
-import AnnouncementBanner from "../announcement/AnnouncementBanner";
 import ManageAnnouncementsSection from "../announcement/ManageAnnouncementsSection";
 
 const COLORS = {
@@ -58,16 +55,33 @@ const COLORS = {
   warning: "#ed6c02",
   error: "#d32f2f",
   info: "#0288d1",
+  secondary: "#9c27b0",
 };
 
-// Valid = green, Invalid = red
-const PIE_COLORS = [COLORS.success, COLORS.error];
+const PIE_COLORS = [COLORS.success, COLORS.error]; // Valid = green, Invalid = red
 
 type TrendGranularity = "daily" | "weekly" | "monthly";
 
+// Custom X-axis tick that rotates labels — keeps all dates readable
+const RotatedTick = ({ x, y, payload }: any) => (
+  <g transform={`translate(${x},${y})`}>
+    <text
+      x={0}
+      y={0}
+      dy={10}
+      textAnchor="end"
+      fill="#666"
+      fontSize={11}
+      transform="rotate(-35)"
+    >
+      {payload.value}
+    </text>
+  </g>
+);
+
 const Dashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState("this_month");
-  const [trendGranularity, setTrend] = useState<TrendGranularity>("daily");
+  const [trendGran, setTrendGran] = useState<TrendGranularity>("daily");
   const { user } = useAuth();
 
   const {
@@ -108,10 +122,10 @@ const Dashboard: React.FC = () => {
             "Prospects",
             "Converted",
             "Total Leads Generated",
-          ].map((title, i) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
+          ].map((t, i) => (
+            <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }} key={i}>
               <StatsCard
-                title={title}
+                title={t}
                 value="--"
                 icon={<BusinessIcon />}
                 color="primary"
@@ -127,29 +141,30 @@ const Dashboard: React.FC = () => {
   const charts = dashboardData?.charts;
   const perf = dashboardData?.performance;
 
-  // Trend data based on selected granularity
+  // Trend drill-through — pick the right dataset + x-axis key
   const trendData =
-    trendGranularity === "weekly"
+    trendGran === "weekly"
       ? charts?.weekly_trends
-      : trendGranularity === "monthly"
+      : trendGran === "monthly"
         ? charts?.monthly_trends
         : charts?.daily_trends;
 
   const trendKey =
-    trendGranularity === "weekly"
+    trendGran === "weekly"
       ? "week"
-      : trendGranularity === "monthly"
+      : trendGran === "monthly"
         ? "month"
         : "date";
 
-  const trendXFormatter = (val: string) => {
-    if (trendGranularity !== "daily") return val;
+  // Format daily dates to MM/DD for the tick
+  const trendTickFormatter = (val: string) => {
+    if (trendGran !== "daily") return val;
     const d = new Date(val);
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
-  // Valid vs Invalid pie data
-  const validInvalidData = charts?.valid_vs_invalid
+  // Valid vs Invalid pie
+  const pieData = charts?.valid_vs_invalid
     ? [
         { name: "Valid", value: charts.valid_vs_invalid.valid },
         { name: "Invalid", value: charts.valid_vs_invalid.invalid },
@@ -158,17 +173,19 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────── */}
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={3}
+        flexWrap="wrap"
+        gap={1}
       >
         <Typography variant="h4" fontWeight="600">
           Dashboard Overview
         </Typography>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={2} flexWrap="wrap">
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Date Range</InputLabel>
             <Select
@@ -201,8 +218,10 @@ const Dashboard: React.FC = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {/* ── A) KPI Cards ────────────────────────────────────────────── */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        {/* ── A) KPI Cards — all 5 in one row ─────────────────────────
+            xs: 2 per row (6/12), sm: all 5 fit using flex, lg: equal fifths
+            Using size prop with lg=2.4 gives exactly 5 equal columns    */}
+        <Grid size={{ xs: 6, sm: 4, md: 4, lg: 2.4 }}>
           <StatsCard
             title="Total Leads Assigned"
             value={stats?.total_leads_assigned ?? 0}
@@ -210,25 +229,25 @@ const Dashboard: React.FC = () => {
             color="primary"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 4, md: 4, lg: 2.4 }}>
           <StatsCard
             title="Follow Ups"
             value={stats?.follow_ups ?? 0}
-            subtitle="Active reminders"
+            subtitle="Follow up / Call back"
             icon={<ScheduleIcon />}
             color="warning"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 4, md: 4, lg: 2.4 }}>
           <StatsCard
             title="Prospects"
             value={stats?.prospects ?? 0}
-            subtitle="Interested / Hot leads"
+            subtitle="Prospect leads"
             icon={<PeopleIcon />}
             color="info"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 4, md: 4, lg: 2.4 }}>
           <StatsCard
             title="Converted"
             value={stats?.converted ?? 0}
@@ -236,8 +255,7 @@ const Dashboard: React.FC = () => {
             color="success"
           />
         </Grid>
-        {/* 5th KPI — full width on xs, half on sm, quarter on md */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 4, md: 4, lg: 2.4 }}>
           <StatsCard
             title="Total Leads Generated"
             value={stats?.total_leads_generated ?? 0}
@@ -258,7 +276,7 @@ const Dashboard: React.FC = () => {
           </Grid>
         )}
 
-        {/* ── B) Lead Generation Trend ─────────────────────────────────── */}
+        {/* ── B) Lead Generation Trend — histogram (BarChart) ─────────── */}
         {trendData && trendData.length > 0 && (
           <Grid size={{ xs: 12, lg: 8 }}>
             <Paper sx={{ p: 3 }}>
@@ -267,16 +285,18 @@ const Dashboard: React.FC = () => {
                 justifyContent="space-between"
                 alignItems="center"
                 mb={2}
+                flexWrap="wrap"
+                gap={1}
               >
                 <Typography variant="h6" fontWeight="600">
                   Lead Generation Trend
                 </Typography>
                 <ToggleButtonGroup
-                  value={trendGranularity}
+                  value={trendGran}
                   exclusive
                   size="small"
                   onChange={(_, val) =>
-                    val && setTrend(val as TrendGranularity)
+                    val && setTrendGran(val as TrendGranularity)
                   }
                 >
                   <ToggleButton value="daily">Daily</ToggleButton>
@@ -285,65 +305,61 @@ const Dashboard: React.FC = () => {
                 </ToggleButtonGroup>
               </Box>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={trendData}>
-                  <defs>
-                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor={COLORS.primary}
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={COLORS.primary}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <BarChart
+                  data={trendData}
+                  margin={{ top: 5, right: 10, bottom: 60, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey={trendKey}
+                    tick={<RotatedTick />}
+                    interval={
+                      trendGran === "daily" && (trendData?.length ?? 0) > 20
+                        ? Math.ceil((trendData?.length ?? 1) / 15)
+                        : 0
+                    }
                     label={{
                       value: "Date",
                       position: "insideBottom",
-                      offset: -2,
+                      offset: -48,
                       fontSize: 12,
+                      fill: "#888",
                     }}
-                    tickFormatter={trendXFormatter}
-                    height={40}
                   />
                   <YAxis
+                    allowDecimals={false}
                     label={{
-                      value: "Total Leads",
+                      value: "Leads",
                       angle: -90,
                       position: "insideLeft",
                       fontSize: 12,
+                      fill: "#888",
                     }}
-                    width={60}
+                    width={45}
                   />
                   <Tooltip
                     labelFormatter={(val) =>
-                      trendGranularity === "daily"
+                      trendGran === "daily"
                         ? new Date(val).toLocaleDateString()
-                        : val
+                        : String(val)
                     }
+                    formatter={(val: number) => [val, "Leads Generated"]}
                   />
-                  <Area
-                    type="monotone"
+                  <Bar
                     dataKey="leads"
                     name="Leads Generated"
-                    stroke={COLORS.primary}
-                    fillOpacity={1}
-                    fill="url(#colorLeads)"
+                    fill={COLORS.primary}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={40}
                   />
-                </AreaChart>
+                </BarChart>
               </ResponsiveContainer>
             </Paper>
           </Grid>
         )}
 
         {/* ── C) Valid vs Invalid Pie ──────────────────────────────────── */}
-        {validInvalidData.length > 0 && (
+        {pieData.length > 0 && (
           <Grid size={{ xs: 12, lg: 4 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="600">
@@ -352,20 +368,20 @@ const Dashboard: React.FC = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={validInvalidData}
+                    data={pieData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={(props: any) =>
-                      `${props.name}: ${(props.percent * 100).toFixed(1)}%`
+                    label={({ name, percent }: any) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
                     }
                     outerRadius={100}
                     dataKey="value"
                   >
-                    {validInvalidData.map((_, index) => (
+                    {pieData.map((_, i) => (
                       <Cell
-                        key={`cell-${index}`}
-                        fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        key={`cell-${i}`}
+                        fill={PIE_COLORS[i % PIE_COLORS.length]}
                       />
                     ))}
                   </Pie>
@@ -377,34 +393,33 @@ const Dashboard: React.FC = () => {
           </Grid>
         )}
 
-        {/* ── D) Leads by Status ───────────────────────────────────────── */}
+        {/* ── D) Leads by Status — histogram with rotated labels ───────── */}
         {charts?.leads_by_status && charts.leads_by_status.length > 0 && (
           <Grid size={12}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="600">
                 Leads by Status
               </Typography>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={340}>
                 <BarChart
                   data={charts.leads_by_status}
-                  margin={{ bottom: 60 }} // extra room so rotated labels don't clip
+                  margin={{ top: 5, right: 20, bottom: 80, left: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="status"
                     interval={0}
-                    angle={-35}
-                    textAnchor="end"
-                    tick={{ fontSize: 12 }}
+                    tick={<RotatedTick />}
+                    height={80}
                   />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend verticalAlign="top" />
+                  <YAxis allowDecimals={false} width={45} />
+                  <Tooltip formatter={(val: number) => [val, "Leads"]} />
                   <Bar
                     dataKey="count"
                     name="Leads"
                     fill={COLORS.primary}
-                    radius={[8, 8, 0, 0]}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={50}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -422,7 +437,9 @@ const Dashboard: React.FC = () => {
               <TableContainer>
                 <Table>
                   <TableHead>
-                    <TableRow sx={{ "& th": { fontWeight: 700 } }}>
+                    <TableRow
+                      sx={{ "& th": { fontWeight: 700, whiteSpace: "nowrap" } }}
+                    >
                       <TableCell>Team</TableCell>
                       <TableCell align="center">Total Leads Assigned</TableCell>
                       <TableCell align="center">Total Follow Ups</TableCell>
@@ -433,7 +450,9 @@ const Dashboard: React.FC = () => {
                   <TableBody>
                     {perf.map((row, i) => (
                       <TableRow key={i} hover>
-                        <TableCell>{row.team}</TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>
+                          {row.team}
+                        </TableCell>
                         <TableCell align="center">
                           {row.total_leads_assigned}
                         </TableCell>
