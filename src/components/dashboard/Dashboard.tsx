@@ -233,7 +233,6 @@ const Dashboard: React.FC = () => {
           <StatsCard
             title="Follow Ups"
             value={stats?.follow_ups ?? 0}
-            subtitle="Follow up / Call back"
             icon={<ScheduleIcon />}
             color="warning"
           />
@@ -242,7 +241,6 @@ const Dashboard: React.FC = () => {
           <StatsCard
             title="Prospects"
             value={stats?.prospects ?? 0}
-            subtitle="Prospect leads"
             icon={<PeopleIcon />}
             color="info"
           />
