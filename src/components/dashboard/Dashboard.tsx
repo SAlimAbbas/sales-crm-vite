@@ -205,7 +205,7 @@ const Dashboard: React.FC = () => {
               <MenuItem value="lifetime">Lifetime</MenuItem>
             </Select>
           </FormControl>
-          {(user?.role === "admin" || user?.role === "manager") && (
+          {(user?.role === "admin" || user?.role === "manager_staff" || user?.role === "manager") && (
             <Button
               variant="outlined"
               startIcon={<FileDownloadIcon />}
@@ -267,8 +267,8 @@ const Dashboard: React.FC = () => {
           <QuickActions />
         </Grid>
 
-        {/* ── Announcements (admin only) ───────────────────────────────── */}
-        {user?.role === "admin" && (
+        {/* ── Announcements (admin & manager_staff only) ───────────────── */}
+        {(user?.role === "admin" || user?.role === "manager_staff") && (
           <Grid size={12}>
             <ManageAnnouncementsSection />
           </Grid>
@@ -473,7 +473,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* ── F) Attendance Reports ────────────────────────────────────── */}
-        {(user?.role === "admin" || user?.role === "manager") && (
+        {(user?.role === "admin" || user?.role === "manager_staff" || user?.role === "manager") && (
           <Grid size={12}>
             <AttendanceReportsSection />
           </Grid>

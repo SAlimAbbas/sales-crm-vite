@@ -393,10 +393,11 @@ const LeadManagement: React.FC = () => {
         <Typography variant="h4">Lead Management</Typography>
         <Box display="flex" gap={1}>
           {(user?.role === "admin" ||
+            user?.role === "manager_staff" ||
             user?.role === "manager" ||
             user?.role === "lead_executive") && (
             <>
-              {user?.role === "admin" && (
+              {(user?.role === "admin" || user?.role === "manager_staff") && (
                 <Button
                   variant="text"
                   startIcon={<DownloadIcon />}

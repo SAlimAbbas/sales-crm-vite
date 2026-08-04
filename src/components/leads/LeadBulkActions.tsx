@@ -102,7 +102,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
   } = useQuery<User[]>({
     queryKey: ["assignable-users", currentUser.role, currentUser.id],
     queryFn: async () => {
-      if (currentUser.role === "admin") {
+      if (currentUser.role === "admin" || currentUser.role === "manager_staff") {
         const [managersRes, salespeopleRes] = await Promise.all([
           userService.getUsers({ role: "manager", is_active: true }),
           userService.getUsers({ role: "salesperson", is_active: true }),
@@ -253,7 +253,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
 
   const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
-    ...(currentUser.role === "admin" || currentUser.role === "manager"
+    ...(currentUser.role === "admin" || currentUser.role === "manager_staff" || currentUser.role === "manager"
       ? [{ value: LEAD_STATUS.UNASSIGNED, label: "Unassigned" }]
       : []),
     { value: LEAD_STATUS.PROSPECTS, label: "Prospects" },
@@ -385,7 +385,7 @@ const LeadBulkActions: React.FC<LeadBulkActionsProps> = ({
       >
         <DialogTitle>
           Assign {selectedIds.length} Lead{selectedIds.length > 1 ? "s" : ""} to
-          {currentUser.role === "admin"
+          {(currentUser.role === "admin" || currentUser.role === "manager_staff")
             ? " Manager/Salesperson"
             : " Team Member"}
         </DialogTitle>

@@ -31,14 +31,46 @@ export interface SetTargetPayload {
   notes?: string;
 }
 
+export interface BackendPerformanceRow {
+  user_id: number;
+  name: string;
+  role: string;
+  total_tasks: number;
+  completed_on_time: number;
+  overdue_tasks: number;
+  pending_tasks: number;
+  on_time_rate: number;
+  admin_approval: "pending" | "positive" | "negative";
+  notes: string;
+  month: number;
+  year: number;
+}
+
+export interface SetBackendApprovalPayload {
+  user_id: number;
+  month: number;
+  year: number;
+  admin_approval: "pending" | "positive" | "negative";
+  notes?: string;
+}
+
 export const performanceService = {
   getReport: (params: {
     month?: number;
     year?: number;
     shift?: string;
-    type?: string;
-    role?: string;
+    manager_id?: string | number;
   }) => apiService.get<any>("/performance/report", params),
+
+  getBackendReport: (params: {
+    month?: number;
+    year?: number;
+    search?: string;
+    role?: string;
+  }) => apiService.get<any>("/performance/backend-report", params),
+
+  setBackendApproval: (data: SetBackendApprovalPayload) =>
+    apiService.post("/performance/backend-approval", data),
 
   getMyPerformance: (params?: { month?: number; year?: number }) =>
     apiService.get("/performance/my", params),

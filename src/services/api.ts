@@ -31,10 +31,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 ||
+      error.response?.data?.account_deactivated
+    ) {
+      const isDeactivated = error.response?.data?.account_deactivated;
+      const deactMsg =
+        error.response?.data?.message ||
+        "Your account has been deactivated. Please contact system administrator.";
+
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+
+      if (window.location.pathname !== "/login") {
+        if (isDeactivated) {
+          alert(deactMsg);
+        }
+        window.location.href = "/login";
+      }
     }
 
     if (error.response?.status === 500) {

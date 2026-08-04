@@ -12,6 +12,7 @@ import { taskService } from "../../services/taskService";
 import { userService } from "../../services/userService";
 import { leadService } from "../../services/leadService";
 import { Task, TaskFormData } from "../../types";
+import { formatForDateInput } from "../../utils/helpers";
 
 interface TaskFormProps {
   open: boolean;
@@ -33,7 +34,7 @@ const validationSchema = yup.object({
     .required("Priority is required")
     .oneOf(["low", "medium", "high"]),
   assigned_to: yup.number().required("Assigned user is required"),
-  lead_id: yup.number().required("Related lead is required"),
+  lead_id: yup.number().nullable(),
 });
 
 const TaskForm: React.FC<TaskFormProps> = ({
@@ -79,10 +80,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
         const formData: TaskFormData = {
           title: values.title,
           description: values.description,
-          due_date: new Date(values.due_date).toISOString(),
+          due_date: `${values.due_date} 23:59:59`,
           priority: values.priority,
           assigned_to: Number(values.assigned_to),
-          lead_id: Number(values.lead_id),
+          lead_id: values.lead_id ? Number(values.lead_id) : null,
         };
 
         if (task) {
@@ -119,15 +120,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
       formik.setValues({
         title: task.title,
         description: task.description,
-        due_date: task.due_date.split("T")[0], // Format for date input
+        due_date: formatForDateInput(task.due_date), // Format for date input without timezone shift
         priority: task.priority,
         assigned_to: task.assigned_to.toString(),
-        lead_id: task.lead_id.toString(),
+        lead_id: task.lead_id ? task.lead_id.toString() : "",
       });
     } else if (open && !task) {
       formik.resetForm();
-      // Set default assigned user to current user if they're a salesperson
-      if (currentUser?.role === "salesperson") {
+      // Set default assigned user to current user if they're a salesperson or backend
+      if (currentUser?.role === "salesperson" || currentUser?.role === "backend") {
         formik.setFieldValue("assigned_to", currentUser.id.toString());
       }
       if (preSelectedLeadId) {
@@ -140,8 +141,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const getAvailableUsers = () => {
     if (!usersData?.data) return [];
 
-    if (currentUser?.role === "admin") {
-      return usersData.data; // Admin can assign to anyone
+    if (currentUser?.role === "admin" || currentUser?.role === "manager_staff") {
+      return usersData.data; // Admin / Manager Staff can assign to anyone
     } else if (currentUser?.role === "manager") {
       // Manager can assign to their team members
       return usersData.data.filter(
@@ -162,11 +163,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
     { value: "high", label: "High Priority" },
   ];
 
-  const leadOptions =
-    leadsData?.data?.map((lead:any) => ({
+  const leadOptions = [
+    { value: "", label: "None (Standalone Task)" },
+    ...(leadsData?.data?.map((lead: any) => ({
       value: lead.id.toString(),
       label: `${lead.company_name} (${lead.contact_number})`,
-    })) || [];
+    })) || []),
+  ];
 
   const userOptions = availableUsers.map((user:any) => ({
     value: user.id.toString(),
@@ -303,8 +306,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               onChange={(value) => formik.setFieldValue("lead_id", value)}
               onBlur={formik.handleBlur}
               options={leadOptions}
-              error={formik.touched.lead_id ? formik.errors.lead_id : undefined}
-              required
+              error={formik.touched.lead_id ? (formik.errors.lead_id as string) : undefined}
               disabled={loadingLeads}
             />
             {leadOptions.length === 0 && !loadingLeads && (

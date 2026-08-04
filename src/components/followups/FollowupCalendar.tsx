@@ -41,7 +41,7 @@ const FollowupCalendar: React.FC<FollowupCalendarProps> = ({ onRefresh }) => {
 
   const { data: followups } = useQuery<any>({
     queryKey: ["calendar-followups"],
-    queryFn: () => followupService.getFollowups({ per_page: 100 }),
+    queryFn: () => followupService.getFollowups({ per_page: 500, include_overdue: "true" }),
   });
 
   const events: CalendarEvent[] = (followups?.data || [])

@@ -2,6 +2,9 @@ export const ROLES = {
   ADMIN: "admin",
   MANAGER: "manager",
   SALESPERSON: "salesperson",
+  LEAD_EXECUTIVE: "lead_executive",
+  BACKEND: "backend",
+  MANAGER_STAFF: "manager_staff",
 } as const;
 
 export const LEAD_STATUS = {

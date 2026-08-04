@@ -119,7 +119,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     // ✅ Change type to User[]
     queryKey: ["assignable-users-filter"],
     queryFn: async () => {
-      if (currentUser?.role === "admin") {
+      if (currentUser?.role === "admin" || currentUser?.role === "manager_staff") {
         const [managers, salespeople] = await Promise.all([
           userService.getUsers({ role: "manager" }),
           userService.getUsers({ role: "salesperson" }),
@@ -151,12 +151,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
   const { data: leadExecutivesData } = useQuery<User[]>({
     queryKey: ["lead-executives-filter"],
     queryFn: async () => {
-      if (currentUser?.role !== "admin") return [];
+      if (currentUser?.role !== "admin" && currentUser?.role !== "manager_staff") return [];
 
       const executives = await userService.getUsers({ role: "lead_executive" });
       return normalizeUserResponse(executives);
     },
-    enabled: currentUser?.role === "admin", // Only fetch for admin
+    enabled: currentUser?.role === "admin" || currentUser?.role === "manager_staff", // Only fetch for admin/manager_staff
   });
 
   const filtersRef = useRef(filters);
@@ -251,7 +251,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
 
   const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
-    ...(currentUser?.role === "admin" || currentUser?.role === "manager"
+    ...(currentUser?.role === "admin" || currentUser?.role === "manager_staff" || currentUser?.role === "manager"
       ? [{ value: LEAD_STATUS.UNASSIGNED, label: "Unassigned" }]
       : []),
     { value: LEAD_STATUS.PROSPECTS, label: "Prospects" },
@@ -511,8 +511,8 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
               />
             </Grid>
 
-            {/* Lead Executive Multi-Select - Admin Only */}
-            {currentUser?.role === "admin" && (
+            {/* Lead Executive Multi-Select - Admin & Manager Staff Only */}
+            {(currentUser?.role === "admin" || currentUser?.role === "manager_staff") && (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                 <Autocomplete
                   multiple

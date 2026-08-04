@@ -80,7 +80,7 @@ const UserForm: React.FC<UserFormProps> = ({
           name: values.name,
           email: values.email,
           phone: values.phone || undefined,
-          role: values.role as "admin" | "manager" | "salesperson",
+          role: values.role as any,
           shift: values.shift as "Day" | "Night" | undefined,
           type: values.type as "Domestic" | "International" | undefined,
           password: values.password || undefined,
@@ -90,7 +90,7 @@ const UserForm: React.FC<UserFormProps> = ({
 
         if (user) {
           await userService.updateUser(user.id, formData);
-          if (values.password && currentUser?.role === "admin") {
+          if (values.password && (currentUser?.role === "admin" || currentUser?.role === "manager_staff")) {
             await userService.updatePassword(user.id, values.password);
           }
         } else {
@@ -162,8 +162,11 @@ const UserForm: React.FC<UserFormProps> = ({
     { value: "manager", label: "Manager" },
     { value: "lead_executive", label: "Lead Executive" },
     { value: "backend", label: "Backend Staff" },
-    ...(currentUser?.role === "admin"
-      ? [{ value: "admin", label: "Admin" }]
+    ...((currentUser?.role === "admin" || currentUser?.role === "manager_staff")
+      ? [
+          { value: "admin", label: "Admin" },
+          { value: "manager_staff", label: "Manager Staff" },
+        ]
       : []),
   ];
 
@@ -273,6 +276,7 @@ const UserForm: React.FC<UserFormProps> = ({
             </Grid>
           )}
           {formik.values.role !== "admin" &&
+            formik.values.role !== "manager_staff" &&
             formik.values.role !== "lead_executive" &&
             formik.values.role !== "backend" && (
               <>
@@ -350,7 +354,7 @@ const UserForm: React.FC<UserFormProps> = ({
             </Grid>
           )}
 
-          {user && currentUser?.role === "admin" && (
+          {user && (currentUser?.role === "admin" || currentUser?.role === "manager_staff") && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormInput
                 label="New Password (leave blank to keep current)"

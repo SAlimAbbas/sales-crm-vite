@@ -15,13 +15,16 @@ export interface PaginationParams {
   search?: string;
   sort_by?: string;
   sort_order?: "asc" | "desc";
-  role?: string | "admin" | "manager" | "salesperson";
+  role?: string | "admin" | "manager" | "salesperson" | "lead_executive" | "backend" | "manager_staff";
   is_active?: boolean;
   start_date?: string;
   end_date?: string;
   status?: string;
   is_completed?: boolean;
   manager_id?: number;
+  include_overdue?: string | boolean;
+  assigned_to?: string | number;
+  due_date?: string;
 }
 
 export interface BulkActionResponse {

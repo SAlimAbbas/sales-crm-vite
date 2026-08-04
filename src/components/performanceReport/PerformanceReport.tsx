@@ -48,7 +48,9 @@ import { useNotification } from "../../contexts/NotificationContext";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { userService } from "../../services/userService";
 import SetTargetsPanel from "./SetTargetsPanel";
+import BackendPerformanceReport from "./BackendPerformanceReport";
 
 // ── Constants (outside component) ────────────────────────────────────────────
 
@@ -168,6 +170,9 @@ const PerformanceReport: React.FC = () => {
   const { showNotification } = useNotification();
   const queryClient = useQueryClient();
 
+  // Main view tab: 0 = Sales & Managers, 1 = Backend Staff
+  const [mainTab, setMainTab] = useState(0);
+
   // Tabs: 0 = Report, 1 = Set Targets (admin only)
   const [activeTab, setActiveTab] = useState(0);
 
@@ -175,8 +180,7 @@ const PerformanceReport: React.FC = () => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [shift, setShift] = useState("");
-  const [type, setType] = useState("");
-  const [role, setRole] = useState("");
+  const [managerId, setManagerId] = useState("all");
   const [countersTarget, setCountersTarget] = useState("");
   const [countersAchieved, setCountersAchieved] = useState("");
 
@@ -187,19 +191,25 @@ const PerformanceReport: React.FC = () => {
   const [achievedAmount, setAchievedAmount] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Fetch Managers list for Team Leaders filter
+  const { data: managersData } = useQuery<any>({
+    queryKey: ["managers-list"],
+    queryFn: () => userService.getUsers({ role: "manager", is_active: true }),
+  });
+  const managersList: any[] = managersData?.data?.data || managersData?.data || [];
+
   // ── Data fetching ───────────────────────────────────────────────────────────
 
   const { data, isLoading, refetch } = useQuery<any>({
-    queryKey: ["performance-report", month, year, shift, type, role],
+    queryKey: ["performance-report", month, year, shift, managerId],
     queryFn: () =>
       performanceService.getReport({
         month,
         year,
         shift: shift || undefined,
-        type: type || undefined,
-        role: role || undefined,
+        manager_id: managerId !== "all" ? managerId : undefined,
       }),
-    enabled: activeTab === 0,
+    enabled: mainTab === 0 && activeTab === 0,
   });
 
   const rows: PerformanceReportRow[] = data?.data?.data ?? data?.data ?? [];
@@ -361,15 +371,17 @@ const PerformanceReport: React.FC = () => {
     // Active filters
     const filterParts: string[] = [];
     if (shift) filterParts.push(`Shift: ${shift}`);
-    if (type) filterParts.push(`Type: ${type}`);
-    if (role) filterParts.push(`Role: ${role}`);
+    if (managerId && managerId !== "all") {
+      const foundM = managersList.find((m: any) => m.id.toString() === managerId);
+      if (foundM) filterParts.push(`Team Leader: ${foundM.name}`);
+    }
     if (filterParts.length) {
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text(`Filters: ${filterParts.join("  |  ")}`, 10, 42);
     }
 
-    const isFiltered = shift !== "" || type !== "" || role !== "";
+    const isFiltered = shift !== "" || (managerId !== "" && managerId !== "all");
     let startY = filterParts.length ? 47 : 42;
 
     if (isFiltered) {
@@ -522,25 +534,47 @@ const PerformanceReport: React.FC = () => {
         )}
       </Box>
 
-      {/* Tabs — admin only */}
-      {user?.role === "admin" && (
-        <Paper sx={{ mb: 3 }}>
-          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-            <Tab
-              icon={<ReportIcon />}
-              iconPosition="start"
-              label="Report"
-              value={0}
-            />
-            <Tab
-              icon={<TargetIcon />}
-              iconPosition="start"
-              label="Set Targets"
-              value={1}
-            />
-          </Tabs>
-        </Paper>
-      )}
+      {/* Main navigation: Sales vs Backend Staff Performance */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={mainTab} onChange={(_, v) => setMainTab(v)}>
+          <Tab
+            icon={<ReportIcon />}
+            iconPosition="start"
+            label="Sales & Managers Performance"
+            value={0}
+          />
+          <Tab
+            icon={<ReportIcon />}
+            iconPosition="start"
+            label="Backend Staff Performance"
+            value={1}
+          />
+        </Tabs>
+      </Paper>
+
+      {mainTab === 1 ? (
+        <BackendPerformanceReport />
+      ) : (
+        <>
+          {/* Tabs — admin & manager_staff only */}
+          {(user?.role === "admin" || user?.role === "manager_staff") && (
+            <Paper sx={{ mb: 3 }}>
+              <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+                <Tab
+                  icon={<ReportIcon />}
+                  iconPosition="start"
+                  label="Report"
+                  value={0}
+                />
+                <Tab
+                  icon={<TargetIcon />}
+                  iconPosition="start"
+                  label="Set Targets"
+                  value={1}
+                />
+              </Tabs>
+            </Paper>
+          )}
 
       {/* ── Report Tab ──────────────────────────────────────────────────────── */}
       {activeTab === 0 && (
@@ -591,29 +625,19 @@ const PerformanceReport: React.FC = () => {
                 </Select>
               </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel>Type</InputLabel>
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel>Filter by Team Leader</InputLabel>
                 <Select
-                  value={type}
-                  label="Type"
-                  onChange={(e) => setType(e.target.value)}
+                  value={managerId}
+                  label="Filter by Team Leader"
+                  onChange={(e) => setManagerId(e.target.value)}
                 >
-                  <MenuItem value="">All Types</MenuItem>
-                  <MenuItem value="Domestic">Domestic</MenuItem>
-                  <MenuItem value="International">International</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={role}
-                  label="Role"
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <MenuItem value="">All Roles</MenuItem>
-                  <MenuItem value="manager">Manager</MenuItem>
-                  <MenuItem value="salesperson">Salesperson</MenuItem>
+                  <MenuItem value="all">All Team Leaders</MenuItem>
+                  {managersList.map((m: any) => (
+                    <MenuItem key={m.id} value={m.id.toString()}>
+                      {m.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Box>
@@ -673,7 +697,7 @@ const PerformanceReport: React.FC = () => {
                       <TableCell>
                         <strong>Notes</strong>
                       </TableCell>
-                      {user?.role === "admin" && (
+                      {(user?.role === "admin" || user?.role === "manager_staff") && (
                         <TableCell align="center">
                           <strong>Edit</strong>
                         </TableCell>
@@ -830,7 +854,7 @@ const PerformanceReport: React.FC = () => {
                             </Typography>
                           </TableCell>
 
-                          {user?.role === "admin" && (
+                          {(user?.role === "admin" || user?.role === "manager_staff") && (
                             <TableCell align="center">
                               <Tooltip
                                 title={
@@ -858,7 +882,7 @@ const PerformanceReport: React.FC = () => {
       )}
 
       {/* ── Set Targets Tab ─────────────────────────────────────────────────── */}
-      {activeTab === 1 && user?.role === "admin" && <SetTargetsPanel />}
+      {activeTab === 1 && (user?.role === "admin" || user?.role === "manager_staff") && <SetTargetsPanel />}
 
       {/* ── Inline Edit Dialog ───────────────────────────────────────────────── */}
       <Dialog
@@ -950,6 +974,8 @@ const PerformanceReport: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+        </>
+      )}
     </Box>
   );
 };

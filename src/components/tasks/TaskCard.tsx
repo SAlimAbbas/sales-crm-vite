@@ -21,6 +21,8 @@ import {
   CheckCircle as CompleteIcon,
 } from "@mui/icons-material";
 import { Task } from "../../types";
+import { useAuth } from "../../contexts/AuthContext";
+import { canEditTask } from "../../utils/helpers";
 
 import { Dialog, DialogTitle, DialogContent, Button } from "@mui/material";
 
@@ -41,6 +43,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   showActions = true,
   compact = false,
 }) => {
+  const { user } = useAuth();
+  const allowEdit = canEditTask(task, user);
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -223,6 +227,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </Typography>
           </Box>
 
+          {/* Created Date */}
+          {task.created_at && (
+            <Box display="flex" alignItems="center" gap={1}>
+              <ScheduleIcon sx={{ fontSize: 16, color: "text.secondary", opacity: 0.6 }} />
+              <Typography variant="caption" color="textSecondary">
+                Created: {new Date(task.created_at).toLocaleDateString()}
+              </Typography>
+            </Box>
+          )}
+
           {/* Assigned User */}
           {task.assigned_user && (
             <Box display="flex" alignItems="center" gap={1}>
@@ -304,10 +318,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
           sx: { width: 160 },
         }}
       >
-        <MenuItem onClick={handleEdit}>
-          <EditIcon sx={{ mr: 2, fontSize: 20 }} />
-          Edit
-        </MenuItem>
+        {allowEdit && (
+          <MenuItem onClick={handleEdit}>
+            <EditIcon sx={{ mr: 2, fontSize: 20 }} />
+            Edit
+          </MenuItem>
+        )}
 
         {task.status !== "completed" && (
           <MenuItem onClick={handleMarkComplete}>

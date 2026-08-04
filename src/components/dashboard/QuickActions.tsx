@@ -14,7 +14,7 @@ const QuickActions: React.FC = () => {
    const { user } = useAuth();
 
   const actions = [
-        ...(user?.role === "admin" || user?.role === "manager"?[{
+        ...(user?.role === "admin" || user?.role === "manager_staff" || user?.role === "manager"?[{
       label: "Bulk Upload",
       icon: <UploadIcon />,
       onClick: () => navigate("/leads?action=upload"),

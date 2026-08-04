@@ -56,7 +56,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
     // ✅ Change type to User[]
     queryKey: ["assignable-users-form"],
     queryFn: async () => {
-      if (user?.role === "admin") {
+      if (user?.role === "admin" || user?.role === "manager_staff") {
         const [managers, salespeople] = await Promise.all([
           userService.getUsers({ role: "manager", is_active: true }),
           userService.getUsers({ role: "salesperson", is_active: true }),

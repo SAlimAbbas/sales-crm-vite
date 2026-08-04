@@ -125,7 +125,7 @@ const ClockInOutButton: React.FC = () => {
 
   // Show recurring login reminder until user clocks in
   useEffect(() => {
-    if (!statusData || user?.role === "admin") return;
+    if (!statusData || user?.role === "admin" || user?.role === "manager_staff") return;
 
     const today = new Date().toDateString();
     const hasLoggedInToday = localStorage.getItem("has_clocked_in_today");

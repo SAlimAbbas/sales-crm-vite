@@ -62,11 +62,13 @@ const UserTable: React.FC<UserTableProps> = ({
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip
-                  label={user.role}
+                  label={user.role === "manager_staff" ? "Manager Staff" : user.role}
                   size="small"
                   color={
                     user.role === "admin"
                       ? "error"
+                      : user.role === "manager_staff"
+                      ? "secondary"
                       : user.role === "manager"
                       ? "warning"
                       : "primary"

@@ -5,10 +5,15 @@ export const hasPermission = (user: any, permission: string): boolean => {
   return user.permissions.includes(permission);
 };
 
+export const isAdminUser = (user: any): boolean => {
+  if (!user) return false;
+  return user.role === ROLES.ADMIN || user.role === ROLES.MANAGER_STAFF;
+};
+
 export const canManageUser = (currentUser: any, targetUser: any): boolean => {
   if (!currentUser || !targetUser) return false;
 
-  if (currentUser.role === ROLES.ADMIN) return true;
+  if (currentUser.role === ROLES.ADMIN || currentUser.role === ROLES.MANAGER_STAFF) return true;
   if (
     currentUser.role === ROLES.MANAGER &&
     targetUser.role === ROLES.SALESPERSON
@@ -24,6 +29,22 @@ export const formatDate = (dateString: string): string => {
 
 export const formatDateTime = (dateString: string): string => {
   return new Date(dateString).toLocaleString();
+};
+
+export const formatForDateInput = (dateString: string): string => {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return dateString.split("T")[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const canEditTask = (task: any, user: any): boolean => {
+  if (!user || !task) return false;
+  if (user.role === ROLES.ADMIN || user.role === ROLES.MANAGER_STAFF) return true;
+  return task.created_by === user.id;
 };
 
 export const getStatusColor = (status: string): string => {

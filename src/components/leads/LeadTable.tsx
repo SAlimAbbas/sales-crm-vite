@@ -250,7 +250,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
   const statusOptions = [
     { value: LEAD_STATUS.ASSIGNED, label: "Assigned" },
-    ...(currentUser.role === "admin" || currentUser.role === "manager"
+    ...(currentUser.role === "admin" || currentUser.role === "manager_staff" || currentUser.role === "manager"
       ? [{ value: LEAD_STATUS.UNASSIGNED, label: "Unassigned" }]
       : []),
     { value: LEAD_STATUS.PROSPECTS, label: "Prospects" },
@@ -322,8 +322,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const canEditLead = (lead: Lead) => {
     if (!currentUser) return false;
 
-    // Admin can edit any lead
-    if (currentUser.role === "admin") return true;
+    // Admin & Manager Staff can edit any lead
+    if (currentUser.role === "admin" || currentUser.role === "manager_staff") return true;
 
     if (currentUser.role === "lead_executive") {
       return !lead.assigned_to; // Can edit only if not assigned
@@ -346,8 +346,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const canDeleteLead = (lead: Lead) => {
     if (!currentUser) return false;
 
-    // Only admin can delete OR creator can delete their own leads
-    if (currentUser.role === "admin") return true;
+    // Only admin & manager_staff can delete OR creator can delete their own leads
+    if (currentUser.role === "admin" || currentUser.role === "manager_staff") return true;
 
     // const createdById =
     //   typeof lead.created_by === "object"
@@ -821,6 +821,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   </TableCell>
 
                   {(currentUser?.role === "admin" ||
+                    currentUser?.role === "manager_staff" ||
                     currentUser?.role === "lead_executive") && (
                     <>
                       <TableCell

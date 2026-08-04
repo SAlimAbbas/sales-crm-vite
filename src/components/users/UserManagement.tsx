@@ -68,14 +68,16 @@ const UserManagement: React.FC = () => {
       sortable: true,
       render: (value: string) => (
         <Chip
-          label={value}
+          label={value === "manager_staff" ? "Manager Staff" : value}
           size="small"
           color={
             value === "admin"
               ? "error"
-              : value === "manager"
-                ? "warning"
-                : "primary"
+              : value === "manager_staff"
+                ? "secondary"
+                : value === "manager"
+                  ? "warning"
+                  : "primary"
           }
           variant="outlined"
         />
@@ -86,14 +88,14 @@ const UserManagement: React.FC = () => {
       label: "Shift",
       sortable: true,
       render: (value: string | undefined, row: User) =>
-        row.role === "admin" ? "-" : value || "-",
+        row.role === "admin" || row.role === "manager_staff" ? "-" : value || "-",
     },
     {
       id: "type",
       label: "Type",
       sortable: true,
       render: (value: string | undefined, row: User) =>
-        row.role === "admin" ? "-" : value || "-",
+        row.role === "admin" || row.role === "manager_staff" ? "-" : value || "-",
     },
     {
       id: "phone",

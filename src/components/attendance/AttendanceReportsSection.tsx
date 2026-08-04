@@ -26,8 +26,27 @@ import { attendanceService } from "../../services/attendanceService";
 import { userService } from "../../services/userService";
 import { format } from "date-fns";
 
+const getRoleLabel = (role: string) => {
+  switch (role) {
+    case "manager":
+      return "Team Leader";
+    case "manager_staff":
+      return "Manager";
+    case "salesperson":
+      return "Salesperson";
+    case "backend":
+      return "Backend Staff";
+    case "lead_executive":
+      return "Lead Executive";
+    case "admin":
+      return "Admin";
+    default:
+      return role ? role.replace("_", " ") : "";
+  }
+};
+
 const AttendanceReportsSection: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<string>("salesperson");
+  const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [startDate, setStartDate] = useState<string>(
     new Date().toISOString().split("T")[0], // today's date
@@ -41,24 +60,71 @@ const AttendanceReportsSection: React.FC = () => {
 
   const { data: usersData } = useQuery<any>({
     queryKey: ["employees-list"],
-    queryFn: () => userService.getUsers({ is_active: true }), // This gets all users
+    queryFn: () => userService.getUsers({ is_active: true }),
   });
 
+  const usersList: any[] = usersData?.data?.data || usersData?.data || [];
+
+  const teamLeaders = React.useMemo(
+    () => usersList.filter((u: any) => u.role === "manager"),
+    [usersList],
+  );
+
+  const managersStaff = React.useMemo(
+    () => usersList.filter((u: any) => u.role === "manager_staff"),
+    [usersList],
+  );
+
+  const filteredEmployees = React.useMemo(() => {
+    if (selectedTeam === "all") {
+      return usersList.filter((u: any) => u.role !== "admin");
+    }
+
+    if (selectedTeam.startsWith("manager_staff_")) {
+      const managerStaffId = parseInt(selectedTeam.replace("manager_staff_", ""), 10);
+      return usersList.filter(
+        (u: any) => u.id === managerStaffId || u.manager_id === managerStaffId,
+      );
+    }
+
+    if (selectedTeam.startsWith("manager_")) {
+      const managerId = parseInt(selectedTeam.replace("manager_", ""), 10);
+      return usersList.filter(
+        (u: any) => u.id === managerId || u.manager_id === managerId,
+      );
+    }
+
+    if (selectedTeam === "backend_exec") {
+      return usersList.filter(
+        (u: any) => u.role === "backend" || u.role === "lead_executive",
+      );
+    }
+
+    return usersList.filter((u: any) => u.role !== "admin");
+  }, [usersList, selectedTeam]);
+
+  const queryParams = React.useMemo(() => {
+    const params: any = {
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
+    };
+
+    if (selectedUser) {
+      params.user_id = selectedUser;
+    } else if (selectedTeam.startsWith("manager_staff_")) {
+      params.manager_id = selectedTeam.replace("manager_staff_", "");
+    } else if (selectedTeam.startsWith("manager_")) {
+      params.manager_id = selectedTeam.replace("manager_", "");
+    } else if (selectedTeam === "backend_exec") {
+      params.role = "backend_exec";
+    }
+
+    return params;
+  }, [selectedUser, selectedTeam, startDate, endDate]);
+
   const { data: attendanceData, isLoading } = useQuery<any>({
-    queryKey: [
-      "attendance-history",
-      selectedUser,
-      selectedRole,
-      startDate,
-      endDate,
-    ],
-    queryFn: () =>
-      attendanceService.getAttendanceHistory({
-        user_id: selectedUser || undefined,
-        role: selectedRole || undefined, // Add this
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-      }),
+    queryKey: ["attendance-history", queryParams],
+    queryFn: () => attendanceService.getAttendanceHistory(queryParams),
     enabled: true,
   });
 
@@ -71,7 +137,7 @@ const AttendanceReportsSection: React.FC = () => {
 
   useEffect(() => {
     setSelectedUser("");
-  }, [selectedRole]);
+  }, [selectedTeam]);
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -80,21 +146,39 @@ const AttendanceReportsSection: React.FC = () => {
       </Typography>
 
       <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Filter by Role</InputLabel>
+        {/* Filter by Team */}
+        <FormControl size="small" sx={{ minWidth: 240 }}>
+          <InputLabel>Filter by Team</InputLabel>
           <Select
-            value={selectedRole}
-            label="Filter by Role"
-            onChange={(e) => setSelectedRole(e.target.value)}
+            value={selectedTeam}
+            label="Filter by Team"
+            onChange={(e) => setSelectedTeam(e.target.value)}
           >
-            <MenuItem value="">All Roles</MenuItem>
-            <MenuItem value="manager">Managers</MenuItem>
-            <MenuItem value="salesperson">Salespeople</MenuItem>
-            <MenuItem value="lead_executive">Lead Executives</MenuItem>
-            <MenuItem value="backend">Backend Staff</MenuItem>
+            <MenuItem value="all">All Teams</MenuItem>
+
+            {/* Team Leaders */}
+            {teamLeaders.map((m: any) => (
+              <MenuItem key={`tl_${m.id}`} value={`manager_${m.id}`}>
+                {m.name} (Team Leader)
+              </MenuItem>
+            ))}
+
+            {/* Managers */}
+            {managersStaff.map((m: any) => (
+              <MenuItem key={`ms_${m.id}`} value={`manager_staff_${m.id}`}>
+                {m.name} (Manager)
+              </MenuItem>
+            ))}
+
+            {/* Backend & Executive Team */}
+            <MenuItem value="backend_exec">
+              Backend & Executive Team (Shikhar)
+            </MenuItem>
           </Select>
         </FormControl>
-        <FormControl size="small" sx={{ minWidth: 200 }}>
+
+        {/* Employee */}
+        <FormControl size="small" sx={{ minWidth: 220 }}>
           <InputLabel>Employee</InputLabel>
           <Select
             value={selectedUser}
@@ -102,16 +186,11 @@ const AttendanceReportsSection: React.FC = () => {
             onChange={(e) => setSelectedUser(e.target.value)}
           >
             <MenuItem value="">All Employees</MenuItem>
-            {(usersData?.data?.data || usersData?.data || [])
-              .filter((user: any) => {
-                if (selectedRole === "") return user.role !== "admin"; // show all non-admin
-                return user.role === selectedRole;
-              })
-              .map((user: any) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.name} ({user.role})
-                </MenuItem>
-              ))}
+            {filteredEmployees.map((user: any) => (
+              <MenuItem key={user.id} value={user.id.toString()}>
+                {user.name} ({getRoleLabel(user.role)})
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
@@ -176,7 +255,21 @@ const AttendanceReportsSection: React.FC = () => {
             ) : (
               attendanceData?.data?.map((log: any) => (
                 <TableRow key={log.id}>
-                  <TableCell>{log.user?.name || "Unknown"}</TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2" fontWeight="medium">
+                        {log.user?.name || "Unknown"}
+                      </Typography>
+                      {log.user?.role && (
+                        <Chip
+                          label={getRoleLabel(log.user.role)}
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 20, fontSize: 11 }}
+                        />
+                      )}
+                    </Box>
+                  </TableCell>
                   <TableCell>
                     {format(
                       new Date(log.clock_in_time),

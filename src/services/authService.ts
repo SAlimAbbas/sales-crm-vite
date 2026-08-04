@@ -166,6 +166,26 @@ export const authService = {
   },
 
   /**
+   * Get current authenticated user profile from backend
+   */
+  getMe: async (): Promise<User | null> => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return null;
+    try {
+      const response = await api.get<{ user: User }>("/auth/me").then((res) => res.data);
+      if (response?.user) {
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return response.user;
+      }
+      return null;
+    } catch (error) {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user");
+      return null;
+    }
+  },
+
+  /**
    * Clear all auth data
    */
   clearAuthData: (): void => {

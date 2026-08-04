@@ -179,7 +179,8 @@ const FollowupManagement: React.FC = () => {
             </Button>
           )}
           {(currentUser?.id === row.salesperson_id ||
-            currentUser?.role === "admin") && (
+            currentUser?.role === "admin" ||
+            currentUser?.role === "manager_staff") && (
             <Button
               size="small"
               color="error"
