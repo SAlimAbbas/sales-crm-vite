@@ -235,9 +235,15 @@ const TaskManagement: React.FC = () => {
       label: "Assigned To",
       sortable: false,
       render: (_: any, row: Task) => (
-        <Typography variant="body2">
-          {row.assigned_user?.name || "Unassigned"}
-        </Typography>
+        <Box display="flex" gap={0.5} flexWrap="wrap">
+          {row.assigned_users && row.assigned_users.length > 0 ? (
+            row.assigned_users.map((au) => (
+              <Chip key={au.id} label={au.name} size="small" variant="outlined" sx={{ height: 22, fontSize: 11 }} />
+            ))
+          ) : (
+            <Typography variant="body2">{row.assigned_user?.name || "Unassigned"}</Typography>
+          )}
+        </Box>
       ),
     },
     {

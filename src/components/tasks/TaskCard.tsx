@@ -237,13 +237,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </Box>
           )}
 
-          {/* Assigned User */}
-          {task.assigned_user && (
-            <Box display="flex" alignItems="center" gap={1}>
+          {/* Assigned User(s) */}
+          {((task.assigned_users && task.assigned_users.length > 0) || task.assigned_user) && (
+            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
               <PersonIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-              <Typography variant="caption" color="textSecondary">
-                {task.assigned_user.name}
-              </Typography>
+              {task.assigned_users && task.assigned_users.length > 0 ? (
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {task.assigned_users.map((au) => (
+                    <Chip key={au.id} label={au.name} size="small" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="caption" color="textSecondary">
+                  {task.assigned_user?.name}
+                </Typography>
+              )}
             </Box>
           )}
 
@@ -258,21 +266,28 @@ const TaskCard: React.FC<TaskCardProps> = ({
           )}
         </Box>
 
-        {/* Avatar for assigned user (in compact mode) */}
-        {compact && task.assigned_user && (
-          <Box display="flex" justifyContent="flex-end" mt={1}>
-            <Tooltip title={task.assigned_user.name}>
-              <Avatar
-                sx={{
-                  width: 24,
-                  height: 24,
-                  fontSize: "0.75rem",
-                  bgcolor: "primary.main",
-                }}
-              >
-                {task.assigned_user.name.charAt(0)}
-              </Avatar>
-            </Tooltip>
+        {/* Avatars for assigned users (in compact mode) */}
+        {compact && (task.assigned_users || task.assigned_user) && (
+          <Box display="flex" justifyContent="flex-end" mt={1} gap={0.5}>
+            {(task.assigned_users && task.assigned_users.length > 0
+              ? task.assigned_users
+              : task.assigned_user
+              ? [task.assigned_user]
+              : []
+            ).map((au) => (
+              <Tooltip key={au.id} title={au.name}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    fontSize: "0.75rem",
+                    bgcolor: "primary.main",
+                  }}
+                >
+                  {au.name.charAt(0)}
+                </Avatar>
+              </Tooltip>
+            ))}
           </Box>
         )}
       </CardContent>

@@ -228,12 +228,21 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
                         </Box>
 
                         {/* Assigned To */}
-                        {task.assigned_user && (
-                          <Box display="flex" alignItems="center" gap={0.5} mr={3} mb={1}>
+                        {((task.assigned_users && task.assigned_users.length > 0) || task.assigned_user) && (
+                          <Box display="flex" alignItems="center" gap={0.5} mr={3} mb={1} flexWrap="wrap">
                             <PersonIcon fontSize="small" color="action" />
-                            <Typography variant="caption" color="textSecondary">
-                              <strong>Assigned To:</strong> {task.assigned_user.name}
+                            <Typography variant="caption" color="textSecondary" mr={0.5}>
+                              <strong>Assigned To:</strong>
                             </Typography>
+                            {task.assigned_users && task.assigned_users.length > 0 ? (
+                              task.assigned_users.map((au) => (
+                                <Chip key={au.id} label={au.name} size="small" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                              ))
+                            ) : (
+                              <Typography variant="caption" color="textSecondary">
+                                {task.assigned_user?.name}
+                              </Typography>
+                            )}
                           </Box>
                         )}
 

@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Box, Grid, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Button,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
+  Chip,
+  Checkbox,
+  ListItemText,
+  FormHelperText,
+} from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +33,7 @@ interface TaskFormProps {
   onClose: () => void;
   onSuccess: () => void;
   task?: Task | null;
-  preSelectedLeadId?: number | null; // ADD THIS
+  preSelectedLeadId?: number | null;
 }
 
 const validationSchema = yup.object({
@@ -33,7 +47,11 @@ const validationSchema = yup.object({
     .string()
     .required("Priority is required")
     .oneOf(["low", "medium", "high"]),
-  assigned_to: yup.number().required("Assigned user is required"),
+  assigned_to: yup
+    .array()
+    .of(yup.string())
+    .min(1, "At least one assigned user is required")
+    .required("Assigned user is required"),
   lead_id: yup.number().nullable(),
 });
 
@@ -65,9 +83,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
     initialValues: {
       title: "",
       description: "",
-      due_date: new Date().toISOString().split("T")[0], // Default to today
+      due_date: new Date().toISOString().split("T")[0],
       priority: "medium" as "low" | "medium" | "high",
-      assigned_to: "",
+      assigned_to: [] as string[],
       lead_id: "",
     },
     validationSchema,
@@ -82,7 +100,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
           description: values.description,
           due_date: `${values.due_date} 23:59:59`,
           priority: values.priority,
-          assigned_to: Number(values.assigned_to),
+          assigned_to: values.assigned_to.map((id) => Number(id)),
           lead_id: values.lead_id ? Number(values.lead_id) : null,
         };
 
@@ -97,7 +115,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
         console.error("Task form submission error:", error);
 
         if (error.response?.data?.errors) {
-          // Handle validation errors from backend
           const errors = error.response.data.errors;
           Object.keys(errors).forEach((field) => {
             setFieldError(field, errors[field][0]);
@@ -117,19 +134,26 @@ const TaskForm: React.FC<TaskFormProps> = ({
   // Update form values when editing
   useEffect(() => {
     if (open && task) {
+      const assignedArray = Array.isArray(task.assigned_to)
+        ? task.assigned_to.map(String)
+        : task.assigned_to
+        ? [task.assigned_to.toString()]
+        : [];
+
       formik.setValues({
         title: task.title,
         description: task.description,
-        due_date: formatForDateInput(task.due_date), // Format for date input without timezone shift
+        due_date: formatForDateInput(task.due_date),
         priority: task.priority,
-        assigned_to: task.assigned_to.toString(),
+        assigned_to: assignedArray,
         lead_id: task.lead_id ? task.lead_id.toString() : "",
       });
     } else if (open && !task) {
       formik.resetForm();
-      // Set default assigned user to current user if they're a salesperson or backend
       if (currentUser?.role === "salesperson" || currentUser?.role === "backend") {
-        formik.setFieldValue("assigned_to", currentUser.id.toString());
+        formik.setFieldValue("assigned_to", [currentUser.id.toString()]);
+      } else {
+        formik.setFieldValue("assigned_to", []);
       }
       if (preSelectedLeadId) {
         formik.setFieldValue("lead_id", preSelectedLeadId.toString());
@@ -142,16 +166,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
     if (!usersData?.data) return [];
 
     if (currentUser?.role === "admin" || currentUser?.role === "manager_staff") {
-      return usersData.data; // Admin / Manager Staff can assign to anyone
+      return usersData.data;
     } else if (currentUser?.role === "manager") {
-      // Manager can assign to their team members
       return usersData.data.filter(
-        (user:any) =>
+        (user: any) =>
           user.manager_id === currentUser.id || user.id === currentUser.id
       );
     } else {
-      // Salesperson can only assign to themselves
-      return usersData.data.filter((user:any) => user.id === currentUser?.id);
+      return usersData.data.filter((user: any) => user.id === currentUser?.id);
     }
   };
 
@@ -171,70 +193,58 @@ const TaskForm: React.FC<TaskFormProps> = ({
     })) || []),
   ];
 
-  const userOptions = availableUsers.map((user:any) => ({
-    value: user.id.toString(),
-    label: `${user.name} (${user.role})`,
-  }));
-
   return (
     <CustomModal
       open={open}
       onClose={onClose}
       title={task ? "Edit Task" : "Create New Task"}
-      maxWidth="md"
       actions={
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <Button onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button
-            type="submit"
-            form="task-form"
             variant="contained"
-            disabled={loading || formik.isSubmitting}
+            onClick={() => formik.handleSubmit()}
+            disabled={loading}
           >
-            {loading ? "Saving..." : task ? "Update Task" : "Create Task"}
+            {task ? "Update Task" : "Create Task"}
           </Button>
         </Box>
       }
     >
-      <form id="task-form" onSubmit={formik.handleSubmit}>
-        <Grid container spacing={3}>
-          {/* Task Title */}
+      <form onSubmit={formik.handleSubmit}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
             <FormInput
               label="Task Title"
               name="title"
               value={formik.values.title}
-              onChange={formik.handleChange}
+              onChange={(e: any) => formik.setFieldValue("title", e.target.value)}
               onBlur={formik.handleBlur}
               error={formik.touched.title ? formik.errors.title : undefined}
               required
-              fullWidth
             />
           </Grid>
 
-          {/* Description */}
           <Grid size={{ xs: 12 }}>
             <FormInput
               label="Description"
               name="description"
-              multiline
-              rows={4}
               value={formik.values.description}
-              onChange={formik.handleChange}
+              onChange={(e: any) => formik.setFieldValue("description", e.target.value)}
               onBlur={formik.handleBlur}
               error={
                 formik.touched.description
                   ? formik.errors.description
                   : undefined
               }
+              multiline
+              rows={3}
               required
-              fullWidth
             />
           </Grid>
 
-          {/* Due Date and Priority */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormDatePicker
               label="Due Date"
@@ -271,22 +281,58 @@ const TaskForm: React.FC<TaskFormProps> = ({
             />
           </Grid>
 
-          {/* Assigned User */}
+          {/* Assigned User - Multi Select */}
           <Grid size={{ xs: 12, sm: 6 }}>
-            <FormSelect
-              label="Assigned To"
-              value={formik.values.assigned_to}
-              onChange={(value) => formik.setFieldValue("assigned_to", value)}
-              onBlur={formik.handleBlur}
-              options={userOptions}
-              error={
-                formik.touched.assigned_to
-                  ? formik.errors.assigned_to
-                  : undefined
-              }
+            <FormControl
+              fullWidth
+              size="small"
+              error={formik.touched.assigned_to && Boolean(formik.errors.assigned_to)}
+              disabled={loadingUsers || currentUser?.role === "salesperson"}
               required
-              disabled={loadingUsers || currentUser?.role === "salesperson"} // Disable if loading or salesperson
-            />
+            >
+              <InputLabel id="assigned-to-label">Assigned To</InputLabel>
+              <Select
+                labelId="assigned-to-label"
+                id="assigned-to-select"
+                multiple
+                value={formik.values.assigned_to || []}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  formik.setFieldValue(
+                    "assigned_to",
+                    typeof value === "string" ? value.split(",") : value
+                  );
+                }}
+                input={<OutlinedInput label="Assigned To" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {(selected as string[]).map((val) => {
+                      const found = availableUsers.find((u: any) => u.id.toString() === val);
+                      return (
+                        <Chip
+                          key={val}
+                          label={found ? `${found.name} (${found.role})` : val}
+                          size="small"
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {availableUsers.map((user: any) => (
+                  <MenuItem key={user.id} value={user.id.toString()}>
+                    <Checkbox
+                      checked={(formik.values.assigned_to || []).indexOf(user.id.toString()) > -1}
+                      size="small"
+                    />
+                    <ListItemText primary={`${user.name} (${user.role})`} />
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.assigned_to && formik.errors.assigned_to && (
+                <FormHelperText>{formik.errors.assigned_to as string}</FormHelperText>
+              )}
+            </FormControl>
             {currentUser?.role === "salesperson" && (
               <Typography
                 variant="caption"

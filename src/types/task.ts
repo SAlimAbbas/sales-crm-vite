@@ -7,7 +7,7 @@ export interface Task {
   description: string;
   due_date: string;
   priority: "low" | "medium" | "high";
-  assigned_to: number;
+  assigned_to: number[] | number;
   lead_id?: number | null;
   created_by: number;
   status: "pending" | "in_progress" | "completed" | "overdue";
@@ -16,6 +16,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   assigned_user?: User;
+  assigned_users?: User[];
   lead?: Lead;
   created_by_user?: User;
 }
@@ -25,7 +26,7 @@ export interface TaskFormData {
   description: string;
   due_date: string;
   priority: "low" | "medium" | "high";
-  assigned_to: number;
+  assigned_to: number[];
   lead_id?: number | null;
 }
 
