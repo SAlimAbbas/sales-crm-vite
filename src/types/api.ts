@@ -25,6 +25,7 @@ export interface PaginationParams {
   include_overdue?: string | boolean;
   assigned_to?: string | number;
   due_date?: string;
+  team?: string;
 }
 
 export interface BulkActionResponse {

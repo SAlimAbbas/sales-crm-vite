@@ -29,7 +29,7 @@ import {
   Delete as DeleteIcon,
   CheckCircle as CompleteIcon,
 } from "@mui/icons-material";
-import { formatDateTime, formatDate, canEditTask } from "../../utils/helpers";
+import { formatDateTime, formatDate, canEditTask, isTaskCompletedOverdue } from "../../utils/helpers";
 import { useAuth } from "../../contexts/AuthContext";
 
 const localizer = momentLocalizer(moment);
@@ -133,6 +133,7 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
           selectable
+          popup={true}
           views={["month", "week", "day", "agenda"]}
           defaultView="month"
           step={30}
@@ -183,12 +184,21 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
                         <Typography variant="subtitle1" fontWeight={700}>
                           {task.title}
                         </Typography>
-                        <Box display="flex" gap={1}>
+                        <Box display="flex" gap={1} alignItems="center">
                           <Chip
                             label={statusDisplay.replace("_", " ").toUpperCase()}
                             color={statusColor as any}
                             size="small"
                           />
+                          {isTaskCompletedOverdue(task) && (
+                            <Chip
+                              label="LATE COMPLETION"
+                              color="error"
+                              size="small"
+                              variant="filled"
+                              sx={{ height: 20, fontSize: 10, fontWeight: "bold" }}
+                            />
+                          )}
                           <Chip
                             label={task.priority.toUpperCase()}
                             variant="outlined"

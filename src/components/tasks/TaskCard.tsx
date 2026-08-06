@@ -22,7 +22,7 @@ import {
 } from "@mui/icons-material";
 import { Task } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
-import { canEditTask } from "../../utils/helpers";
+import { canEditTask, isTaskCompletedOverdue } from "../../utils/helpers";
 
 import { Dialog, DialogTitle, DialogContent, Button } from "@mui/material";
 
@@ -193,7 +193,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         )}
 
         {/* Status and Priority Chips */}
-        <Box display="flex" gap={1} mb={2} flexWrap="wrap">
+        <Box display="flex" gap={1} mb={2} flexWrap="wrap" alignItems="center">
           <Chip
             size="small"
             label={task.status.replace("_", " ").toUpperCase()}
@@ -201,10 +201,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
             variant={task.status === "completed" ? "filled" : "outlined"}
             onClick={handleStatusClick}
             sx={{
-              cursor: task.status !== "overdue" ? "pointer" : "default",
-              "&:hover": task.status !== "overdue" ? { opacity: 0.8 } : {},
+              cursor: "pointer",
+              "&:hover": { opacity: 0.8 },
             }}
           />
+          {isTaskCompletedOverdue(task) && (
+            <Chip
+              size="small"
+              label="LATE COMPLETION"
+              color="error"
+              variant="filled"
+              sx={{ height: 20, fontSize: 10, fontWeight: "bold" }}
+            />
+          )}
           <Chip
             size="small"
             label={task.priority.toUpperCase()}
@@ -217,12 +226,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <Box display="flex" flexDirection="column" gap={1}>
           {/* Due Date */}
           <Box display="flex" alignItems="center" gap={1}>
-            <ScheduleIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <ScheduleIcon
+              sx={{
+                fontSize: 16,
+                color: isOverdue() || isTaskCompletedOverdue(task) ? "error.main" : "text.secondary",
+              }}
+            />
             <Typography
               variant="caption"
-              color={isOverdue() ? "error" : "textSecondary"}
-              sx={{ fontWeight: isOverdue() ? "medium" : "normal" }}
+              color={isOverdue() || isTaskCompletedOverdue(task) ? "error.main" : "textSecondary"}
+              sx={{
+                fontWeight: isOverdue() || isTaskCompletedOverdue(task) ? "bold" : "normal",
+              }}
             >
+              {isTaskCompletedOverdue(task) && "⚠️ "}
               {formatDueDate(task.due_date)}
             </Typography>
           </Box>

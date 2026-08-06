@@ -47,6 +47,15 @@ export const canEditTask = (task: any, user: any): boolean => {
   return task.created_by === user.id;
 };
 
+export const isTaskCompletedOverdue = (task: any): boolean => {
+  if (!task || task.status !== "completed" || !task.due_date) return false;
+  const dueDate = new Date(task.due_date);
+  if (task.completed_at) {
+    return new Date(task.completed_at) > dueDate;
+  }
+  return task.actual_status === "overdue";
+};
+
 export const getStatusColor = (status: string): string => {
   const statusColors: Record<string, string> = {
     // Lead statuses
