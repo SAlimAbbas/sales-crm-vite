@@ -66,13 +66,15 @@ const TaskManagement: React.FC = () => {
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Fetch users for filter dropdown
+  // Fetch users for filter dropdown (only active users)
   const { data: usersData } = useQuery<any>({
     queryKey: ["users-filter-tasks"],
-    queryFn: () => userService.getUsers({ per_page: 100 }),
+    queryFn: () => userService.getUsers({ per_page: 100, is_active: true }),
   });
 
-  const rawUsers: any[] = usersData?.data?.data || usersData?.data || [];
+  const rawUsers: any[] = (usersData?.data?.data || usersData?.data || []).filter(
+    (u: any) => u.is_active === true || u.is_active === 1 || u.is_active === "1"
+  );
 
   // Team Leaders (manager) and Managers (manager_staff)
   const teamLeaders = React.useMemo(() => {

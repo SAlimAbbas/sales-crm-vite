@@ -65,10 +65,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Fetch users based on role permissions
+  // Fetch users based on role permissions (only active users)
   const { data: usersData, isLoading: loadingUsers } = useQuery<any>({
     queryKey: ["users-for-assignment"],
-    queryFn: () => userService.getUsers(),
+    queryFn: () => userService.getUsers({ per_page: 100, is_active: true }),
     enabled: open,
   });
 
@@ -161,19 +161,22 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   }, [open, task, currentUser, preSelectedLeadId]);
 
-  // Filter users based on current user's role and permissions
+  // Filter users based on current user's role and permissions (only active users)
   const getAvailableUsers = () => {
-    if (!usersData?.data) return [];
+    const rawList: any[] = (usersData?.data?.data || usersData?.data || []).filter(
+      (u: any) => u.is_active === true || u.is_active === 1 || u.is_active === "1"
+    );
+    if (!rawList) return [];
 
     if (currentUser?.role === "admin" || currentUser?.role === "manager_staff") {
-      return usersData.data;
+      return rawList;
     } else if (currentUser?.role === "manager") {
-      return usersData.data.filter(
+      return rawList.filter(
         (user: any) =>
           user.manager_id === currentUser.id || user.id === currentUser.id
       );
     } else {
-      return usersData.data.filter((user: any) => user.id === currentUser?.id);
+      return rawList.filter((user: any) => user.id === currentUser?.id);
     }
   };
 

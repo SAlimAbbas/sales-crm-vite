@@ -208,9 +208,12 @@ const BackendPerformanceReport: React.FC = () => {
   // Summary Metrics
   const totalBackendUsers = rows.length;
   const totalTasksAssigned = rows.reduce((acc, r) => acc + r.total_tasks, 0);
+  const totalCompletedOnTime = rows.reduce((acc, r) => acc + r.completed_on_time, 0);
   const avgOnTimeRate =
-    totalBackendUsers > 0
-      ? (rows.reduce((acc, r) => acc + r.on_time_rate, 0) / totalBackendUsers).toFixed(1)
+    data?.summary?.avg_on_time_rate !== undefined
+      ? Number(data.summary.avg_on_time_rate).toFixed(1)
+      : totalTasksAssigned > 0
+      ? ((totalCompletedOnTime / totalTasksAssigned) * 100).toFixed(1)
       : "0";
   const totalPositive = rows.filter((r) => r.admin_approval === "positive").length;
   const totalNegative = rows.filter((r) => r.admin_approval === "negative").length;

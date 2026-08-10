@@ -14,6 +14,7 @@ import {
   ListItemText,
   IconButton,
   Divider,
+  Tooltip,
 } from "@mui/material";
 import { Calendar, momentLocalizer, Event } from "react-big-calendar";
 import moment from "moment";
@@ -62,11 +63,14 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
   };
 
   const events: TaskCalendarEvent[] = tasks.map((task) => {
-    const dueDate = new Date(task.due_date);
+    const dueDateObj = new Date(task.due_date);
+    const start = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate(), 9, 0, 0);
+    const end = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate(), 10, 0, 0);
+
     return {
       title: task.title + (task.lead?.company_name ? ` (${task.lead.company_name})` : ""),
-      start: dueDate,
-      end: new Date(dueDate.getTime() + 60 * 60000), // 1 hour duration
+      start,
+      end,
       allDay: false,
       task: task,
       resource: {
@@ -75,31 +79,100 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
     };
   });
 
-  const eventStyleGetter = (event: TaskCalendarEvent) => {
-    const task = event.task;
-    const overdue = isOverdue(task);
-    let backgroundColor = "#ff9800"; // default pending: orange
-
-    if (task.status === "completed") {
-      backgroundColor = "#4caf50"; // green
-    } else if (overdue || task.status === "overdue") {
-      backgroundColor = "#f44336"; // red
-    } else if (task.status === "in_progress") {
-      backgroundColor = "#2196f3"; // blue
-    }
-
+  const eventStyleGetter = () => {
     return {
       style: {
-        backgroundColor,
-        borderRadius: "4px",
-        opacity: 0.9,
-        color: "white",
-        border: "0px",
+        backgroundColor: "transparent",
+        border: "none",
+        boxShadow: "none",
         display: "block",
-        padding: "2px 5px",
-        fontSize: "0.85rem",
+        padding: "1px 0",
+        margin: "1px 0",
       },
     };
+  };
+
+  const CustomEventComponent = ({ event }: { event: TaskCalendarEvent }) => {
+    const task = event.task;
+    const overdue = isOverdue(task);
+    const wasCompletedLate = isTaskCompletedOverdue(task);
+
+    let dotColor = "#ff9800"; // default pending: orange
+    if (task.status === "completed") {
+      dotColor = "#4caf50"; // green
+    } else if (overdue || task.status === "overdue") {
+      dotColor = "#f44336"; // red
+    } else if (task.status === "in_progress") {
+      dotColor = "#2196f3"; // blue
+    }
+
+    return (
+      <Tooltip
+        title={
+          <Box p={0.5}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {task.title}
+            </Typography>
+            {task.lead?.company_name && (
+              <Typography variant="caption" display="block">
+                Lead: {task.lead.company_name}
+              </Typography>
+            )}
+            <Typography variant="caption" display="block">
+              Status: {task.status.toUpperCase()} {wasCompletedLate ? "(Late Completion)" : ""}
+            </Typography>
+          </Box>
+        }
+        arrow
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={0.6}
+          sx={{
+            width: "100%",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            py: 0.3,
+            px: 0.8,
+            borderRadius: "12px",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+            border: `1px solid ${dotColor}`,
+            cursor: "pointer",
+            "&:hover": {
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
+            },
+          }}
+        >
+          <Box
+            sx={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              backgroundColor: dotColor,
+              flexShrink: 0,
+            }}
+          />
+          <Typography
+            variant="caption"
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: "text.primary",
+              lineHeight: 1.2,
+            }}
+          >
+            {task.title}
+          </Typography>
+        </Box>
+      </Tooltip>
+    );
   };
 
   const handleSelectEvent = (event: TaskCalendarEvent) => {
@@ -130,6 +203,9 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({
           endAccessor="end"
           style={{ height: "100%" }}
           eventPropGetter={eventStyleGetter}
+          components={{
+            event: CustomEventComponent,
+          }}
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
           selectable
