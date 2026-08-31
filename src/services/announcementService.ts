@@ -6,6 +6,7 @@ export interface Announcement {
   description: string;
   type: "info" | "warning" | "success" | "error";
   target_roles: string[];
+  target_users?: (string | number)[] | null;
   start_date: string;
   end_date: string;
   is_active: boolean;
@@ -19,6 +20,7 @@ export interface CreateAnnouncementPayload {
   description: string;
   type: "info" | "warning" | "success" | "error";
   target_roles: string[];
+  target_users?: (string | number)[] | null;
   start_date: string;
   end_date: string;
   is_active?: boolean;

@@ -250,7 +250,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     {client.paid_amount_date
                       ? format(
                           new Date(client.paid_amount_date),
-                          "MMM dd, yyyy"
+                          "MMM dd, yyyy",
                         )
                       : "-"}
                   </TableCell>
@@ -263,7 +263,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       >
                         {formatCurrency(
                           client.total_amount_paid,
-                          client.currency
+                          client.currency,
                         )}
                       </Typography>
                       {client.gst_on_paid &&
@@ -277,7 +277,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           + GST (Paid):{" "}
                           {formatCurrency(
                             client.gst_amount_paid,
-                            client.currency
+                            client.currency,
                           )}
                         </Typography>
                       ) : (
@@ -294,7 +294,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           + GST (Upgrade):{" "}
                           {formatCurrency(
                             client.gst_amount_upgrade,
-                            client.currency
+                            client.currency,
                           )}
                         </Typography>
                       ) : (
@@ -312,7 +312,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           Total:{" "}
                           {formatCurrency(
                             client.total_with_gst,
-                            client.currency
+                            client.currency,
                           )}
                         </Typography>
                       ) : (
@@ -442,7 +442,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   Total Amount Paid:{" "}
                   {formatCurrency(
                     detailsDialog.client.total_amount_paid,
-                    detailsDialog.client.currency
+                    detailsDialog.client.currency,
                   )}
                 </Typography>
                 {detailsDialog.client.gst_on_paid &&
@@ -456,7 +456,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       GST on Paid Amount (18%):{" "}
                       {formatCurrency(
                         detailsDialog.client.gst_amount_paid,
-                        detailsDialog.client.currency
+                        detailsDialog.client.currency,
                       )}
                     </Typography>
                   )}
@@ -467,7 +467,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       GST on Upgrade Amount (18%):{" "}
                       {formatCurrency(
                         detailsDialog.client.gst_amount_upgrade,
-                        detailsDialog.client.currency
+                        detailsDialog.client.currency,
                       )}
                     </Typography>
                   )}
@@ -485,7 +485,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       Total with GST:{" "}
                       {formatCurrency(
                         detailsDialog.client.total_with_gst,
-                        detailsDialog.client.currency
+                        detailsDialog.client.currency,
                       )}
                     </Typography>
                   </>
@@ -549,7 +549,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
 
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary">
-                    GST Number
+                    GST/Tax Document Number
                   </Typography>
                   <Typography variant="body2" fontWeight={500}>
                     {detailsDialog.client.company_gst_number || "-"}
@@ -669,7 +669,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                       >
                         {formatCurrency(
                           detailsDialog.client.plan_amount,
-                          detailsDialog.client.currency
+                          detailsDialog.client.currency,
                         )}
                       </Typography>
                     </Box>
@@ -687,7 +687,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           >
                             {formatCurrency(
                               detailsDialog.client.upgrade_payment_amount,
-                              detailsDialog.client.currency
+                              detailsDialog.client.currency,
                             )}
                           </Typography>
                         </Box>
@@ -753,7 +753,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   >
                     {formatCurrency(
                       detailsDialog.client.paid_amount,
-                      detailsDialog.client.currency
+                      detailsDialog.client.currency,
                     )}
                   </Typography>
                 </Grid>
@@ -766,7 +766,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     {detailsDialog.client.paid_amount_date
                       ? format(
                           new Date(detailsDialog.client.paid_amount_date),
-                          "MMM dd, yyyy"
+                          "MMM dd, yyyy",
                         )
                       : "-"}
                   </Typography>
@@ -783,7 +783,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   >
                     {formatCurrency(
                       detailsDialog.client.pending_amount,
-                      detailsDialog.client.currency
+                      detailsDialog.client.currency,
                     )}
                   </Typography>
                 </Grid>
@@ -805,7 +805,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     {detailsDialog.client.pending_amount_date
                       ? format(
                           new Date(detailsDialog.client.pending_amount_date),
-                          "MMM dd, yyyy"
+                          "MMM dd, yyyy",
                         )
                       : "-"}
                   </Typography>
@@ -822,7 +822,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   >
                     {formatCurrency(
                       detailsDialog.client.upgrade_payment_amount,
-                      detailsDialog.client.currency
+                      detailsDialog.client.currency,
                     )}
                   </Typography>
                 </Grid>
@@ -835,7 +835,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                     {detailsDialog.client.upgrade_payment_date
                       ? format(
                           new Date(detailsDialog.client.upgrade_payment_date),
-                          "MMM dd, yyyy"
+                          "MMM dd, yyyy",
                         )
                       : "-"}
                   </Typography>
@@ -848,12 +848,12 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   <Typography variant="body2" fontWeight={500}>
                     <Chip
                       label={getPaymentStatusLabel(
-                        detailsDialog.client.payment_status
+                        detailsDialog.client.payment_status,
                       )}
                       size="small"
                       color={
                         getPaymentStatusColor(
-                          detailsDialog.client.payment_status
+                          detailsDialog.client.payment_status,
                         ) as any
                       }
                     />
@@ -874,8 +874,8 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                           detailsDialog.client.payment_percentage === 100
                             ? "success"
                             : detailsDialog.client.payment_percentage > 0
-                            ? "warning"
-                            : "error"
+                              ? "warning"
+                              : "error"
                         }
                       />
                       <Typography variant="caption" fontWeight={500}>
@@ -935,7 +935,7 @@ const ConvertedClientTable: React.FC<ConvertedClientTableProps> = ({
                   <Typography variant="body2" fontWeight={500}>
                     {format(
                       new Date(detailsDialog.client.created_at),
-                      "MMM dd, yyyy HH:mm"
+                      "MMM dd, yyyy HH:mm",
                     )}
                   </Typography>
                 </Grid>

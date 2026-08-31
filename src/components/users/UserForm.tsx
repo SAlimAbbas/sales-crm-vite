@@ -159,7 +159,7 @@ const UserForm: React.FC<UserFormProps> = ({
 
   const roleOptions = [
     { value: "salesperson", label: "Salesperson" },
-    { value: "manager", label: "Manager" },
+    { value: "manager", label: "Team Leader" },
     { value: "lead_executive", label: "Lead Executive" },
     { value: "backend", label: "Backend Staff" },
     ...((currentUser?.role === "admin" || currentUser?.role === "manager_staff")
@@ -248,7 +248,7 @@ const UserForm: React.FC<UserFormProps> = ({
           {formik.values.role === "salesperson" && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormSelect
-                label="Assign Manager"
+                label="Assign Team Leader"
                 name="manager_id"
                 value={formik.values.manager_id}
                 onChange={(value) => formik.setFieldValue("manager_id", value)}

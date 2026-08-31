@@ -66,22 +66,43 @@ const UserManagement: React.FC = () => {
       id: "role",
       label: "Role",
       sortable: true,
-      render: (value: string) => (
-        <Chip
-          label={value === "manager_staff" ? "Manager Staff" : value}
-          size="small"
-          color={
-            value === "admin"
-              ? "error"
-              : value === "manager_staff"
-                ? "secondary"
-                : value === "manager"
-                  ? "warning"
-                  : "primary"
+      render: (value: string) => {
+        const getRoleLabel = (role: string) => {
+          switch (role) {
+            case "admin":
+              return "Admin";
+            case "manager_staff":
+              return "Manager Staff";
+            case "manager":
+              return "Team Leader";
+            case "salesperson":
+              return "Salesperson";
+            case "lead_executive":
+              return "Lead Executive";
+            case "backend":
+              return "Backend";
+            default:
+              return role;
           }
-          variant="outlined"
-        />
-      ),
+        };
+
+        return (
+          <Chip
+            label={getRoleLabel(value)}
+            size="small"
+            color={
+              value === "admin"
+                ? "error"
+                : value === "manager_staff"
+                  ? "secondary"
+                  : value === "manager"
+                    ? "warning"
+                    : "primary"
+            }
+            variant="outlined"
+          />
+        );
+      },
     },
     {
       id: "shift",
