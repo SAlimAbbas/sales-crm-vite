@@ -11,10 +11,12 @@ import {
   Chip,
   Badge,
   Drawer,
+  Tooltip,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
+  Campaign as CampaignIcon,
   Brightness4,
   Brightness7,
 } from "@mui/icons-material";
@@ -22,8 +24,11 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useNotificationSystem } from "../../contexts/NotificationSystemContext";
+import { useQuery } from "@tanstack/react-query";
+import { announcementService, Announcement } from "../../services/announcementService";
 import NotificationPanel from "../notifications/NotificationPanel";
 import ClockInOutButton from "../attendance/ClockInOutButton";
+import AnnouncementDrawer from "../announcement/AnnouncementDrawer";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -39,6 +44,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [notificationDrawerOpen, setNotificationDrawerOpen] =
     React.useState(false);
+  const [announcementDrawerOpen, setAnnouncementDrawerOpen] =
+    React.useState(false);
+
+  const { data: announcementData } = useQuery<any>({
+    queryKey: ["my-announcements"],
+    queryFn: () => announcementService.getMyAnnouncements(),
+    staleTime: 2 * 60 * 1000,
+  });
+  const myAnnouncements: Announcement[] = announcementData?.data ?? [];
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -99,26 +113,43 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {user?.role !== "admin" && <ClockInOutButton />}
             {/* Theme Toggle Button */}
-            <IconButton
-              onClick={toggleTheme}
-              color="inherit"
-              aria-label="toggle theme"
-              sx={{ mr: 1 }}
-            >
-              {isDark ? <Brightness7 /> : <Brightness4 />}
-            </IconButton>
+            <Tooltip title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+              <IconButton
+                onClick={toggleTheme}
+                color="inherit"
+                aria-label="toggle theme"
+              >
+                {isDark ? <Brightness7 /> : <Brightness4 />}
+              </IconButton>
+            </Tooltip>
+
+            {/* Announcement Icon Button (Right after Theme Toggle) */}
+            <Tooltip title="Company Announcements">
+              <IconButton
+                size="large"
+                aria-label="show announcements"
+                color="inherit"
+                onClick={() => setAnnouncementDrawerOpen(true)}
+              >
+                <Badge badgeContent={myAnnouncements.length} color="warning">
+                  <CampaignIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
 
             {/* Notification Button with Live Badge */}
-            <IconButton
-              size="large"
-              aria-label="show notifications"
-              color="inherit"
-              onClick={handleNotificationsOpen}
-            >
-              <Badge badgeContent={unreadCount} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            <Tooltip title="Notifications">
+              <IconButton
+                size="large"
+                aria-label="show notifications"
+                color="inherit"
+                onClick={handleNotificationsOpen}
+              >
+                <Badge badgeContent={unreadCount} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
 
             {/* User Profile Chip */}
             <Chip
@@ -176,6 +207,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       >
         <NotificationPanel onClose={handleNotificationDrawerClose} />
       </Drawer>
+
+      {/* Announcement Drawer */}
+      <AnnouncementDrawer
+        open={announcementDrawerOpen}
+        onClose={() => setAnnouncementDrawerOpen(false)}
+        announcements={myAnnouncements}
+      />
     </>
   );
 };

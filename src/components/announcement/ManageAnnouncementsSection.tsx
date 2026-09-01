@@ -451,11 +451,31 @@ const ManageAnnouncementsSection: React.FC = () => {
                     <TableCell>{formatDateForDisplay(a.start_date)}</TableCell>
                     <TableCell>{formatDateForDisplay(a.end_date)}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={a.is_active ? "Active" : "Inactive"}
-                        color={a.is_active ? "success" : "default"}
-                        size="small"
-                      />
+                      {(() => {
+                        const todayStr = new Date().toISOString().split("T")[0];
+                        const isExpired = a.end_date < todayStr;
+                        const isActuallyActive = a.is_active && !isExpired;
+
+                        return (
+                          <Chip
+                            label={
+                              !a.is_active
+                                ? "Inactive"
+                                : isExpired
+                                  ? "Expired"
+                                  : "Active"
+                            }
+                            color={
+                              isActuallyActive
+                                ? "success"
+                                : isExpired
+                                  ? "warning"
+                                  : "default"
+                            }
+                            size="small"
+                          />
+                        );
+                      })()}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Edit">
