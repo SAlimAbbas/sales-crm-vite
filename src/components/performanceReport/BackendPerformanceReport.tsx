@@ -48,6 +48,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const MONTHS = [
+  { value: "all", label: "All Time (Year Total)" },
   { value: 1, label: "January" },
   { value: 2, label: "February" },
   { value: 3, label: "March" },
@@ -74,7 +75,7 @@ const PDF_TABLE_HEAD = [
   "Pending/In Progress",
   "On-Time Rate %",
   "Admin Approval",
-  "Notes",
+  "Admin Remarks",
 ];
 
 const BackendPerformanceReport: React.FC = () => {
@@ -82,7 +83,7 @@ const BackendPerformanceReport: React.FC = () => {
   const { showNotification } = useNotification();
   const queryClient = useQueryClient();
 
-  const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
+  const [month, setMonth] = useState<number | string>(new Date().getMonth() + 1);
   const [year, setYear] = useState<number>(CURRENT_YEAR);
   const [search, setSearch] = useState<string>("");
 
@@ -95,29 +96,9 @@ const BackendPerformanceReport: React.FC = () => {
   const [selectedRow, setSelectedRow] = useState<BackendPerformanceRow | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<"pending" | "positive" | "negative">("pending");
   const [approvalNotes, setApprovalNotes] = useState<string>("");
+  const [notesError, setNotesError] = useState<string>("");
 
-  const handleChipClick = (event: React.MouseEvent<HTMLElement>, row: BackendPerformanceRow) => {
-    if (!user || (user.role !== "admin" && user.role !== "manager_staff")) return;
-    setMenuAnchorEl(event.currentTarget);
-    setMenuRow(row);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setMenuRow(null);
-  };
-
-  const handleQuickApprovalSelect = (status: "positive" | "negative" | "pending") => {
-    if (!menuRow) return;
-    approvalMutation.mutate({
-      user_id: menuRow.user_id,
-      month,
-      year,
-      admin_approval: status,
-      notes: menuRow.notes || "",
-    });
-    handleMenuClose();
-  };
+  const isAdminOrManagerStaff = user?.role === "admin" || user?.role === "manager_staff";
 
   // Query Backend Report
   const { data, isLoading, isError, refetch } = useQuery<any>({
@@ -125,7 +106,8 @@ const BackendPerformanceReport: React.FC = () => {
     queryFn: () => performanceService.getBackendReport({ month, year, search }),
   });
 
-  const rows: BackendPerformanceRow[] = data?.data || [];
+  // Handle both unrolled array and wrapped response formats
+  const rows: BackendPerformanceRow[] = data?.data?.data ?? data?.data ?? [];
 
   // Mutation for Admin Approval
   const approvalMutation = useMutation({
@@ -136,14 +118,29 @@ const BackendPerformanceReport: React.FC = () => {
       handleCloseDialog();
     },
     onError: (err: any) => {
-      showNotification(err.response?.data?.message || "Failed to update approval", "error");
+      const msg = err?.response?.data?.errors?.admin_remarks?.[0]
+        || err?.response?.data?.message
+        || "Failed to update approval";
+      showNotification(msg, "error");
     },
   });
 
-  const handleOpenDialog = (row: BackendPerformanceRow) => {
+  const handleChipClick = (event: React.MouseEvent<HTMLElement>, row: BackendPerformanceRow) => {
+    if (!isAdminOrManagerStaff) return;
+    setMenuAnchorEl(event.currentTarget);
+    setMenuRow(row);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuRow(null);
+  };
+
+  const handleOpenDialog = (row: BackendPerformanceRow, defaultStatus?: "pending" | "positive" | "negative") => {
     setSelectedRow(row);
-    setApprovalStatus(row.admin_approval);
-    setApprovalNotes(row.notes || "");
+    setApprovalStatus(defaultStatus ?? row.admin_approval);
+    setApprovalNotes(row.admin_remarks || row.notes || "");
+    setNotesError("");
     setDialogOpen(true);
   };
 
@@ -152,16 +149,45 @@ const BackendPerformanceReport: React.FC = () => {
     setSelectedRow(null);
     setApprovalStatus("pending");
     setApprovalNotes("");
+    setNotesError("");
+  };
+
+  const handleQuickApprovalSelect = (status: "positive" | "negative" | "pending") => {
+    if (!menuRow) return;
+    const row = menuRow;
+    handleMenuClose();
+
+    // If negative is selected, open dialog to mandate Admin Remarks
+    if (status === "negative") {
+      handleOpenDialog(row, "negative");
+      return;
+    }
+
+    approvalMutation.mutate({
+      user_id: row.user_id,
+      month,
+      year,
+      admin_approval: status,
+      admin_remarks: row.admin_remarks || row.notes || "",
+      notes: row.admin_remarks || row.notes || "",
+    });
   };
 
   const handleSaveApproval = () => {
     if (!selectedRow) return;
+
+    if (approvalStatus === "negative" && !approvalNotes.trim()) {
+      setNotesError("Admin Remarks / Comments are mandatory when marking performance as Negative.");
+      return;
+    }
+
     approvalMutation.mutate({
       user_id: selectedRow.user_id,
       month,
       year,
       admin_approval: approvalStatus,
-      notes: approvalNotes,
+      admin_remarks: approvalNotes.trim(),
+      notes: approvalNotes.trim(),
     });
   };
 
@@ -173,7 +199,7 @@ const BackendPerformanceReport: React.FC = () => {
     }
 
     const doc = new jsPDF("landscape");
-    const monthLabel = MONTHS.find((m) => m.value === month)?.label || month;
+    const monthLabel = month === "all" ? "All Time" : (MONTHS.find((m) => m.value === month)?.label || month);
 
     // Header Title
     doc.setFontSize(16);
@@ -190,7 +216,7 @@ const BackendPerformanceReport: React.FC = () => {
       row.pending_tasks.toString(),
       `${row.on_time_rate}%`,
       row.admin_approval.toUpperCase(),
-      row.notes || "-",
+      (row.admin_remarks || row.notes || "-").replace(/[^\x00-\x7F]/g, ""),
     ]);
 
     autoTable(doc, {
@@ -208,17 +234,12 @@ const BackendPerformanceReport: React.FC = () => {
   // Summary Metrics
   const totalBackendUsers = rows.length;
   const totalTasksAssigned = rows.reduce((acc, r) => acc + r.total_tasks, 0);
-  const totalCompletedOnTime = rows.reduce((acc, r) => acc + r.completed_on_time, 0);
   const avgOnTimeRate =
-    data?.summary?.avg_on_time_rate !== undefined
-      ? Number(data.summary.avg_on_time_rate).toFixed(1)
-      : totalTasksAssigned > 0
-      ? ((totalCompletedOnTime / totalTasksAssigned) * 100).toFixed(1)
+    totalBackendUsers > 0
+      ? (rows.reduce((acc, r) => acc + r.on_time_rate, 0) / totalBackendUsers).toFixed(1)
       : "0";
   const totalPositive = rows.filter((r) => r.admin_approval === "positive").length;
   const totalNegative = rows.filter((r) => r.admin_approval === "negative").length;
-
-  const isAdminOrManagerStaff = user?.role === "admin" || user?.role === "manager_staff";
 
   return (
     <Box>
@@ -231,7 +252,6 @@ const BackendPerformanceReport: React.FC = () => {
               <Typography variant="body2" color="textSecondary">
                 Total Tasks Assigned
               </Typography>
-
               <Typography variant="h5" fontWeight="bold">
                 {totalTasksAssigned}
               </Typography>
@@ -292,7 +312,7 @@ const BackendPerformanceReport: React.FC = () => {
               <Select
                 value={month}
                 label="Month"
-                onChange={(e) => setMonth(Number(e.target.value))}
+                onChange={(e) => setMonth(e.target.value)}
               >
                 {MONTHS.map((m) => (
                   <MenuItem key={m.value} value={m.value}>
@@ -367,7 +387,7 @@ const BackendPerformanceReport: React.FC = () => {
               <TableCell align="center"><strong>Pending / In Progress</strong></TableCell>
               <TableCell align="center"><strong>On-Time Rate %</strong></TableCell>
               <TableCell align="center"><strong>Admin Approval</strong></TableCell>
-              <TableCell><strong>Notes</strong></TableCell>
+              <TableCell><strong>Admin Remarks</strong></TableCell>
               {isAdminOrManagerStaff && <TableCell align="right"><strong>Actions</strong></TableCell>}
             </TableRow>
           </TableHead>
@@ -461,7 +481,7 @@ const BackendPerformanceReport: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="textSecondary">
-                      {row.notes || "-"}
+                      {row.admin_remarks || row.notes || "-"}
                     </Typography>
                   </TableCell>
 
@@ -500,7 +520,12 @@ const BackendPerformanceReport: React.FC = () => {
                 <Select
                   value={approvalStatus}
                   label="Admin Approval"
-                  onChange={(e) => setApprovalStatus(e.target.value as any)}
+                  onChange={(e) => {
+                    setApprovalStatus(e.target.value as any);
+                    if (e.target.value !== "negative") {
+                      setNotesError("");
+                    }
+                  }}
                 >
                   <MenuItem value="positive">Positive (Approved)</MenuItem>
                   <MenuItem value="negative">Negative (Needs Improvement)</MenuItem>
@@ -509,14 +534,21 @@ const BackendPerformanceReport: React.FC = () => {
               </FormControl>
 
               <TextField
-                label="Notes / Comments"
+                label={approvalStatus === "negative" ? "Admin Remarks / Comments *" : "Admin Remarks / Comments"}
                 multiline
                 rows={3}
                 fullWidth
                 size="small"
                 value={approvalNotes}
-                onChange={(e) => setApprovalNotes(e.target.value)}
-                placeholder="Enter approval notes or performance feedback..."
+                onChange={(e) => {
+                  setApprovalNotes(e.target.value);
+                  if (e.target.value.trim()) {
+                    setNotesError("");
+                  }
+                }}
+                error={Boolean(notesError)}
+                helperText={notesError || (approvalStatus === "negative" ? "Required for Negative approval" : "Optional feedback")}
+                placeholder="Enter admin remarks or performance feedback..."
               />
             </Box>
           )}

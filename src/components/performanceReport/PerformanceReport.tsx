@@ -51,10 +51,12 @@ import autoTable from "jspdf-autotable";
 import { userService } from "../../services/userService";
 import SetTargetsPanel from "./SetTargetsPanel";
 import BackendPerformanceReport from "./BackendPerformanceReport";
+import BackendMemberPerformance from "./BackendMemberPerformance";
 
 // ── Constants (outside component) ────────────────────────────────────────────
 
 const MONTHS = [
+  { value: "all", label: "All Time (Year Total)" },
   { value: 1, label: "January" },
   { value: 2, label: "February" },
   { value: 3, label: "March" },
@@ -97,7 +99,7 @@ const PDF_TABLE_HEAD = [
   "Overachievement %",
   "Counters Target",
   "Counters Achieved",
-  "Counter Achievement %", // ADD
+  "Counter Achievement %",
   "Notes",
 ];
 
@@ -112,13 +114,9 @@ const getPDFTableStyles = () => ({
     fillColor: [245, 248, 255] as [number, number, number],
   },
   margin: { left: 10, right: 10 },
-  didDrawCell(data: any) {
-    // Do nothing — row highlighting is handled via didParseCell on the Name column
-  },
   didParseCell(data: any) {
     if (data.section !== "body") return;
 
-    // Get the row data via data.row.index
     const row = data.row.raw as string[];
 
     // Overachievement % is index 8
@@ -146,7 +144,7 @@ const getPDFTableStyles = () => ({
     }
 
     // Highlight entire row green if either target is 100%+ achieved
-    const achievementPct = parseFloat(String(row[7]).replace("%", "")); // Achievement %
+    const achievementPct = parseFloat(String(row[7]).replace("%", ""));
     const counterAchievePct =
       String(row[11]) !== "-"
         ? parseFloat(String(row[11]).replace("%", ""))
@@ -157,7 +155,7 @@ const getPDFTableStyles = () => ({
       (counterAchievePct !== null && counterAchievePct >= 100);
 
     if (eitherAchieved) {
-      data.cell.styles.fillColor = [232, 245, 233]; // light green background
+      data.cell.styles.fillColor = [232, 245, 233];
       data.cell.styles.textColor = data.cell.styles.textColor ?? [0, 0, 0];
     }
   },
@@ -170,6 +168,11 @@ const PerformanceReport: React.FC = () => {
   const { showNotification } = useNotification();
   const queryClient = useQueryClient();
 
+  // If backend staff or lead executive, render their personal report
+  if (user?.role === "backend" || user?.role === "lead_executive") {
+    return <BackendMemberPerformance />;
+  }
+
   // Main view tab: 0 = Sales & Managers, 1 = Backend Staff
   const [mainTab, setMainTab] = useState(0);
 
@@ -177,7 +180,7 @@ const PerformanceReport: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   // Report filters
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [month, setMonth] = useState<number | string>(new Date().getMonth() + 1);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [shift, setShift] = useState("");
   const [managerId, setManagerId] = useState("all");
@@ -268,7 +271,7 @@ const PerformanceReport: React.FC = () => {
     });
   };
 
-  // ── Row mapper for PDF (inside component — accesses rows) ───────────────────
+  // ── Row mapper for PDF ──────────────────────────────────────────────────────
 
   const mapRowForPDF = (r: PerformanceReportRow) => [
     r.name,
@@ -280,16 +283,16 @@ const PerformanceReport: React.FC = () => {
     formatINRPDF(r.achieved_amount),
     `${r.achievement_percent}%`,
     `${r.overachievement_percent > 0 ? "+" : ""}${r.overachievement_percent}%`,
-    r.counters_target || "-", // ADD
-    r.counters_achieved || "-", // ADD
-    r.counters_target > 0 ? `${r.counters_achievement_percent}%` : "-", // ADD
+    r.counters_target || "-",
+    r.counters_achieved || "-",
+    r.counters_target > 0 ? `${r.counters_achievement_percent}%` : "-",
     (r.notes || "-").replace(/[^\x00-\x7F]/g, ""),
   ];
 
   // ── Download Excel ──────────────────────────────────────────────────────────
 
   const downloadExcel = () => {
-    const monthLabel = MONTHS.find((m) => m.value === month)?.label;
+    const monthLabel = month === "all" ? "All_Time" : (MONTHS.find((m) => m.value === month)?.label || month);
     const ws = XLSX.utils.json_to_sheet(
       rows.map((r) => ({
         Name: r.name,
@@ -317,7 +320,7 @@ const PerformanceReport: React.FC = () => {
   // ── Download PDF ────────────────────────────────────────────────────────────
 
   const downloadPDF = async () => {
-    const monthLabel = MONTHS.find((m) => m.value === month)?.label;
+    const monthLabel = month === "all" ? "All Time" : (MONTHS.find((m) => m.value === month)?.label || month);
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -325,7 +328,6 @@ const PerformanceReport: React.FC = () => {
     });
     const pageW = doc.internal.pageSize.getWidth();
 
-    // With this:
     try {
       const img = new Image();
       img.src = "/images/exporters-worlds-full-logo.png";
@@ -339,7 +341,6 @@ const PerformanceReport: React.FC = () => {
       const base64 = canvas.toDataURL("image/png");
       doc.addImage(base64, "PNG", 10, 8, 36, 18);
     } catch {
-      // fallback to placeholder if image fails
       doc.setDrawColor(200, 200, 200);
       doc.setFillColor(240, 240, 240);
       doc.roundedRect(10, 8, 36, 18, 2, 2, "FD");
@@ -385,7 +386,6 @@ const PerformanceReport: React.FC = () => {
     let startY = filterParts.length ? 47 : 42;
 
     if (isFiltered) {
-      // Single flat table when filters are applied
       autoTable(doc, {
         startY,
         head: [PDF_TABLE_HEAD],
@@ -393,7 +393,6 @@ const PerformanceReport: React.FC = () => {
         ...getPDFTableStyles(),
       });
     } else {
-      // Group by Type + Shift
       const combos = [
         { type: "Domestic", shift: "Day" },
         { type: "Domestic", shift: "Night" },
@@ -410,14 +409,12 @@ const PerformanceReport: React.FC = () => {
         }
       });
 
-      // Users with missing type/shift
       const ungrouped = rows.filter((r) => r.type === "-" || r.shift === "-");
       if (ungrouped.length > 0) {
         groups.push({ label: "Others", data: ungrouped });
       }
 
       groups.forEach((group) => {
-        // Blue section heading bar
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
         doc.setFillColor(25, 118, 210);
@@ -437,16 +434,13 @@ const PerformanceReport: React.FC = () => {
       });
     }
 
-    // Motivational closing section
     const finalY = (doc as any).lastAutoTable.finalY + 12;
     const centerX = pageW / 2;
 
-    // Divider
     doc.setDrawColor(25, 118, 210);
     doc.setLineWidth(0.3);
     doc.line(10, finalY, pageW - 10, finalY);
 
-    // Quote
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
     doc.setFont("helvetica", "bolditalic");
@@ -463,7 +457,6 @@ const PerformanceReport: React.FC = () => {
       { align: "center" },
     );
 
-    // Report created by line
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
@@ -474,7 +467,6 @@ const PerformanceReport: React.FC = () => {
       { align: "center" },
     );
 
-    // Footer on every page
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -540,13 +532,13 @@ const PerformanceReport: React.FC = () => {
           <Tab
             icon={<ReportIcon />}
             iconPosition="start"
-            label="Sales & Managers Performance"
+            label="SALES & MANAGERS PERFORMANCE"
             value={0}
           />
           <Tab
             icon={<ReportIcon />}
             iconPosition="start"
-            label="Backend Staff Performance"
+            label="BACKEND STAFF PERFORMANCE"
             value={1}
           />
         </Tabs>
@@ -563,417 +555,438 @@ const PerformanceReport: React.FC = () => {
                 <Tab
                   icon={<ReportIcon />}
                   iconPosition="start"
-                  label="Report"
+                  label="REPORT"
                   value={0}
                 />
                 <Tab
                   icon={<TargetIcon />}
                   iconPosition="start"
-                  label="Set Targets"
+                  label="SET TARGETS"
                   value={1}
                 />
               </Tabs>
             </Paper>
           )}
 
-      {/* ── Report Tab ──────────────────────────────────────────────────────── */}
-      {activeTab === 0 && (
-        <>
-          {/* Filters */}
-          <Paper sx={{ p: 2, mb: 3 }}>
-            <Box display="flex" gap={2} flexWrap="wrap">
-              <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel>Month</InputLabel>
-                <Select
-                  value={month}
-                  label="Month"
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                >
-                  {MONTHS.map((m) => (
-                    <MenuItem key={m.value} value={m.value}>
-                      {m.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+          {/* ── Report Tab ──────────────────────────────────────────────────────── */}
+          {activeTab === 0 && (
+            <>
+              {/* Filters */}
+              <Paper sx={{ p: 2, mb: 3 }}>
+                <Box display="flex" gap={2} flexWrap="wrap">
+                  <FormControl size="small" sx={{ minWidth: 140 }}>
+                    <InputLabel>Month</InputLabel>
+                    <Select
+                      value={month}
+                      label="Month"
+                      onChange={(e) => setMonth(e.target.value)}
+                    >
+                      {MONTHS.map((m) => (
+                        <MenuItem key={m.value} value={m.value}>
+                          {m.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 110 }}>
-                <InputLabel>Year</InputLabel>
-                <Select
-                  value={year}
-                  label="Year"
-                  onChange={(e) => setYear(Number(e.target.value))}
-                >
-                  {YEARS.map((y) => (
-                    <MenuItem key={y} value={y}>
-                      {y}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <FormControl size="small" sx={{ minWidth: 110 }}>
+                    <InputLabel>Year</InputLabel>
+                    <Select
+                      value={year}
+                      label="Year"
+                      onChange={(e) => setYear(Number(e.target.value))}
+                    >
+                      {YEARS.map((y) => (
+                        <MenuItem key={y} value={y}>
+                          {y}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel>Shift</InputLabel>
-                <Select
-                  value={shift}
-                  label="Shift"
-                  onChange={(e) => setShift(e.target.value)}
-                >
-                  <MenuItem value="">All Shifts</MenuItem>
-                  <MenuItem value="Day">Day</MenuItem>
-                  <MenuItem value="Night">Night</MenuItem>
-                </Select>
-              </FormControl>
+                  <FormControl size="small" sx={{ minWidth: 130 }}>
+                    <InputLabel>Shift</InputLabel>
+                    <Select
+                      value={shift}
+                      label="Shift"
+                      onChange={(e) => setShift(e.target.value)}
+                    >
+                      <MenuItem value="">All Shifts</MenuItem>
+                      <MenuItem value="Day">Day</MenuItem>
+                      <MenuItem value="Night">Night</MenuItem>
+                    </Select>
+                  </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>Filter by Team Leader</InputLabel>
-                <Select
-                  value={managerId}
-                  label="Filter by Team Leader"
-                  onChange={(e) => setManagerId(e.target.value)}
-                >
-                  <MenuItem value="all">All Team Leaders</MenuItem>
-                  {managersList.map((m: any) => (
-                    <MenuItem key={m.id} value={m.id.toString()}>
-                      {m.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </Paper>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel>Filter by Team Leader</InputLabel>
+                    <Select
+                      value={managerId}
+                      label="Filter by Team Leader"
+                      onChange={(e) => setManagerId(e.target.value)}
+                    >
+                      <MenuItem value="all">All Team Leaders</MenuItem>
+                      {managersList.map((m: any) => (
+                        <MenuItem key={m.id} value={m.id.toString()}>
+                          {m.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Paper>
 
-          {/* Table */}
-          <Paper sx={{ p: 2 }}>
-            {isLoading ? (
-              <Box py={6} display="flex" justifyContent="center">
-                <CircularProgress />
-              </Box>
-            ) : rows.length === 0 ? (
-              <Alert severity="info">
-                No data found for the selected filters.
-              </Alert>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Name</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Role</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Shift</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Type</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Manager</strong>
-                      </TableCell>
-                      <TableCell align="right">
-                        <strong>Target (₹)</strong>
-                      </TableCell>
-                      <TableCell align="right">
-                        <strong>Achieved (₹)</strong>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 160 }}>
-                        <strong>Achievement</strong>
-                      </TableCell>
-                      <TableCell align="center">
-                        <strong>Overachievement</strong>
-                      </TableCell>
-                      <TableCell align="center">
-                        <strong>Counters Target</strong>
-                      </TableCell>
-                      <TableCell align="center">
-                        <strong>Counters Achieved</strong>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 160 }}>
-                        <strong>Counter Achievement</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Notes</strong>
-                      </TableCell>
-                      {(user?.role === "admin" || user?.role === "manager_staff") && (
-                        <TableCell align="center">
-                          <strong>Edit</strong>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((row) => {
-                      const isOver = row.overachievement_percent >= 0;
-                      const progressColor =
-                        row.achievement_percent >= 100
-                          ? "success"
-                          : row.achievement_percent >= 70
-                            ? "warning"
-                            : "error";
-
-                      return (
-                        <TableRow key={row.user_id} hover>
+              {/* Table */}
+              <Paper sx={{ p: 2 }}>
+                {isLoading ? (
+                  <Box py={6} display="flex" justifyContent="center">
+                    <CircularProgress />
+                  </Box>
+                ) : rows.length === 0 ? (
+                  <Alert severity="info">
+                    No data found for the selected filters.
+                  </Alert>
+                ) : (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
                           <TableCell>
-                            <Typography variant="body2" fontWeight={600}>
-                              {row.name}
-                            </Typography>
+                            <strong>Name</strong>
                           </TableCell>
                           <TableCell>
-                            <Chip
-                              label={row.role}
-                              size="small"
-                              variant="outlined"
-                            />
+                            <strong>Role</strong>
                           </TableCell>
-                          <TableCell>{row.shift}</TableCell>
-                          <TableCell>{row.type}</TableCell>
-                          <TableCell>{row.manager_name}</TableCell>
-
+                          <TableCell>
+                            <strong>Shift</strong>
+                          </TableCell>
+                          <TableCell>
+                            <strong>Type</strong>
+                          </TableCell>
+                          <TableCell>
+                            <strong>Manager</strong>
+                          </TableCell>
                           <TableCell align="right">
-                            {row.target_amount > 0 ? (
-                              formatINR(row.target_amount)
-                            ) : (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                Not set
-                              </Typography>
-                            )}
+                            <strong>Target (₹)</strong>
                           </TableCell>
-
                           <TableCell align="right">
-                            {formatINR(row.achieved_amount)}
+                            <strong>Achieved (₹)</strong>
                           </TableCell>
-
-                          <TableCell>
-                            <Box>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {row.achievement_percent}%
-                              </Typography>
-                              <LinearProgress
-                                variant="determinate"
-                                value={Math.min(row.achievement_percent, 100)}
-                                color={progressColor}
-                                sx={{ height: 6, borderRadius: 3, mt: 0.5 }}
-                              />
-                            </Box>
-                          </TableCell>
-
-                          <TableCell align="center">
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                              gap={0.5}
-                            >
-                              {isOver ? (
-                                <TrendingUpIcon
-                                  fontSize="small"
-                                  color="success"
-                                />
-                              ) : (
-                                <TrendingDownIcon
-                                  fontSize="small"
-                                  color="error"
-                                />
-                              )}
-                              <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                color={isOver ? "success.main" : "error.main"}
-                              >
-                                {isOver ? "+" : ""}
-                                {row.overachievement_percent}%
-                              </Typography>
-                            </Box>
-                          </TableCell>
-
-                          <TableCell align="center">
-                            {row.counters_target || "-"}
+                          <TableCell sx={{ minWidth: 160 }}>
+                            <strong>Achievement</strong>
                           </TableCell>
                           <TableCell align="center">
-                            {row.counters_achieved || "-"}
+                            <strong>Overachievement</strong>
+                          </TableCell>
+                          <TableCell align="center">
+                            <strong>Counters Target</strong>
+                          </TableCell>
+                          <TableCell align="center">
+                            <strong>Counters Achieved</strong>
+                          </TableCell>
+                          <TableCell sx={{ minWidth: 160 }}>
+                            <strong>Counter Achievement</strong>
                           </TableCell>
                           <TableCell>
-                            {row.counters_target > 0 ? (
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {row.counters_achievement_percent}%
-                                </Typography>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={Math.min(
-                                    row.counters_achievement_percent,
-                                    100,
-                                  )}
-                                  color={
-                                    row.counters_achievement_percent >= 100
-                                      ? "success"
-                                      : row.counters_achievement_percent >= 70
-                                        ? "warning"
-                                        : "error"
-                                  }
-                                  sx={{ height: 6, borderRadius: 3, mt: 0.5 }}
-                                />
-                              </Box>
-                            ) : (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                Not set
-                              </Typography>
-                            )}
+                            <strong>Notes</strong>
                           </TableCell>
-
-                          <TableCell sx={{ maxWidth: 200 }}>
-                            <Typography
-                              variant="body2"
-                              color={
-                                row.notes ? "text.primary" : "text.secondary"
-                              }
-                              sx={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                maxWidth: 180,
-                              }}
-                              title={row.notes || ""}
-                            >
-                              {row.notes || "-"}
-                            </Typography>
-                          </TableCell>
-
                           {(user?.role === "admin" || user?.role === "manager_staff") && (
                             <TableCell align="center">
-                              <Tooltip
-                                title={
-                                  row.target_id ? "Edit Target" : "Set Target"
-                                }
-                              >
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleOpenTarget(row)}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
+                              <strong>Edit</strong>
                             </TableCell>
                           )}
                         </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </Paper>
-        </>
-      )}
+                      </TableHead>
+                      <TableBody>
+                        {rows.map((row) => {
+                          const isOver = row.overachievement_percent >= 0;
+                          const progressColor =
+                            row.achievement_percent >= 100
+                              ? "success"
+                              : row.achievement_percent >= 70
+                                ? "warning"
+                                : "error";
 
-      {/* ── Set Targets Tab ─────────────────────────────────────────────────── */}
-      {activeTab === 1 && (user?.role === "admin" || user?.role === "manager_staff") && <SetTargetsPanel />}
+                          const counterAchievePct =
+                            row.counters_target > 0 && row.counters_achieved > 0
+                              ? Math.round((row.counters_achieved / row.counters_target) * 100)
+                              : 0;
 
-      {/* ── Inline Edit Dialog ───────────────────────────────────────────────── */}
-      <Dialog
-        open={targetDialog}
-        onClose={handleCloseDialog}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>
-          {targetRow?.target_id ? "Edit Target" : "Set Target"} —{" "}
-          {targetRow?.name}
-        </DialogTitle>
+                          const eitherAchieved =
+                            row.achievement_percent >= 100 ||
+                            (row.counters_target > 0 && counterAchievePct >= 100);
 
-        <DialogContent
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            pt: "16px !important",
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {MONTHS.find((m) => m.value === month)?.label} {year}
-            {targetRow?.shift !== "-" ? ` • ${targetRow?.shift}` : ""}
-            {targetRow?.type !== "-" ? ` • ${targetRow?.type}` : ""}
-          </Typography>
+                          return (
+                            <TableRow
+                              key={row.user_id}
+                              hover
+                              sx={{
+                                backgroundColor: eitherAchieved
+                                  ? "rgba(46, 125, 50, 0.08)"
+                                  : "inherit",
+                              }}
+                            >
+                              <TableCell>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {row.name}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={row.role}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell>{row.shift}</TableCell>
+                              <TableCell>{row.type}</TableCell>
+                              <TableCell>{row.manager_name}</TableCell>
 
-          <Divider />
+                              <TableCell align="right">
+                                {row.target_amount > 0 ? (
+                                  formatINR(row.target_amount)
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Not set
+                                  </Typography>
+                                )}
+                              </TableCell>
 
-          <TextField
-            label="Target Amount (₹) *"
-            type="number"
-            value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
+                              <TableCell align="right">
+                                {formatINR(row.achieved_amount)}
+                              </TableCell>
+
+                              <TableCell>
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {row.achievement_percent}%
+                                  </Typography>
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={Math.min(
+                                      row.achievement_percent,
+                                      100,
+                                    )}
+                                    color={progressColor}
+                                    sx={{ height: 6, borderRadius: 3, mt: 0.5 }}
+                                  />
+                                </Box>
+                              </TableCell>
+
+                              <TableCell align="center">
+                                <Box
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
+                                  gap={0.5}
+                                >
+                                  {isOver ? (
+                                    <TrendingUpIcon
+                                      fontSize="small"
+                                      color="success"
+                                    />
+                                  ) : (
+                                    <TrendingDownIcon
+                                      fontSize="small"
+                                      color="error"
+                                    />
+                                  )}
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    color={isOver ? "success.main" : "error.main"}
+                                  >
+                                    {isOver ? "+" : ""}
+                                    {row.overachievement_percent}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+
+                              <TableCell align="center">
+                                {row.counters_target || "-"}
+                              </TableCell>
+                              <TableCell align="center">
+                                {row.counters_achieved || "-"}
+                              </TableCell>
+                              <TableCell>
+                                {row.counters_target > 0 ? (
+                                  <Box>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {row.counters_achievement_percent}%
+                                    </Typography>
+                                    <LinearProgress
+                                      variant="determinate"
+                                      value={Math.min(
+                                        row.counters_achievement_percent,
+                                        100,
+                                      )}
+                                      color={
+                                        row.counters_achievement_percent >= 100
+                                          ? "success"
+                                          : row.counters_achievement_percent >= 70
+                                            ? "warning"
+                                            : "error"
+                                      }
+                                      sx={{ height: 6, borderRadius: 3, mt: 0.5 }}
+                                    />
+                                  </Box>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Not set
+                                  </Typography>
+                                )}
+                              </TableCell>
+
+                              <TableCell sx={{ maxWidth: 200 }}>
+                                <Typography
+                                  variant="body2"
+                                  color={
+                                    row.notes ? "text.primary" : "text.secondary"
+                                  }
+                                  sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    maxWidth: 180,
+                                  }}
+                                  title={row.notes || ""}
+                                >
+                                  {row.notes || "-"}
+                                </Typography>
+                              </TableCell>
+
+                              {(user?.role === "admin" || user?.role === "manager_staff") && (
+                                <TableCell align="center">
+                                  <Tooltip
+                                    title={
+                                      row.target_id ? "Edit Target" : "Set Target"
+                                    }
+                                  >
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleOpenTarget(row)}
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </Paper>
+            </>
+          )}
+
+          {/* ── Set Targets Tab ─────────────────────────────────────────────────── */}
+          {activeTab === 1 && (user?.role === "admin" || user?.role === "manager_staff") && (
+            <SetTargetsPanel />
+          )}
+
+          {/* ── Inline Edit Dialog ───────────────────────────────────────────────── */}
+          <Dialog
+            open={targetDialog}
+            onClose={handleCloseDialog}
+            maxWidth="xs"
             fullWidth
-            inputProps={{ min: 0 }}
-            autoFocus
-          />
-
-          <TextField
-            label="Achieved Amount (₹)"
-            type="number"
-            value={achievedAmount}
-            onChange={(e) => setAchievedAmount(e.target.value)}
-            fullWidth
-            inputProps={{ min: 0 }}
-          />
-
-          <TextField
-            label="Counters Target"
-            type="number"
-            value={countersTarget}
-            onChange={(e) => setCountersTarget(e.target.value)}
-            fullWidth
-            inputProps={{ min: 0 }}
-            placeholder="Number of clients target"
-          />
-          <TextField
-            label="Counters Achieved"
-            type="number"
-            value={countersAchieved}
-            onChange={(e) => setCountersAchieved(e.target.value)}
-            fullWidth
-            inputProps={{ min: 0 }}
-            placeholder="Number of clients achieved"
-          />
-
-          <TextField
-            label="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            fullWidth
-            multiline
-            minRows={3}
-            placeholder="Add any remarks or notes..."
-          />
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSaveTarget}
-            disabled={!targetAmount || setTargetMutation.isPending}
           >
-            {setTargetMutation.isPending ? "Saving..." : "Save"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <DialogTitle>
+              {targetRow?.target_id ? "Edit Target" : "Set Target"} — {targetRow?.name}
+            </DialogTitle>
+
+            <DialogContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                pt: "16px !important",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {month === "all" ? "All Time" : (MONTHS.find((m) => m.value === month)?.label || month)} {year}
+                {targetRow?.shift !== "-" ? ` • ${targetRow?.shift}` : ""}
+                {targetRow?.type !== "-" ? ` • ${targetRow?.type}` : ""}
+              </Typography>
+
+              <Divider />
+
+              <TextField
+                label="Target Amount (₹) *"
+                type="number"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                fullWidth
+                inputProps={{ min: 0 }}
+                autoFocus
+              />
+
+              <TextField
+                label="Achieved Amount (₹)"
+                type="number"
+                value={achievedAmount}
+                onChange={(e) => setAchievedAmount(e.target.value)}
+                fullWidth
+                inputProps={{ min: 0 }}
+              />
+
+              <TextField
+                label="Counters Target"
+                type="number"
+                value={countersTarget}
+                onChange={(e) => setCountersTarget(e.target.value)}
+                fullWidth
+                inputProps={{ min: 0 }}
+                placeholder="Number of clients target"
+              />
+              <TextField
+                label="Counters Achieved"
+                type="number"
+                value={countersAchieved}
+                onChange={(e) => setCountersAchieved(e.target.value)}
+                fullWidth
+                inputProps={{ min: 0 }}
+                placeholder="Number of clients achieved"
+              />
+
+              <TextField
+                label="Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder="Add any remarks or notes..."
+              />
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button onClick={handleCloseDialog} color="inherit">
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleSaveTarget}
+                disabled={!targetAmount || setTargetMutation.isPending}
+              >
+                {setTargetMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogActions>
+          </Dialog>
         </>
       )}
     </Box>

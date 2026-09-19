@@ -104,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       text: "Performance Reports",
       icon: <AssessmentIcon />,
       path: "/performance",
-      roles: ["admin", "manager_staff"],
+      roles: ["admin", "manager_staff", "backend", "lead_executive"],
     },
   ];
 
