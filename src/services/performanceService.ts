@@ -45,6 +45,9 @@ export interface BackendPerformanceRow {
   admin_approval: "pending" | "positive" | "negative";
   notes: string;
   admin_remarks?: string;
+  set_by?: number | null;
+  approved_by_name?: string | null;
+  approved_at?: string | null;
   month: number | string;
   year: number;
 }
@@ -80,6 +83,9 @@ export interface MyBackendPerformanceData {
   on_time_rate: number;
   admin_approval: "pending" | "positive" | "negative";
   admin_remarks: string;
+  set_by?: number | null;
+  approved_by_name?: string | null;
+  approved_at?: string | null;
   tasks: MyBackendTask[];
 }
 

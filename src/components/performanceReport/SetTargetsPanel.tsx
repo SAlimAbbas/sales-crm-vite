@@ -201,7 +201,7 @@ const SetTargetsPanel: React.FC = () => {
             onChange={(e) => setRoleFilter(e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
-            <MenuItem value="manager">Manager</MenuItem>
+            <MenuItem value="manager">Team Leader</MenuItem>
             <MenuItem value="salesperson">Salesperson</MenuItem>
           </Select>
         </FormControl>
@@ -241,7 +241,7 @@ const SetTargetsPanel: React.FC = () => {
                   <strong>Type</strong>
                 </TableCell>
                 <TableCell>
-                  <strong>Manager</strong>
+                  <strong>Team Leader</strong>
                 </TableCell>
                 <TableCell sx={{ minWidth: 160 }}>
                   <strong>Target (₹)</strong>
@@ -269,7 +269,11 @@ const SetTargetsPanel: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={u.role} size="small" variant="outlined" />
+                    <Chip
+                      label={u.role === "manager" ? "Team Leader" : u.role}
+                      size="small"
+                      variant="outlined"
+                    />
                   </TableCell>
                   <TableCell>{u.shift ?? "-"}</TableCell>
                   <TableCell>{u.type ?? "-"}</TableCell>

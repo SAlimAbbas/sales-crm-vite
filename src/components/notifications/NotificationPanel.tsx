@@ -61,6 +61,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose }) => {
         return <Warning />; // Add Warning icon
       case "task_reminder":
         return <AccessTime />; // Add AccessTime icon
+      case "performance_evaluation":
+        return <CheckCircle />;
       default:
         return <NotificationsIcon />;
     }
@@ -75,6 +77,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose }) => {
       case "task_assigned":
         return "#2196F3";
       case "task_completed":
+        return "#4CAF50";
+      case "performance_evaluation":
         return "#4CAF50";
       case "followup_reminder":
         return "#FF9800";
@@ -116,13 +120,16 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose }) => {
       case "task_overdue":
       case "task_reminder":
         navigate("/tasks");
-
         break;
 
       case "followup_reminder":
         navigate("/followups");
-
         break;
+
+      case "performance_evaluation":
+        navigate("/performance");
+        break;
+
       default:
         // Do nothing or show details
         break;

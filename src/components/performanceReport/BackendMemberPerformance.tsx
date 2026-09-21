@@ -172,6 +172,12 @@ const BackendMemberPerformance: React.FC = () => {
                     Your performance has been evaluated and approved by management.
                   </Typography>
                 )}
+                {perf.approved_by_name && (
+                  <Typography variant="caption" display="block" sx={{ mt: 0.8, color: "text.secondary" }}>
+                    <strong>Approved by:</strong> {perf.approved_by_name}
+                    {perf.approved_at ? ` (${perf.approved_at})` : ""}
+                  </Typography>
+                )}
               </Alert>
             )}
 
@@ -187,6 +193,12 @@ const BackendMemberPerformance: React.FC = () => {
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                   <strong>Admin Remarks:</strong> {perf.admin_remarks || "No remarks provided."}
                 </Typography>
+                {perf.approved_by_name && (
+                  <Typography variant="caption" display="block" sx={{ mt: 0.8, color: "text.secondary" }}>
+                    <strong>Evaluated by:</strong> {perf.approved_by_name}
+                    {perf.approved_at ? ` (${perf.approved_at})` : ""}
+                  </Typography>
+                )}
               </Alert>
             )}
 
@@ -201,6 +213,12 @@ const BackendMemberPerformance: React.FC = () => {
                 {perf.admin_remarks && (
                   <Typography variant="body2" sx={{ mt: 0.5 }}>
                     <strong>Admin Remarks:</strong> {perf.admin_remarks}
+                  </Typography>
+                )}
+                {perf.approved_by_name && (
+                  <Typography variant="caption" display="block" sx={{ mt: 0.8, color: "text.secondary" }}>
+                    <strong>Set by:</strong> {perf.approved_by_name}
+                    {perf.approved_at ? ` (${perf.approved_at})` : ""}
                   </Typography>
                 )}
               </Alert>

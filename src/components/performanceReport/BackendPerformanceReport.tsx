@@ -478,6 +478,11 @@ const BackendPerformanceReport: React.FC = () => {
                         }}
                       />
                     </Tooltip>
+                    {row.approved_by_name && (
+                      <Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5, fontSize: "0.72rem" }}>
+                        by {row.approved_by_name}
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="textSecondary">

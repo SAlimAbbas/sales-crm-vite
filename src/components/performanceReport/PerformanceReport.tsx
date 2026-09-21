@@ -92,7 +92,7 @@ const PDF_TABLE_HEAD = [
   "Role",
   "Shift",
   "Type",
-  "Manager",
+  "Team Leader",
   "Target (Rs.)",
   "Achieved (Rs.)",
   "Achievement %",
@@ -275,7 +275,7 @@ const PerformanceReport: React.FC = () => {
 
   const mapRowForPDF = (r: PerformanceReportRow) => [
     r.name,
-    r.role,
+    r.role === "manager" ? "Team Leader" : r.role,
     r.shift,
     r.type,
     r.manager_name,
@@ -296,10 +296,10 @@ const PerformanceReport: React.FC = () => {
     const ws = XLSX.utils.json_to_sheet(
       rows.map((r) => ({
         Name: r.name,
-        Role: r.role,
+        Role: r.role === "manager" ? "Team Leader" : r.role,
         Shift: r.shift,
         Type: r.type,
-        Manager: r.manager_name,
+        "Team Leader": r.manager_name,
         "Target (Rs.)": r.target_amount,
         "Achieved (Rs.)": r.achieved_amount,
         "Achievement %": r.achievement_percent,
@@ -461,7 +461,7 @@ const PerformanceReport: React.FC = () => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
     doc.text(
-      `Report created by: Sales Manager  |  ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
+      `Report created by: Sales Team Leader  |  ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
       centerX,
       finalY + 22,
       { align: "center" },
@@ -532,7 +532,7 @@ const PerformanceReport: React.FC = () => {
           <Tab
             icon={<ReportIcon />}
             iconPosition="start"
-            label="SALES & MANAGERS PERFORMANCE"
+            label="SALES & TEAM LEADERS PERFORMANCE"
             value={0}
           />
           <Tab
@@ -663,7 +663,7 @@ const PerformanceReport: React.FC = () => {
                             <strong>Type</strong>
                           </TableCell>
                           <TableCell>
-                            <strong>Manager</strong>
+                            <strong>Team Leader</strong>
                           </TableCell>
                           <TableCell align="right">
                             <strong>Target (₹)</strong>
@@ -732,7 +732,7 @@ const PerformanceReport: React.FC = () => {
                               </TableCell>
                               <TableCell>
                                 <Chip
-                                  label={row.role}
+                                  label={row.role === "manager" ? "Team Leader" : row.role}
                                   size="small"
                                   variant="outlined"
                                 />
