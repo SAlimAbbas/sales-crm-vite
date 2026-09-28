@@ -150,7 +150,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
       });
     } else if (open && !task) {
       formik.resetForm();
-      if (currentUser?.role === "salesperson" || currentUser?.role === "backend") {
+      if (
+        currentUser?.role === "salesperson" ||
+        currentUser?.role === "backend" ||
+        currentUser?.role === "crm"
+      ) {
         formik.setFieldValue("assigned_to", [currentUser.id.toString()]);
       } else {
         formik.setFieldValue("assigned_to", []);
@@ -174,6 +178,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
       return rawList.filter(
         (user: any) =>
           user.manager_id === currentUser.id || user.id === currentUser.id
+      );
+    } else if (currentUser?.role === "crm") {
+      return rawList.filter(
+        (user: any) =>
+          user.id === currentUser.id ||
+          user.email?.toLowerCase().trim() === "shikhar@exportersworlds.com"
       );
     } else {
       return rawList.filter((user: any) => user.id === currentUser?.id);

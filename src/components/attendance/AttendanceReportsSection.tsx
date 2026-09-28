@@ -38,6 +38,8 @@ const getRoleLabel = (role: string) => {
       return "Backend Staff";
     case "lead_executive":
       return "Lead Executive";
+    case "crm":
+      return "CRM";
     case "admin":
       return "Admin";
     default:
@@ -100,6 +102,10 @@ const AttendanceReportsSection: React.FC = () => {
       );
     }
 
+    if (selectedTeam === "crm") {
+      return usersList.filter((u: any) => u.role === "crm");
+    }
+
     return usersList.filter((u: any) => u.role !== "admin");
   }, [usersList, selectedTeam]);
 
@@ -117,6 +123,8 @@ const AttendanceReportsSection: React.FC = () => {
       params.manager_id = selectedTeam.replace("manager_", "");
     } else if (selectedTeam === "backend_exec") {
       params.role = "backend_exec";
+    } else if (selectedTeam === "crm") {
+      params.role = "crm";
     }
 
     return params;
@@ -174,6 +182,9 @@ const AttendanceReportsSection: React.FC = () => {
             <MenuItem value="backend_exec">
               Backend & Executive Team (Shikhar)
             </MenuItem>
+
+            {/* CRM Team */}
+            <MenuItem value="crm">CRM</MenuItem>
           </Select>
         </FormControl>
 

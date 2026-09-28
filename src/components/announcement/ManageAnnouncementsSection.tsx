@@ -56,6 +56,7 @@ const ALL_ROLES_CONFIG = [
   { value: "manager_staff", label: "Manager (Staff)" },
   { value: "lead_executive", label: "Lead Executive" },
   { value: "backend", label: "Backend" },
+  { value: "crm", label: "CRM" },
 ];
 
 const TYPE_OPTIONS = [

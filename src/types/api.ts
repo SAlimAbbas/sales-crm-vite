@@ -15,7 +15,7 @@ export interface PaginationParams {
   search?: string;
   sort_by?: string;
   sort_order?: "asc" | "desc";
-  role?: string | "admin" | "manager" | "salesperson" | "lead_executive" | "backend" | "manager_staff";
+  role?: string | "admin" | "manager" | "salesperson" | "lead_executive" | "backend" | "manager_staff" | "crm";
   is_active?: boolean;
   start_date?: string;
   end_date?: string;

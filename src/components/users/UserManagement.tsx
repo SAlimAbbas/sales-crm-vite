@@ -81,6 +81,8 @@ const UserManagement: React.FC = () => {
               return "Lead Executive";
             case "backend":
               return "Backend";
+            case "crm":
+              return "CRM";
             default:
               return role;
           }

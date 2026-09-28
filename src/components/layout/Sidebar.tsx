@@ -49,6 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         "lead_executive",
         "backend",
         "manager_staff",
+        "crm",
       ],
     },
     {
@@ -80,6 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         "manager_staff",
         "backend",
         "lead_executive",
+        "crm",
       ],
     },
     {

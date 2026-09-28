@@ -10,8 +10,8 @@ const DashboardRouter: React.FC = () => {
     return <Navigate to="/lead-executive/dashboard" replace />;
   }
 
-  // Route backend staff to their specific dashboard
-  if (user?.role === "backend") {
+  // Route backend staff and CRM to backend dashboard
+  if (user?.role === "backend" || user?.role === "crm") {
     return <Navigate to="/backend/dashboard" replace />;
   }
 

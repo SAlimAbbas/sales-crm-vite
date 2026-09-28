@@ -90,7 +90,11 @@ const UserForm: React.FC<UserFormProps> = ({
 
         if (user) {
           await userService.updateUser(user.id, formData);
-          if (values.password && (currentUser?.role === "admin" || currentUser?.role === "manager_staff")) {
+          if (
+            values.password &&
+            (currentUser?.role === "admin" ||
+              currentUser?.role === "manager_staff")
+          ) {
             await userService.updatePassword(user.id, values.password);
           }
         } else {
@@ -162,7 +166,8 @@ const UserForm: React.FC<UserFormProps> = ({
     { value: "manager", label: "Team Leader" },
     { value: "lead_executive", label: "Lead Executive" },
     { value: "backend", label: "Backend Staff" },
-    ...((currentUser?.role === "admin" || currentUser?.role === "manager_staff")
+    { value: "crm", label: "CRM" },
+    ...(currentUser?.role === "admin" || currentUser?.role === "manager_staff"
       ? [
           { value: "admin", label: "Admin" },
           { value: "manager_staff", label: "Manager Staff" },
@@ -277,6 +282,7 @@ const UserForm: React.FC<UserFormProps> = ({
           )}
           {formik.values.role !== "admin" &&
             formik.values.role !== "manager_staff" &&
+            formik.values.role !== "crm" &&
             formik.values.role !== "lead_executive" &&
             formik.values.role !== "backend" && (
               <>
@@ -354,36 +360,38 @@ const UserForm: React.FC<UserFormProps> = ({
             </Grid>
           )}
 
-          {user && (currentUser?.role === "admin" || currentUser?.role === "manager_staff") && (
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormInput
-                label="New Password (leave blank to keep current)"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.password ? formik.errors.password : undefined
-                }
-                helperText={
-                  formik.touched.password ? formik.errors.password || "" : ""
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          )}
+          {user &&
+            (currentUser?.role === "admin" ||
+              currentUser?.role === "manager_staff") && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormInput
+                  label="New Password (leave blank to keep current)"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.password ? formik.errors.password : undefined
+                  }
+                  helperText={
+                    formik.touched.password ? formik.errors.password || "" : ""
+                  }
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            )}
           <Grid size={{ xs: 12 }}>
             <FormControlLabel
               control={

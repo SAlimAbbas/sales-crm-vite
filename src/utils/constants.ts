@@ -5,6 +5,7 @@ export const ROLES = {
   LEAD_EXECUTIVE: "lead_executive",
   BACKEND: "backend",
   MANAGER_STAFF: "manager_staff",
+  CRM: "crm",
 } as const;
 
 export const LEAD_STATUS = {

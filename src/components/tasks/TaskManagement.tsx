@@ -94,6 +94,8 @@ const TaskManagement: React.FC = () => {
         return rawUsers.filter(
           (u: any) => u.role === "backend" || u.role === "lead_executive"
         );
+      } else if (selectedTeam === "crm") {
+        return rawUsers.filter((u: any) => u.role === "crm");
       } else if (selectedTeam.startsWith("manager_staff_")) {
         const mId = parseInt(selectedTeam.replace("manager_staff_", ""), 10);
         return rawUsers.filter((u: any) => u.id === mId || u.manager_id === mId);
@@ -552,6 +554,7 @@ const TaskManagement: React.FC = () => {
                   <MenuItem value="backend_exec">
                     Backend & Executive Team (Shikhar)
                   </MenuItem>
+                  <MenuItem value="crm">CRM</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
