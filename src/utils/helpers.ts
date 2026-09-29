@@ -43,8 +43,15 @@ export const formatForDateInput = (dateString: string): string => {
 
 export const canEditTask = (task: any, user: any): boolean => {
   if (!user || !task) return false;
-  if (user.role === ROLES.ADMIN || user.role === ROLES.MANAGER_STAFF) return true;
-  return task.created_by === user.id;
+  if (
+    user.role === ROLES.ADMIN ||
+    user.role === ROLES.MANAGER_STAFF ||
+    user.role === ROLES.CRM ||
+    user.role === "crm"
+  ) {
+    return true;
+  }
+  return String(task.created_by) === String(user.id);
 };
 
 export const isTaskCompletedOverdue = (task: any): boolean => {

@@ -36,24 +36,72 @@ interface TaskFormProps {
   preSelectedLeadId?: number | null;
 }
 
-const validationSchema = yup.object({
-  title: yup.string().required("Title is required").max(255, "Title too long"),
-  description: yup.string().required("Description is required"),
-  due_date: yup
-    .date()
-    .required("Due date is required")
-    .min(new Date(), "Due date must be in the future"),
-  priority: yup
-    .string()
-    .required("Priority is required")
-    .oneOf(["low", "medium", "high"]),
-  assigned_to: yup
-    .array()
-    .of(yup.string())
-    .min(1, "At least one assigned user is required")
-    .required("Assigned user is required"),
-  lead_id: yup.number().nullable(),
-});
+const getLocalDateString = (d: Date = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseLocalDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  const parts = dateStr.split("T")[0].split("-");
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    return new Date(year, month, day);
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+const getValidationSchema = (task?: Task | null) =>
+  yup.object({
+    title: yup.string().required("Title is required").max(255, "Title too long"),
+    description: yup.string().required("Description is required"),
+    due_date: yup
+      .mixed()
+      .required("Due date is required")
+      .test("not-in-past", "Due date cannot be in the past", function (value) {
+        if (!value) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let d: Date | null = null;
+        if (typeof value === "string") {
+          d = parseLocalDate(value);
+        } else if (value instanceof Date) {
+          d = new Date(value);
+        }
+
+        if (!d || isNaN(d.getTime())) return false;
+        d.setHours(0, 0, 0, 0);
+
+        // When editing an existing task, allow keeping its original due date
+        if (task && task.due_date) {
+          const origDate = parseLocalDate(task.due_date);
+          if (origDate) {
+            origDate.setHours(0, 0, 0, 0);
+            if (d.getTime() === origDate.getTime()) {
+              return true;
+            }
+          }
+        }
+
+        return d.getTime() >= today.getTime();
+      }),
+    priority: yup
+      .string()
+      .required("Priority is required")
+      .oneOf(["low", "medium", "high"]),
+    assigned_to: yup
+      .array()
+      .of(yup.string())
+      .min(1, "At least one assigned user is required")
+      .required("Assigned user is required"),
+    lead_id: yup.number().nullable(),
+  });
 
 const TaskForm: React.FC<TaskFormProps> = ({
   open,
@@ -79,11 +127,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
     enabled: open,
   });
 
+  const validationSchema = React.useMemo(() => getValidationSchema(task), [task]);
+
   const formik = useFormik({
     initialValues: {
       title: "",
       description: "",
-      due_date: new Date().toISOString().split("T")[0],
+      due_date: getLocalDateString(),
       priority: "medium" as "low" | "medium" | "high",
       assigned_to: [] as string[],
       lead_id: "",
@@ -172,22 +222,44 @@ const TaskForm: React.FC<TaskFormProps> = ({
     );
     if (!rawList) return [];
 
+    let filtered: any[] = [];
     if (currentUser?.role === "admin" || currentUser?.role === "manager_staff") {
-      return rawList;
+      filtered = rawList;
     } else if (currentUser?.role === "manager") {
-      return rawList.filter(
+      filtered = rawList.filter(
         (user: any) =>
           user.manager_id === currentUser.id || user.id === currentUser.id
       );
     } else if (currentUser?.role === "crm") {
-      return rawList.filter(
+      filtered = rawList.filter(
         (user: any) =>
           user.id === currentUser.id ||
+          user.role === "crm" ||
           user.email?.toLowerCase().trim() === "shikhar@exportersworlds.com"
       );
     } else {
-      return rawList.filter((user: any) => user.id === currentUser?.id);
+      filtered = rawList.filter((user: any) => user.id === currentUser?.id);
     }
+
+    if (task) {
+      const assignedUsers = task.assigned_users || (task.assigned_user ? [task.assigned_user] : []);
+      assignedUsers.forEach((au: any) => {
+        if (!filtered.some((u: any) => String(u.id) === String(au.id))) {
+          filtered.push(au);
+        }
+      });
+      const assignedArray = Array.isArray(task.assigned_to)
+        ? task.assigned_to.map(String)
+        : task.assigned_to ? [String(task.assigned_to)] : [];
+      assignedArray.forEach((id: string) => {
+        if (!filtered.some((u: any) => String(u.id) === id)) {
+          const found = rawList.find((u: any) => String(u.id) === id);
+          if (found) filtered.push(found);
+        }
+      });
+    }
+
+    return filtered;
   };
 
   const availableUsers = getAvailableUsers();
@@ -261,13 +333,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormDatePicker
               label="Due Date"
-              value={
-                formik.values.due_date ? new Date(formik.values.due_date) : null
-              }
+              value={parseLocalDate(formik.values.due_date)}
               onChange={(date) =>
                 formik.setFieldValue(
                   "due_date",
-                  date?.toISOString().split("T")[0]
+                  date && !isNaN(date.getTime()) ? getLocalDateString(date) : ""
                 )
               }
               error={
@@ -276,7 +346,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   : undefined
               }
               required
-              minDate={new Date()}
+              minDate={
+                task
+                  ? undefined
+                  : (() => {
+                      const d = new Date();
+                      d.setHours(0, 0, 0, 0);
+                      return d;
+                    })()
+              }
             />
           </Grid>
 

@@ -108,6 +108,12 @@ const TaskManagement: React.FC = () => {
       return rawUsers.filter(
         (u: any) => u.manager_id === user.id || u.id === user.id
       );
+    } else if (user.role === "crm") {
+      return rawUsers.filter(
+        (u: any) =>
+          u.role === "crm" ||
+          (u.email && u.email.toLowerCase().trim() === "shikhar@exportersworlds.com")
+      );
     } else {
       const foundSelf = rawUsers.find((u: any) => u.id === user.id);
       return foundSelf
@@ -119,7 +125,8 @@ const TaskManagement: React.FC = () => {
   const isIndividualRole =
     user?.role !== "admin" &&
     user?.role !== "manager_staff" &&
-    user?.role !== "manager";
+    user?.role !== "manager" &&
+    user?.role !== "crm";
 
   const defaultAssignedFilter = isIndividualRole
     ? user?.id
@@ -577,6 +584,9 @@ const TaskManagement: React.FC = () => {
                 )}
                 {user?.role === "manager" && (
                   <MenuItem value="all">All Team Members</MenuItem>
+                )}
+                {user?.role === "crm" && (
+                  <MenuItem value="all">All (CRM & Assigned)</MenuItem>
                 )}
                 {filterableUsers.map((u: any) => (
                   <MenuItem key={u.id} value={u.id.toString()}>
