@@ -8,7 +8,7 @@ else
     exit 1
 fi
 
-echo "🚀 Deploying exportersworldscrm.site Frontend (using SCP)..."
+echo "🚀 Deploying exportersworldsportal.site Frontend (using SCP)..."
 
 # Build production version
 echo "🔨 Building production bundle..."
@@ -49,7 +49,7 @@ echo "📦 Extracting files on server..."
 # Extract on server
 ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
 # Navigate to public_html
-cd domains/exportersworldscrm.site/public_html
+cd domains/exportersworldsportal.site/public_html
 
 # Backup Laravel files
 echo "Backing up Laravel files..."
@@ -110,4 +110,4 @@ rm -f frontend-deploy.tar.gz
 
 echo ""
 echo "✅ Frontend deployed successfully!"
-echo "🌐 Visit: https://exportersworldscrm.site"
+echo "🌐 Visit: https://exportersworldsportal.site"
