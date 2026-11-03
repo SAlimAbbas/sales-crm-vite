@@ -6,6 +6,7 @@ export interface Lead {
   company_name: string;
   contact_number: string;
   source: string;
+  sector?: "b2b_leads" | "it_leads" | string;
   country: string;
   product: string;
   owner_name?: string;
@@ -33,6 +34,7 @@ export interface LeadFormData {
   company_name: string;
   contact_number: string;
   source: string;
+  sector?: "b2b_leads" | "it_leads" | string;
   country: string;
   product: string;
   owner_name?: string;

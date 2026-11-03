@@ -52,6 +52,7 @@ export interface FilterState {
   dateField: string;
   dateFrom: Date | null;
   dateTo: Date | null;
+  sector?: string;
   product: string;
   tags?: string;
 }
@@ -77,6 +78,7 @@ const initialFilters: FilterState = {
   dateField: "date",
   dateFrom: null,
   dateTo: null,
+  sector: "",
   product: "",
   tags: "",
 };
@@ -275,6 +277,12 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
     { value: "international", label: "International" },
   ];
 
+
+  const sectorOptions = [
+    { value: "", label: "All Sectors" },
+    { value: "b2b_leads", label: "B2B Leads" },
+    { value: "it_leads", label: "IT Leads" },
+  ];
   const sourceOptions = [
     { value: "", label: "All Sources" },
     { value: "Websites", label: "Websites" },
@@ -322,7 +330,7 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
       if (key === "country") return Array.isArray(value) && value.length > 0; // ✅ Add this check
       if (key === "dateField") return false; // ✅ This should already be there
       if (key === "tags") return value !== "" && value !== null; // ✅ Only count if not empty
-      if (key === "type" || key === "source" || key === "product")
+      if (key === "type" || key === "source" || key === "product" || key === "sector")
         return value !== "" && value !== null; // ✅ Explicitly check these
       return false; // ✅ Default to false for any other fields
     }).length;
@@ -463,6 +471,28 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({
                   disabled={loading}
                 >
                   {sourceOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            
+            {/* Sector Dropdown */}
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sector</InputLabel>
+                <Select
+                  value={pendingFilters.sector || ""}
+                  label="Sector"
+                  onChange={(e) =>
+                    handlePendingFilterChange("sector", e.target.value)
+                  }
+                  disabled={loading}
+                >
+                  {sectorOptions.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
                     </MenuItem>

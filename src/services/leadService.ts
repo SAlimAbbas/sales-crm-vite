@@ -14,6 +14,7 @@ export interface LeadFilters extends PaginationParams {
   status?: string;
   type?: string;
   source?: string;
+  sector?: string;
   country?: string;
   assignedTo?: string;
   dateFrom?: string;
@@ -105,6 +106,7 @@ export const leadService = {
       converted: number;
       by_source: Record<string, number>;
       by_country: Record<string, number>;
+      by_sector?: Record<string, number>;
     }>("/leads/stats"),
 
   downloadFailedLeads: (sessionKey: string) =>

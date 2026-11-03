@@ -25,6 +25,7 @@ const validationSchema = yup.object({
   company_name: yup.string().required("Company name is required"),
   contact_number: yup.string().required("Contact number is required"),
   source: yup.string().required("Source is required"),
+  sector: yup.string().required("Sector is required").oneOf(["b2b_leads", "it_leads"]),
   country: yup.string().required("Country is required"),
   product: yup.string().required("Product is required"),
   owner_name: yup.string().nullable(),
@@ -96,6 +97,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
       company_name: lead?.company_name || "",
       contact_number: lead?.contact_number || "",
       source: lead?.source || "",
+      sector: lead?.sector || "b2b_leads",
       country: lead?.country || "",
       product: lead?.product || "",
       owner_name: lead?.owner_name || "",
@@ -112,6 +114,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
           company_name: values.company_name,
           contact_number: values.contact_number,
           source: values.source,
+          sector: values.sector || "b2b_leads",
           country: values.country,
           product: values.product,
           owner_name: values.owner_name || undefined,
@@ -174,6 +177,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
         company_name: lead.company_name,
         contact_number: lead.contact_number,
         source: lead.source,
+        sector: lead.sector || "b2b_leads",
         country: lead.country,
         product: lead.product,
         owner_name: lead.owner_name || "",
@@ -183,6 +187,7 @@ const LeadForm: React.FC<LeadFormProps> = ({
       });
     } else if (open) {
       formik.resetForm();
+      formik.setFieldValue("sector", "b2b_leads");
       formik.setFieldValue("date", new Date().toISOString().split("T")[0]);
     }
   }, [open, lead]);
@@ -204,6 +209,11 @@ const LeadForm: React.FC<LeadFormProps> = ({
     "Paid Campaign",
     "Email Campaign",
     "Other",
+  ];
+
+  const sectorOptions = [
+    { value: "b2b_leads", label: "B2B Leads" },
+    { value: "it_leads", label: "IT Leads" },
   ];
 
   return (
@@ -279,6 +289,16 @@ const LeadForm: React.FC<LeadFormProps> = ({
                 label: source,
               }))}
               error={formik.touched.source ? formik.errors.source : undefined}
+              required
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <FormSelect
+              label="Sector"
+              value={formik.values.sector}
+              onChange={(value) => formik.setFieldValue("sector", value)}
+              options={sectorOptions}
+              error={formik.touched.sector ? formik.errors.sector : undefined}
               required
             />
           </Grid>

@@ -112,6 +112,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     { id: "product", label: "Product", sortable: true, minWidth: 120 },
     { id: "contact_number", label: "Phone", sortable: false, minWidth: 140 },
     { id: "source", label: "Source", sortable: true, minWidth: 160 },
+    { id: "sector" as keyof Lead, label: "Sector", sortable: true, minWidth: 130 },
     { id: "country", label: "Country", sortable: true, minWidth: 80 },
     { id: "type", label: "Type", sortable: true, minWidth: 140 },
     { id: "status", label: "Status", sortable: true, minWidth: 160 },
@@ -185,6 +186,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     product: 120,
     contact_number: 140,
     source: 160,
+    sector: 130,
     country: 80,
     type: 140,
     status: 160,
@@ -751,6 +753,23 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     }}
                   >
                     <Chip label={lead.source} size="small" variant="outlined" />
+                  </TableCell>
+
+                  <TableCell
+                    style={{
+                      width: columnWidths.sector,
+                      maxWidth: columnWidths.sector,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <Chip
+                      label={lead.sector === "it_leads" ? "IT Leads" : "B2B Leads"}
+                      size="small"
+                      variant="outlined"
+                      color={lead.sector === "it_leads" ? "info" : "default"}
+                    />
                   </TableCell>
 
                   <TableCell
