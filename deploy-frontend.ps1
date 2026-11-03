@@ -25,3 +25,4 @@ ssh -p 65002 u597814446@193.203.186.174 "cd domains/exportersworldsportal.site/p
 Remove-Item -Path "frontend-deploy.tar.gz" -ErrorAction SilentlyContinue
 
 Write-Host "✅ Frontend deployed successfully to https://exportersworldsportal.site!" -ForegroundColor Green
+
